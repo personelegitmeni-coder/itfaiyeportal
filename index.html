@@ -197,7 +197,7 @@
 
     <div class="announcement-banner">
         <span class="badge-new">YENİ</span>
-        <span>🤖 Tüm Modüllere Veri Kayıt ve Ekleme Butonları Tam Entegre Edildi.</span>
+        <span>🤖 Tarayıcı Hafızalı (LocalStorage) Kalıcı Veri Modu Aktifleştirildi.</span>
     </div>
 
     <div class="main-wrapper">
@@ -308,7 +308,7 @@
                     </div>
                     <div class="chat-box" id="ai-chat-container" style="height:320px;">
                         <div class="chat-msg ai">
-                            <strong>🔥 KIVILCIM AI:</strong> Yangın hakkında tüm sorularınızı bekliyorum, sesli veya yazılı olarak sorabilirsiniz!
+                            <strong>🔥 KIVILCIM AI:</strong> Merhaba Murat Amirim! Yangın müdahale taktikleri, kimyasal (MSDS) kodları veya yönetmelik sorularınızı bekliyorum.
                         </div>
                     </div>
                     <div style="display:flex; gap:10px;">
@@ -369,7 +369,7 @@
                             <tr><th>Firma</th><th>Olay Türü</th><th>Çıkış / Dönüş</th><th>Araç & Personel</th><th>Foto Adet</th><th>İşlem</th></tr>
                         </thead>
                         <tbody id="olay-list">
-                            <tr><td>Kastamonu Entegre</td><td>Yangın</td><td>01.06.2026 14:00 - 15:30</td><td>01 BIC 466 (Murat Ortaç)</td><td><span class="badge bg-green">🖼️ 3 Foto</span></td><td><button class="btn btn-danger admin-only" style="padding:2px 6px; font-size:11px;" onclick="this.closest('tr').remove()">Sil</button></td></tr>
+                            <!-- LocalStorage ile yüklenecek -->
                         </tbody>
                     </table>
                 </div>
@@ -445,13 +445,7 @@
                             <tr><th>YSC Kodu</th><th>Tip / Ağırlık</th><th>Konum (GPS)</th><th>Son Kontrol</th><th>Geçmiş</th></tr>
                         </thead>
                         <tbody id="ysc-list">
-                            <tr>
-                                <td>YSC1</td>
-                                <td>6 kg KKT</td>
-                                <td>Lat: 36.958, Lng: 35.418 (AOSB Garaj)</td>
-                                <td>06.11.2026</td>
-                                <td><button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="viewYSCHistory('YSC1')">🔍 Tüm Geçmiş</button></td>
-                            </tr>
+                            <!-- LocalStorage ile yüklenecek -->
                         </tbody>
                     </table>
                 </div>
@@ -492,13 +486,7 @@
                             <tr><th>Hidrant Kodu</th><th>Adres / Konum</th><th>Durum</th><th>Geçmiş</th><th>İşlem</th></tr>
                         </thead>
                         <tbody id="hidrant-list">
-                            <tr>
-                                <td>H1</td>
-                                <td>1. Cadde Girişi (36.958, 35.418)</td>
-                                <td><span class="badge bg-green">🟢 Sağlam</span></td>
-                                <td><span style="font-size:11px; color:var(--text-muted);">Basınç Testi Yapıldı</span></td>
-                                <td><button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=36.958,35.418', '_blank')">Yol Tarifi</button></td>
-                            </tr>
+                            <!-- LocalStorage ile yüklenecek -->
                         </tbody>
                     </table>
                 </div>
@@ -519,7 +507,7 @@
                 </div>
             </section>
 
-            <!-- MODÜL 8: EĞİTİM DOKÜMANLARI (VERİ GİRİŞ BUTONLU) -->
+            <!-- MODÜL 8: EĞİTİM DOKÜMANLARI -->
             <section id="mod8" class="module-section">
                 <div class="card">
                     <div class="card-header">
@@ -539,13 +527,13 @@
                             <tr><th>Doküman Adı</th><th>Kategori</th><th>Bağlantı</th></tr>
                         </thead>
                         <tbody id="doc-list">
-                            <tr><td>SCBA Solunum Cihazı Standardı</td><td>KKD & Solunum</td><td><a href="#" style="color:var(--accent);">Görüntüle</a></td></tr>
+                            <!-- LocalStorage ile yüklenecek -->
                         </tbody>
                     </table>
                 </div>
             </section>
 
-            <!-- MODÜL 9: DUYURU YÖNETİMİ (VERİ GİRİŞ BUTONLU) -->
+            <!-- MODÜL 9: DUYURU YÖNETİMİ -->
             <section id="mod9" class="module-section">
                 <div class="card">
                     <div class="card-header">
@@ -561,7 +549,7 @@
                 </div>
             </section>
 
-            <!-- MODÜL 10: EĞİTİM PLANLAMA (VERİ GİRİŞ BUTONLU) -->
+            <!-- MODÜL 10: EĞİTİM PLANLAMA -->
             <section id="mod10" class="module-section">
                 <div class="card">
                     <div class="card-header">
@@ -582,7 +570,7 @@
                             <tr><th>Eğitim Konusu</th><th>Vardiya</th><th>Eğitmen</th></tr>
                         </thead>
                         <tbody id="plan-list">
-                            <tr><td>Fabrika Köpük Sistemleri</td><td>08.00 - 16.00 Vardiyası</td><td>Murat Ortaç</td></tr>
+                            <!-- LocalStorage ile yüklenecek -->
                         </tbody>
                     </table>
                 </div>
@@ -644,12 +632,6 @@
                                 <td><span class="badge bg-green">36.9581, 35.4182</span></td>
                                 <td><button class="btn btn-success" style="padding:4px 10px; font-size:11px;" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=36.9581,35.4182', '_blank')">🗺️ Haritalarda Git (Navigasyon)</button></td>
                             </tr>
-                            <tr>
-                                <td>Sasa Polyester A.Ş.</td>
-                                <td>3. Cadde No:12</td>
-                                <td><span class="badge bg-green">36.9610, 35.4220</span></td>
-                                <td><button class="btn btn-success" style="padding:4px 10px; font-size:11px;" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=36.9610,35.4220', '_blank')">🗺️ Haritalarda Git (Navigasyon)</button></td>
-                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -664,17 +646,9 @@
         let currentUser = null;
         let isAdmin = false;
 
-        const yscDatabase = {
-            "YSC1": [
-                { tarih: "06.11.2026", durum: "🟢 Sağlam / Basınç Normal", konum: "AOSB Garaj İçi" },
-                { tarih: "06.05.2026", durum: "🟡 Basınç Kontrol Edildi", konum: "AOSB Garaj İçi" }
-            ]
-        };
-
-        const hidrantDatabase = {
-            "H1": [
-                { tarih: "06.11.2026", durum: "🟢 Sağlam / Basınç Yüksek", adres: "1. Cadde Girişi" }
-            ]
+        // Sayfa açıldığında LocalStorage'dan verileri yükle
+        window.onload = function() {
+            loadFromLocalStorage();
         };
 
         function updateClockAndWeather() {
@@ -738,7 +712,6 @@
             options.forEach(opt => {
                 if(opt.value.toLowerCase() === val.toLowerCase()) isFound = true;
             });
-
             if(isFound) {
                 alert(`✅ Kayıtlı Firma Seçildi: ${val}`);
             } else {
@@ -753,6 +726,69 @@
             }
         }
 
+        // --- LOCALSTORAGE KAYIT VE YÜKLEME FONKSİYONLARI ---
+        function saveToStorage(key, data) {
+            let existing = JSON.parse(localStorage.getItem(key)) || [];
+            existing.unshift(data);
+            localStorage.setItem(key, JSON.stringify(existing));
+        }
+
+        function loadFromLocalStorage() {
+            // Olaylar
+            let olaylar = JSON.parse(localStorage.getItem('osb_olaylar')) || [];
+            let olayTbody = document.getElementById('olay-list');
+            olaylar.forEach(item => {
+                let tr = document.createElement('tr');
+                tr.innerHTML = `<td>${item.firma}</td><td>${item.tur}</td><td>Çıkış: ${item.cikis}<br>Dönüş: ${item.donus}</td><td>${item.arac}<br>(${item.personel})</td><td><span class="badge bg-green">🖼️ ${item.photoCount} Foto</span></td><td><button class="btn btn-danger admin-only" style="padding:2px 6px; font-size:11px;" onclick="this.closest('tr').remove()">Sil</button></td>`;
+                olayTbody.appendChild(tr);
+            });
+
+            // YSC
+            let yscs = JSON.parse(localStorage.getItem('osb_ysc')) || [];
+            let yscTbody = document.getElementById('ysc-list');
+            yscs.forEach(item => {
+                let tr = document.createElement('tr');
+                tr.innerHTML = `<td>${item.code}</td><td>${item.tip}</td><td>${item.konum}</td><td>${item.tarih}</td><td><button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;">🔍 Geçmiş</button></td>`;
+                yscTbody.appendChild(tr);
+            });
+
+            // Hidrant
+            let hidrants = JSON.parse(localStorage.getItem('osb_hidrant')) || [];
+            let hidTbody = document.getElementById('hidrant-list');
+            hidrants.forEach(item => {
+                let tr = document.createElement('tr');
+                tr.innerHTML = `<td>${item.code}</td><td>${item.adres} (${item.gps})</td><td><span class="badge bg-green">${item.durum}</span></td><td>Test Edildi</td><td><button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${item.gps}', '_blank')">Yol Tarifi</button></td>`;
+                hidTbody.appendChild(tr);
+            });
+
+            // Dokümanlar
+            let docs = JSON.parse(localStorage.getItem('osb_docs')) || [];
+            let docTbody = document.getElementById('doc-list');
+            docs.forEach(item => {
+                let tr = document.createElement('tr');
+                tr.innerHTML = `<td>${item.title}</td><td>${item.cat}</td><td><a href="${item.link || '#'}" style="color:var(--accent);" target="_blank">Görüntüle</a></td>`;
+                docTbody.appendChild(tr);
+            });
+
+            // Eğitim Planları
+            let plans = JSON.parse(localStorage.getItem('osb_plans')) || [];
+            let planTbody = document.getElementById('plan-list');
+            plans.forEach(item => {
+                let tr = document.createElement('tr');
+                tr.innerHTML = `<td>${item.konu}</td><td>${item.vardiya}</td><td>${item.egitmen}</td>`;
+                planTbody.appendChild(tr);
+            });
+
+            // Firmalar
+            let firmalar = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
+            let firmaTbody = document.getElementById('firmalar-list');
+            firmalar.forEach(item => {
+                let tr = document.createElement('tr');
+                tr.innerHTML = `<td>${item.name}</td><td>${item.adres}</td><td><span class="badge bg-green">${item.gps}</span></td><td><button class="btn btn-success" style="padding:4px 10px; font-size:11px;" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${item.gps}', '_blank')">🗺️ Navigasyon</button></td>`;
+                firmaTbody.appendChild(tr);
+            });
+        }
+
         function addIncident() {
             const tur = document.getElementById('olay-tur').value;
             const firma = document.getElementById('olay-firma-input').value;
@@ -762,33 +798,19 @@
             const arac = document.getElementById('olay-arac').value;
             const personel = document.getElementById('olay-personel').value || "Ekip";
             const photoCount = document.getElementById('olay-photos').files.length;
-            const ozet = document.getElementById('olay-ozet').value;
 
             if(!firma) { alert("Lütfen bir firma seçiniz veya yazınız!"); return; }
             if(!konum) { alert("Lütfen olay konumunu giriniz!"); return; }
 
+            const olayData = { firma, tur, cikis, donus, arac, personel, photoCount };
+            saveToStorage('osb_olaylar', olayData);
+
             const tbody = document.getElementById('olay-list');
             const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${firma}</td>
-                <td>${tur}</td>
-                <td>Çıkış: ${cikis}<br>Dönüş: ${donus}</td>
-                <td>${arac}<br>(${personel})</td>
-                <td><span class="badge bg-green">🖼️ ${photoCount} Foto</span></td>
-                <td><button class="btn btn-danger admin-only" style="padding:2px 6px; font-size:11px;" onclick="this.closest('tr').remove()">Sil</button></td>
-            `;
+            tr.innerHTML = `<td>${firma}</td><td>${tur}</td><td>Çıkış: ${cikis}<br>Dönüş: ${donus}</td><td>${arac}<br>(${personel})</td><td><span class="badge bg-green">🖼️ ${photoCount} Foto</span></td><td><button class="btn btn-danger admin-only" style="padding:2px 6px; font-size:11px;" onclick="this.closest('tr').remove()">Sil</button></td>`;
             tbody.prepend(tr);
             
-            const datalist = document.getElementById('firma-options');
-            let exists = false;
-            document.querySelectorAll('#firma-options option').forEach(o => { if(o.value === firma) exists = true; });
-            if(!exists) {
-                const opt = document.createElement('option');
-                opt.value = firma;
-                datalist.appendChild(opt);
-            }
-
-            alert("Olay raporu ve fotoğraflar başarıyla kaydedildi!");
+            alert("Olay raporu kalıcı olarak kaydedildi!");
             toggleForm('olay-form-box');
         }
 
@@ -818,39 +840,22 @@
         function getSmartYSCLocation() {
             if(navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(pos => {
-                    const gpsStr = `Lat: ${pos.coords.latitude.toFixed(4)}, Lng: ${pos.coords.longitude.toFixed(4)} (AOSB Garaj)`;
+                    const gpsStr = `Lat: ${pos.coords.latitude.toFixed(4)}, Lng: ${pos.coords.longitude.toFixed(4)} (AOSB)`;
                     document.getElementById('ysc-konum').value = gpsStr;
-                    const autoCode = "YSC1";
-                    document.getElementById('ysc-no').value = autoCode;
-                    checkYSCCodeHistory(autoCode);
-                    alert(`📍 Bulunduğunuz konum algılandı! Bu konumda daha önce kontrol edilen cihaz: ${autoCode}`);
+                    document.getElementById('ysc-no').value = "YSC1";
+                    alert("📍 Konum ve YSC Kodu algılandı!");
                 });
             }
         }
 
         function checkYSCCodeHistory(code) {
             const banner = document.getElementById('ysc-warning-banner');
-            const historyBox = document.getElementById('ysc-history-detail');
-            const historyTimeline = document.getElementById('history-ysc-timeline');
-            
             const upperCode = code.toUpperCase().trim();
-
-            if(yscDatabase[upperCode]) {
-                const nextNum = Object.keys(yscDatabase).length + 1;
-                banner.innerHTML = `⚠️ <strong>${upperCode}</strong> kodlu YSC daha önce sisteme girilmiş! Mevcut kaydın üzerine işlem yapıyorsunuz. Önerilen Sıradaki Yeni Kod: <strong>YSC${nextNum}</strong>`;
+            if(upperCode === "YSC1") {
+                banner.innerHTML = `⚠️ <strong>YSC1</strong> daha önce kaydedilmiş!`;
                 banner.style.display = 'block';
-
-                document.getElementById('history-ysc-code').innerText = upperCode;
-                let html = '<ul>';
-                yscDatabase[upperCode].forEach(item => {
-                    html += `<li><strong>Tarih:</strong> ${item.tarih} | <strong>Durum:</strong> ${item.durum} | <strong>Konum:</strong> ${item.konum}</li>`;
-                });
-                html += '</ul>';
-                historyTimeline.innerHTML = html;
-                historyBox.style.display = 'block';
             } else {
                 banner.style.display = 'none';
-                historyBox.style.display = 'none';
             }
         }
 
@@ -860,37 +865,22 @@
             const konum = document.getElementById('ysc-konum').value;
             const tarih = document.getElementById('ysc-kontrol').value;
 
-            if(!code) { alert("Lütfen bir YSC Kodu giriniz!"); return; }
+            if(!code) { alert("YSC Kodu giriniz!"); return; }
 
-            if(!yscDatabase[code]) yscDatabase[code] = [];
-            yscDatabase[code].unshift({ tarih: tarih, durum: tip, konum: konum });
+            saveToStorage('osb_ysc', { code, tip, konum, tarih });
 
             const tbody = document.getElementById('ysc-list');
             const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${code}</td>
-                <td>${tip}</td>
-                <td>${konum || 'AOSB'}</td>
-                <td>${tarih}</td>
-                <td><button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="viewYSCHistory('${code}')">🔍 Tüm Geçmiş</button></td>
-            `;
+            tr.innerHTML = `<td>${code}</td><td>${tip}</td><td>${konum || 'AOSB'}</td><td>${tarih}</td><td><button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;">🔍 Geçmiş</button></td>`;
             tbody.prepend(tr);
             toggleForm('ysc-form-box');
-            alert(`${code} kodlu YSC başarıyla kaydedildi!`);
-        }
-
-        function viewYSCHistory(code) {
-            checkYSCCodeHistory(code);
-            document.getElementById('ysc-history-detail').scrollIntoView({ behavior: 'smooth' });
+            alert("YSC kaydedildi!");
         }
 
         function checkHydrantCodeHistory(code) {
             const banner = document.getElementById('hidrant-warning-banner');
-            const upperCode = code.toUpperCase().trim();
-
-            if(hidrantDatabase[upperCode]) {
-                const nextNum = Object.keys(hidrantDatabase).length + 1;
-                banner.innerHTML = `⚠️ <strong>${upperCode}</strong> kodlu hidrant daha önce sisteme girilmiş! Önerilen Sıradaki Kod: <strong>H${nextNum}</strong>`;
+            if(code.toUpperCase().trim() === "H1") {
+                banner.innerHTML = `⚠️ <strong>H1</strong> nolu hidrant sistemde mevcut.`;
                 banner.style.display = 'block';
             } else {
                 banner.style.display = 'none';
@@ -903,36 +893,32 @@
             const durum = document.getElementById('h-durum').value;
             const gps = document.getElementById('h-gps').value;
 
-            if(!code) { alert("Lütfen bir Hidrant Kodu giriniz!"); return; }
+            if(!code) { alert("Hidrant Kodu giriniz!"); return; }
 
-            if(!hidrantDatabase[code]) hidrantDatabase[code] = [];
-            hidrantDatabase[code].unshift({ tarih: "06.11.2026", durum: durum, adres: adres });
+            saveToStorage('osb_hidrant', { code, adres, durum, gps });
 
             const tbody = document.getElementById('hidrant-list');
             const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${code}</td>
-                <td>${adres} (${gps || 'GPS'})</td>
-                <td><span class="badge bg-green">${durum}</span></td>
-                <td><span style="font-size:11px; color:var(--text-muted);">Basınç Testi Yapıldı</span></td>
-                <td><button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${gps}', '_blank')">Yol Tarifi</button></td>
-            `;
+            tr.innerHTML = `<td>${code}</td><td>${adres} (${gps})</td><td><span class="badge bg-green">${durum}</span></td><td>Test Edildi</td><td><button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${gps}', '_blank')">Yol Tarifi</button></td>`;
             tbody.prepend(tr);
             toggleForm('hidrant-form');
-            alert(`${code} kodlu Hidrant kaydedildi!`);
+            alert("Hidrant kaydedildi!");
         }
 
         function addDocument() {
             const title = document.getElementById('doc-title').value;
             const cat = document.getElementById('doc-cat').value;
             const link = document.getElementById('doc-link').value;
-            if(!title) { alert("Doküman adını giriniz!"); return; }
+            if(!title) { alert("Doküman adı giriniz!"); return; }
+
+            saveToStorage('osb_docs', { title, cat, link });
+
             const tbody = document.getElementById('doc-list');
             const tr = document.createElement('tr');
             tr.innerHTML = `<td>${title}</td><td>${cat}</td><td><a href="${link || '#'}" style="color:var(--accent);" target="_blank">Görüntüle</a></td>`;
             tbody.appendChild(tr);
             toggleForm('doc-form');
-            alert("Eğitim dokümanı eklendi!");
+            alert("Doküman eklendi!");
         }
 
         function addAnnouncement() {
@@ -941,39 +927,63 @@
             if(!title) { alert("Duyuru başlığı giriniz!"); return; }
             document.querySelector('.announcement-banner span:last-child').innerText = `📢 ${title}: ${text}`;
             toggleForm('duyuru-form');
-            alert("Duyuru başarıyla yayınlandı!");
+            alert("Duyuru yayınlandı!");
         }
 
         function addTrainingPlan() {
             const konu = document.getElementById('plan-konu').value;
             const vardiya = document.getElementById('plan-vardiya').value;
             const egitmen = document.getElementById('plan-egitmen').value;
-            if(!konu) { alert("Eğitim konusunu giriniz!"); return; }
+            if(!konu) { alert("Eğitim konusu giriniz!"); return; }
+
+            saveToStorage('osb_plans', { konu, vardiya, egitmen });
+
             const tbody = document.getElementById('plan-list');
             const tr = document.createElement('tr');
             tr.innerHTML = `<td>${konu}</td><td>${vardiya}</td><td>${egitmen}</td>`;
             tbody.appendChild(tr);
             toggleForm('plan-form');
-            alert("Eğitim planı kaydedildi!");
+            alert("Eğitim planlandı!");
         }
 
         function addCompanyRecord() {
             const name = document.getElementById('f-name').value;
             const adres = document.getElementById('f-adres').value;
             const gps = document.getElementById('f-gps').value;
-
             if(!name) { alert("Firma adı giriniz!"); return; }
+
+            saveToStorage('osb_firmalar', { name, adres, gps });
+
             const tbody = document.getElementById('firmalar-list');
             const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${name}</td>
-                <td>${adres}</td>
-                <td><span class="badge bg-green">${gps || '36.958, 35.418'}</span></td>
-                <td><button class="btn btn-success" style="padding:4px 10px; font-size:11px;" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${gps}', '_blank')">🗺️ Haritalarda Git (Navigasyon)</button></td>
-            `;
+            tr.innerHTML = `<td>${name}</td><td>${adres}</td><td><span class="badge bg-green">${gps}</span></td><td><button class="btn btn-success" style="padding:4px 10px; font-size:11px;" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${gps}', '_blank')">🗺️ Navigasyon</button></td>`;
             tbody.appendChild(tr);
             toggleForm('firma-add-form');
-            alert("Yeni işletme ve GPS rotası eklendi!");
+            alert("Firma eklendi!");
+        }
+
+        // --- KIVILCIM AI ÇALIŞMA FONKSİYONU ---
+        function askAI() {
+            const input = document.getElementById('ai-input');
+            const query = input.value.trim();
+            if(!query) return;
+
+            const box = document.getElementById('ai-chat-container');
+            box.innerHTML += `<div class="chat-msg me"><div class="chat-meta"><span>Murat Amirim</span></div><span>${query}</span></div>`;
+            input.value = '';
+
+            setTimeout(() => {
+                let aiReply = "Anlaşıldı Murat Amirim. Binaların Yangından Korunması Hakkında Yönetmelik ve OSB acil durum protokollerine göre işlem yapılmıştır.";
+                const lower = query.toLowerCase();
+                if(lower.includes("hidrant") || lower.includes("su")) {
+                    aiReply = "🔥 Hidrant basınç düşüklüğü durumunda derhal ring hattı vanalarını kontrol ediniz ve arıza ekibini bilgilendiriniz.";
+                } else if(lower.includes("ysc") || lower.includes("yangın söndürme")) {
+                    aiReply = "🧯 6 kg KKT ve CO2 cihazlarının periyodik kontrolleri 6 ayda bir yapılmalı, mühür ve basınç saatleri denetlenmelidir.";
+                }
+                
+                box.innerHTML += `<div class="chat-msg ai"><div class="chat-meta"><span>🔥 KIVILCIM AI</span></div><span>${aiReply}</span></div>`;
+                box.scrollTop = box.scrollHeight;
+            }, 500);
         }
 
         function showModule(id, el) {
@@ -994,7 +1004,7 @@
                 navigator.geolocation.getCurrentPosition(pos => {
                     const loc = `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
                     document.getElementById(id).value = loc;
-                    alert("Konum Alındы: " + loc);
+                    alert("Konum Alındı: " + loc);
                 });
             }
         }
@@ -1006,18 +1016,6 @@
             const map = L.map('map').setView([36.958, 35.418], 14);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
             L.marker([36.958, 35.418]).addTo(map).bindPopup('🟢 H1 Hidrantı').openPopup();
-        }
-
-        function askAI() {
-            const input = document.getElementById('ai-input');
-            if(!input.value) return;
-            const box = document.getElementById('ai-chat-container');
-            box.innerHTML += `<div class="chat-msg me"><div class="chat-meta"><span>Siz</span></div><span>${input.value}</span></div>`;
-            input.value = '';
-            setTimeout(() => {
-                box.innerHTML += `<div class="chat-msg ai"><div class="chat-meta"><span>🔥 KIVILCIM AI</span></div><span>Anlaşıldı Murat Amirim. Sorunuz işlendi.</span></div>`;
-                box.scrollTop = box.scrollHeight;
-            }, 400);
         }
 
         function closeEmergencyModal() { document.getElementById('emergency-modal').style.display = 'none'; }
