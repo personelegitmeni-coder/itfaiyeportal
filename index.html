@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adana OSB İtfaiye Portalı - 14 Modül Tam Entegre</title>
-    <!-- Leaflet CSS (Harita Entegrasyonu İçin) -->
+    <title>Adana OSB İtfaiye Portalı - Tam Entegre Sistem</title>
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- SheetJS (Excel Yükleme ve Analiz İçin) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         :root {
             --bg-dark: #0f172a;
@@ -25,43 +27,52 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: var(--bg-dark); color: var(--text-main); display: flex; flex-direction: column; min-height: 100vh; }
 
-        /* HEADER & BANNER */
+        /* GİRİŞ OVERLAY */
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.96); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .login-card { background: var(--card-bg); border: 2px solid var(--primary); padding: 30px; border-radius: 12px; width: 100%; max-width: 420px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .login-card h2 { color: var(--primary); margin-bottom: 15px; font-size: 20px; }
+        
+        .login-tabs { display: flex; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); }
+        .login-tab { flex: 1; padding: 10px; cursor: pointer; color: var(--text-muted); font-weight: bold; font-size: 13px; transition: all 0.2s; }
+        .login-tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); background: rgba(56, 189, 248, 0.05); }
+
+        .login-form { display: none; text-align: left; }
+        .login-form.active { display: flex; flex-direction: column; gap: 12px; }
+
+        /* MODAL */
+        #emergency-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(127, 29, 29, 0.95); display: none; align-items: center; justify-content: center; z-index: 10000; padding: 20px; }
+        .emergency-modal-content { background: #1e293b; border: 3px solid #ef4444; border-radius: 12px; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 25px; box-shadow: 0 0 30px rgba(239, 68, 68, 0.8); }
+
+        /* HEADER */
         header { background: var(--card-bg); border-bottom: 3px solid var(--primary); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         .logo-area h1 { color: var(--primary); font-size: 20px; display: flex; align-items: center; gap: 8px; }
         .logo-area p { color: var(--text-muted); font-size: 12px; }
         
+        .header-widget { display: flex; align-items: center; gap: 15px; font-size: 12px; background: #0f172a; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); }
         .user-info { display: flex; align-items: center; gap: 15px; font-size: 13px; }
         .user-badge { background: #334155; padding: 5px 12px; border-radius: 20px; color: var(--accent); font-weight: bold; }
         
-        /* EMERGENCY CONTACT BAR */
         .emergency-bar { background: #7f1d1d; color: #fecaca; padding: 8px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: bold; }
         .emergency-bar a { color: #ffffff; background: #dc2626; padding: 3px 10px; border-radius: 4px; text-decoration: none; margin-left: 5px; }
 
-        /* ANNOUNCEMENT FLASHING BANNER */
         .announcement-banner { background: #854d0e; color: #fef08a; padding: 10px 20px; text-align: center; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .badge-new { background: var(--danger); color: white; font-weight: bold; padding: 2px 8px; border-radius: 4px; font-size: 11px; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        .badge-new { background: var(--danger); color: white; font-weight: bold; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
 
         /* LAYOUT */
         .main-wrapper { display: flex; flex: 1; overflow: hidden; }
-        
-        /* SIDEBAR NAV */
         nav { width: 260px; background: #111827; border-right: 1px solid var(--border-color); padding: 15px 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
         .nav-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; color: var(--text-muted); text-decoration: none; border-radius: 6px; font-size: 13px; cursor: pointer; transition: all 0.2s; }
         .nav-item:hover, .nav-item.active { background: #1e293b; color: var(--accent); font-weight: bold; }
         .nav-item .mod-no { font-size: 11px; background: #334155; padding: 2px 6px; border-radius: 4px; color: #cbd5e1; }
 
-        /* CONTENT AREA */
         main { flex: 1; padding: 20px; overflow-y: auto; }
         .module-section { display: none; }
         .module-section.active { display: block; }
 
-        /* DASHBOARD GRID & CARDS */
         .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
         .card-header h2 { color: var(--accent); font-size: 16px; }
 
-        /* FORM ELEMENTS */
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 15px; }
         .form-group { display: flex; flex-direction: column; gap: 5px; text-align: left; }
         label { color: #cbd5e1; font-size: 12px; font-weight: bold; }
@@ -77,30 +88,29 @@
         .btn-success { background: var(--success); }
         .btn-success:hover { background: #16a34a; }
 
-        /* TABLES */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; text-align: left; }
         th, td { padding: 10px; border-bottom: 1px solid var(--border-color); }
         th { background: #0f172a; color: var(--accent); }
         tr:hover { background: rgba(255,255,255,0.02); }
 
-        /* STATUS BADGES & PINS */
         .badge { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; }
         .bg-green { background: #166534; color: #4ade80; }
         .bg-red { background: #991b1b; color: #fca5a5; }
         .bg-yellow { background: #854d0e; color: #fef08a; }
         .bg-orange { background: #9a3412; color: #fdba74; }
-        .bg-gray { background: #334155; color: #cbd5e1; }
 
-        /* MAP CONTAINER */
         .map-box { height: 380px; width: 100%; border-radius: 8px; border: 1px solid var(--border-color); margin-top: 10px; }
 
-        /* CHAT WINDOW */
         .chat-box { height: 300px; overflow-y: auto; background: #0f172a; border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
         .chat-msg { background: #1e293b; padding: 8px 12px; border-radius: 6px; max-width: 80%; font-size: 13px; }
         .chat-msg.me { align-self: flex-end; background: #0369a1; }
+        .chat-msg.ai { align-self: flex-start; border-left: 4px solid var(--primary); }
         .chat-meta { font-size: 10px; color: var(--text-muted); margin-bottom: 3px; display: flex; justify-content: space-between; gap: 10px; }
 
-        /* RESPONSIVE */
+        .admin-only { display: none !important; }
+        body.is-admin .admin-only { display: inline-flex !important; }
+        body.is-admin div.admin-only { display: block !important; }
+
         @media (max-width: 768px) {
             .main-wrapper { flex-direction: column; }
             nav { width: 100%; height: auto; max-height: 180px; }
@@ -109,7 +119,56 @@
 </head>
 <body>
 
-    <!-- EMERGENCY CONTACT HEADER -->
+    <!-- GİRİŞ OVERLAY -->
+    <div id="login-overlay">
+        <div class="login-card">
+            <h2>👨‍🚒 ADANA OSB İTFAİYE PORTALI</h2>
+            
+            <div class="login-tabs">
+                <div class="login-tab active" onclick="switchLoginTab('admin')">🔑 Admin Girişi</div>
+                <div class="login-tab" onclick="switchLoginTab('user')">👤 Personel Girişi</div>
+            </div>
+
+            <div id="admin-login-form" class="login-form active">
+                <p style="font-size:12px; color:var(--text-muted); margin-bottom:5px;">Lütfen 11 haneli TC kimlik ve şifrenizi giriniz.</p>
+                <div class="form-group">
+                    <label>Admin TC Kimlik No:</label>
+                    <input type="text" id="admin-user" placeholder="11 Haneli TC Kimlik No">
+                </div>
+                <div class="form-group">
+                    <label>Admin Şifre:</label>
+                    <input type="password" id="admin-pass" placeholder="Şifreniz">
+                </div>
+                <button class="btn btn-success" style="width:100%; margin-top:5px;" onclick="handleAdminLogin()">Admin Girişi Yap</button>
+            </div>
+
+            <div id="user-login-form" class="login-form">
+                <p style="font-size:12px; color:var(--text-muted); margin-bottom:5px;">Lütfen 11 haneli TC kimlik ve şifrenizi giriniz.</p>
+                <div class="form-group">
+                    <label>Personel TC Kimlik No:</label>
+                    <input type="text" id="personel-tc" placeholder="11 Haneli TC Kimlik No">
+                </div>
+                <div class="form-group">
+                    <label>Personel Şifre:</label>
+                    <input type="password" id="personel-pass" value="MRTORTC">
+                </div>
+                <button class="btn btn-primary" style="width:100%; margin-top:5px;" onclick="handleUserLogin()">Personel Girişi Yap</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL -->
+    <div id="emergency-modal">
+        <div class="emergency-modal-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #ef4444; padding-bottom:10px; margin-bottom:15px;">
+                <h2 style="color:#ef4444; font-size:20px;">🚨 ACİL UYARI & DETAYLI BİLGİ PENCERESİ</h2>
+                <button class="btn btn-danger" onclick="closeEmergencyModal()">X KAPA</button>
+            </div>
+            <div id="emergency-modal-body" style="font-size:14px; color:#f8fafc; line-height:1.6;"></div>
+        </div>
+    </div>
+
+    <!-- EMERGENCY BAR -->
     <div class="emergency-bar">
         <span>🔥 ACİL İLETİŞİM HATTI</span>
         <div>
@@ -118,50 +177,59 @@
         </div>
     </div>
 
-    <!-- MAIN HEADER -->
+    <!-- HEADER -->
     <header>
         <div class="logo-area">
             <h1>👨‍🚒 ADANA OSB İTFAİYE MÜDÜRLÜĞÜ</h1>
-            <p>Yangın Müdahale, Hidrant GPS Navigasyon ve Vardiya Portalı</p>
+            <p>Yangın Müdahale, Akıllı YSC & Hidrant GPS Otomasyon Portalı</p>
         </div>
+        
+        <div class="header-widget">
+            <span id="live-clock">📅 Yükleniyor...</span> | 
+            <span id="live-weather">🌤️ Adana OSB: 24°C (Açık)</span>
+        </div>
+
         <div class="user-info">
-            <span class="user-badge">Vardiya Amiri (ADMIN)</span>
-            <span style="color: var(--text-muted);">Aktif Kullanıcılar: <strong style="color:var(--success);">18 / 50</strong></span>
+            <span class="user-badge" id="current-user-display">Giriş Yapılmadı</span>
+            <button class="btn btn-danger" style="padding:4px 10px; font-size:11px;" onclick="logout()">Çıkış Yap</button>
         </div>
     </header>
 
-    <!-- ANNOUNCEMENT BANNER -->
     <div class="announcement-banner">
         <span class="badge-new">YENİ</span>
-        <span>📢 Vardiya Devir-Teslim ve Hidrant Arıza Kayıtları Güncellenmiştir. Lütfen Kontrol Ediniz.</span>
+        <span>🤖 Tüm Modüllere Veri Kayıt ve Ekleme Butonları Tam Entegre Edildi.</span>
     </div>
 
     <div class="main-wrapper">
-        <!-- SIDEBAR NAVIGATION -->
+        <!-- NAVIGATION -->
         <nav>
             <div class="nav-item active" onclick="showModule('mod1', this)">
-                <span>👤 Personel Özlük & Vardiya</span>
+                <span>👤 Personel Künyesi & CV</span>
                 <span class="mod-no">M1</span>
+            </div>
+            <div class="nav-item" onclick="showModule('mod-ai', this)">
+                <span>🤖 KIVILCIM AI & MSDS</span>
+                <span class="mod-no">AI</span>
             </div>
             <div class="nav-item" onclick="showModule('mod2', this)">
                 <span>🔥 Olay & Yangın Raporu</span>
                 <span class="mod-no">M2</span>
             </div>
             <div class="nav-item" onclick="showModule('mod3', this)">
-                <span>🚛 Araç Envanter & Arıza</span>
+                <span>🚛 Araç Kartları & Ekipman</span>
                 <span class="mod-no">M3</span>
             </div>
             <div class="nav-item" onclick="showModule('mod4', this)">
-                <span>🧯 YSC Takip & Harita</span>
+                <span>🧯 Akıllı YSC (Otomatik GPS)</span>
                 <span class="mod-no">M4</span>
             </div>
             <div class="nav-item" onclick="showModule('mod5', this)">
-                <span>📍 Hidrant & 3km GPS</span>
+                <span>📍 Hidrant & GPS Navigasyon</span>
                 <span class="mod-no">M5</span>
             </div>
             <div class="nav-item" onclick="showModule('mod6', this)">
                 <span>🔑 Geçici Yetkilendirme</span>
-                <span class="mod-no">M6/14</span>
+                <span class="mod-no">M6</span>
             </div>
             <div class="nav-item" onclick="showModule('mod8', this)">
                 <span>📚 Eğitim Dokümanları</span>
@@ -176,15 +244,15 @@
                 <span class="mod-no">M10</span>
             </div>
             <div class="nav-item" onclick="showModule('mod11', this)">
-                <span>📄 Formlar & Belgeler</span>
+                <span>📄 Formlar & Şablonlar</span>
                 <span class="mod-no">M11</span>
             </div>
             <div class="nav-item" onclick="showModule('mod12', this)">
-                <span>💬 Canlı Sohbet (50 Sınırı)</span>
+                <span>💬 Canlı Sohbet</span>
                 <span class="mod-no">M12</span>
             </div>
             <div class="nav-item" onclick="showModule('mod13', this)">
-                <span>🏢 Firmalar & Doğalgaz</span>
+                <span>🏢 Firmalar & Navigasyon</span>
                 <span class="mod-no">M13</span>
             </div>
         </nav>
@@ -192,308 +260,354 @@
         <!-- MAIN CONTENT AREA -->
         <main>
 
-            <!-- MODÜL 1: PERSONEL ÖZLÜK & VARDIYA -->
+            <!-- MODÜL 1: PERSONEL KÜNYESİ -->
             <section id="mod1" class="module-section active">
                 <div class="card">
                     <div class="card-header">
-                        <h2>👤 Modül 1: Personel Özlük, Beden & Vardiya Yönetimi</h2>
+                        <h2>👤 Modül 1: Personel Künyesi, Fotoğraf, CV ve Belgeler</h2>
                         <button class="btn btn-success" onclick="toggleForm('p-form')">+ Yeni Personel Ekle</button>
                     </div>
                     
                     <div id="p-form" style="display:none;" class="form-grid">
-                        <div class="form-group"><label>Ad Soyad:</label><input type="text" id="p-name" placeholder="Örn: Ramazan Baytekin"></div>
-                        <div class="form-group"><label>Görevi:</label><input type="text" id="p-role" placeholder="İtfaiye Eri / Şoför"></div>
-                        <div class="form-group">
-                            <label>Vardiya Ekibi:</label>
-                            <select id="p-shift"><option>A Ekibi</option><option>B Ekibi</option><option>C Ekibi</option><option>D Ekibi</option></select>
-                        </div>
-                        <div class="form-group"><label>Kıyafet / Nomex Beden:</label><input type="text" id="p-size" placeholder="Örn: L / 52"></div>
-                        <div class="form-group"><label>Telefon / İletişim:</label><input type="text" id="p-phone" placeholder="05xx xxx xx xx"></div>
+                        <div class="form-group"><label>TC Kimlik No:</label><input type="text" id="p-tc" placeholder="11 Haneli TC"></div>
+                        <div class="form-group"><label>Ad Soyad:</label><input type="text" id="p-name" placeholder="Ramazan Baytekin"></div>
+                        <div class="form-group"><label>Görevi:</label><input type="text" id="p-role" placeholder="İtfaiye Eri"></div>
+                        <div class="form-group"><label>Vardiya:</label><select id="p-shift"><option>A Ekibi</option><option>B Ekibi</option><option>C Ekibi</option></select></div>
+                        <div class="form-group"><label>Ehliyet Sınıfı:</label><input type="text" id="p-ehliyet" placeholder="C, CE"></div>
+                        <div class="form-group"><label>Kan Grubu:</label><select id="p-kan"><option>0 RH+</option><option>A RH+</option><option>B RH+</option></select></div>
+                        <div class="form-group"><label>Personel Fotoğrafı:</label><input type="file" id="p-photo" accept="image/*"></div>
+                        <div class="form-group"><label>CV veya Sertifika (.pdf):</label><input type="file" id="p-cv" accept=".pdf,.doc"></div>
+                        <div class="form-group"><label>Acil Ulaşılacak Kişi & Tel:</label><input type="text" id="p-acil" placeholder="05xx..."></div>
                         <div class="form-group" style="grid-column: 1 / -1;"><button class="btn" onclick="addPersonnel()">Personeli Kaydet</button></div>
                     </div>
 
                     <table>
                         <thead>
-                            <tr><th>Ad Soyad</th><th>Görev</th><th>Vardiya</th><th>Beden (Nomex)</th><th>İletişim</th><th>İşlem</th></tr>
+                            <tr><th>TC</th><th>Ad Soyad</th><th>Görev</th><th>Vardiya</th><th>Ehliyet</th><th>CV / Belge</th><th>İşlem</th></tr>
                         </thead>
                         <tbody id="p-list">
-                            <tr><td>Murat Ortaç</td><td>Vardiya Amiri</td><td><span class="badge bg-green">A Ekibi</span></td><td>XL / 54</td><td>05xx xxx xx xx</td><td><button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;">Düzenle</button></td></tr>
-                            <tr><td>Ramazan Baytekin</td><td>İtfaiye Eri</td><td><span class="badge bg-green">A Ekibi</span></td><td>L / 52</td><td>05xx xxx xx xx</td><td><button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;">Düzenle</button></td></tr>
+                            <tr>
+                                <td>12544424006</td>
+                                <td>Murat Ortaç</td>
+                                <td>Vardiya Amiri</td>
+                                <td>A Ekibi</td>
+                                <td>CE</td>
+                                <td><a href="#" style="color:var(--accent);">CV_MuratOrtac.pdf</a></td>
+                                <td><button class="btn btn-secondary admin-only" style="padding:2px 6px; font-size:11px;">Düzenle</button></td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
             </section>
 
-            <!-- MODÜL 2: OLAY & YANGIN RAPORLAMA -->
+            <!-- MODÜL AI: KIVILCIM AI -->
+            <section id="mod-ai" class="module-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>🤖 KIVILCIM AI - Akıllı Yangın & MSDS Asistanı</h2>
+                    </div>
+                    <div class="chat-box" id="ai-chat-container" style="height:320px;">
+                        <div class="chat-msg ai">
+                            <strong>🔥 KIVILCIM AI:</strong> Yangın hakkında tüm sorularınızı bekliyorum, sesli veya yazılı olarak sorabilirsiniz!
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="ai-input" placeholder="Sorunuzu yazın..." onkeypress="if(event.key==='Enter') askAI()">
+                        <button class="btn" style="width:130px;" onclick="askAI()">Gönder</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- MODÜL 2: OLAY & YANGIN RAPORU -->
             <section id="mod2" class="module-section">
                 <div class="card">
                     <div class="card-header">
                         <h2>🔥 Modül 2: Olay & Yangın İhbar Raporlama</h2>
+                        <button class="btn btn-success" onclick="toggleForm('olay-form-box')">+ Yeni Olay Raporu Ekle</button>
                     </div>
-                    <div class="form-grid">
-                        <div class="form-group"><label>Olay Türü:</label><select id="olay-tur"><option>Endüstriyel Fabrika Yangını</option><option>Araç / Trafik Kazası</option><option>Ot / Anız Yangını</option><option>Kurtarma Operasyonu</option></select></div>
-                        <div class="form-group"><label>Firma / Konum:</label><input type="text" id="olay-konum" placeholder="AOSB 2. Cadde No:8"></div>
-                        <div class="form-group"><label>Müdahale Eden Ekip / Araç:</label><input type="text" id="olay-ekip" placeholder="A Ekibi - 01 IT 110"></div>
-                        <div class="form-group"><label>İhbar Saati:</label><input type="time" id="olay-saat" value="14:30"></div>
-                        <div class="form-group" style="grid-column: 1 / -1;"><label>Olay Özet Raporu:</label><textarea id="olay-ozet" rows="3" placeholder="Yangın çıkış nedeni ve yapılan ilk müdahale detayları..."></textarea></div>
-                    </div>
-                    <button class="btn" onclick="addIncident()">Olay Raporunu Kaydet</button>
 
-                    <h3 style="color:var(--accent); font-size:14px; margin-top:20px; margin-bottom:8px;">Kayıtlı Olay Raporları</h3>
+                    <div id="olay-form-box" style="display:none;" class="form-grid">
+                        <div class="form-group">
+                            <label>Olay Türü:</label>
+                            <select id="olay-tur">
+                                <option>Endüstriyel Fabrika Yangını</option>
+                                <option>Tatbikat / Eğitim</option>
+                                <option>Araç Kazası</option>
+                                <option>Gaz Kaçağı / Kurtarma</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>İşletme / Firma Seç veya Arayarak Yazın:</label>
+                            <input type="text" id="olay-firma-input" list="firma-options" placeholder="Firma adını yazın..." onchange="handleFirmaSearchChange(this.value)">
+                            <datalist id="firma-options">
+                                <option value="Kastamonu Entegre A.Ş."></option>
+                                <option value="Sasa Polyester A.Ş."></option>
+                                <option value="Bossa Tekstil A.Ş."></option>
+                                <option value="Çimsa Çimento A.Ş."></option>
+                            </datalist>
+                        </div>
+
+                        <div class="form-group"><label>Olay Konumu / Adres:</label><input type="text" id="olay-konum" placeholder="Konum / Adres"></div>
+                        <div class="form-group"><label>Çıkış Zamanı:</label><input type="datetime-local" id="cikis-zaman"></div>
+                        <div class="form-group"><label>Dönüş Zamanı:</label><input type="datetime-local" id="donus-zaman"></div>
+                        <div class="form-group"><label>Görevli Araç:</label><select id="olay-arac"><option>01 BIC 466</option><option>01 YS 955</option><option>01 AHB 740</option></select></div>
+                        <div class="form-group"><label>Görevli Personeller:</label><input type="text" id="olay-personel" placeholder="Murat Ortaç, Ramazan Baytekin"></div>
+
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label>Olay Yeri Fotoğrafları (Maksimum 10 Adet):</label>
+                            <input type="file" id="olay-photos" accept="image/*" multiple onchange="validatePhotoCount(this)">
+                        </div>
+
+                        <div class="form-group" style="grid-column: 1 / -1;"><label>Olay Özet Raporu:</label><textarea id="olay-ozet" rows="3"></textarea></div>
+                        <div class="form-group" style="grid-column: 1 / -1;"><button class="btn" onclick="addIncident()">Olay Raporunu Kaydet</button></div>
+                    </div>
+
+                    <h3 style="color:var(--accent); font-size:14px; margin-top:15px; margin-bottom:8px;">Kayıtlı Olaylar</h3>
                     <table>
                         <thead>
-                            <tr><th>Tarih / Saat</th><th>Olay Türü</th><th>Konum</th><th>Müdahale Eden Ekip</th><th>Özet</th></tr>
+                            <tr><th>Firma</th><th>Olay Türü</th><th>Çıkış / Dönüş</th><th>Araç & Personel</th><th>Foto Adet</th><th>İşlem</th></tr>
                         </thead>
                         <tbody id="olay-list">
-                            <tr><td>Bugün 14:30</td><td>Endüstriyel Fabrika Yangını</td><td>AOSB 2. Cadde No:8</td><td>A Ekibi - 01 IT 110</td><td>İlk müdahale yapıldı, soğutma sürüyor.</td></tr>
+                            <tr><td>Kastamonu Entegre</td><td>Yangın</td><td>01.06.2026 14:00 - 15:30</td><td>01 BIC 466 (Murat Ortaç)</td><td><span class="badge bg-green">🖼️ 3 Foto</span></td><td><button class="btn btn-danger admin-only" style="padding:2px 6px; font-size:11px;" onclick="this.closest('tr').remove()">Sil</button></td></tr>
                         </tbody>
                     </table>
                 </div>
             </section>
 
-            <!-- MODÜL 3: ARAÇ ENVANTERİ & ARIZA -->
+            <!-- MODÜL 3: ARAÇ KARTLARI -->
             <section id="mod3" class="module-section">
                 <div class="card">
                     <div class="card-header">
-                        <h2>🚛 Modül 3: Araç Envanteri & Renk Kodlu Arıza Takibi</h2>
-                        <button class="btn btn-success" onclick="toggleForm('arac-form')">+ Yeni Araç / Arıza Bildir</button>
+                        <h2>🚛 Modül 3: Araç Kartları & Ekipman Kontrolü</h2>
+                        <button class="btn btn-success admin-only" onclick="toggleForm('arac-form-box')">+ Yeni Araç Kartı Ekle</button>
                     </div>
 
-                    <div id="arac-form" style="display:none;" class="form-grid">
-                        <div class="form-group"><label>Araç Plaka / Kod:</label><input type="text" id="arac-plaka" placeholder="01 IT 114 (AOSB-3)"></div>
-                        <div class="form-group"><label>Araç Tipi:</label><input type="text" id="arac-tip" placeholder="Köpük Kulesi / Su Tankeri"></div>
-                        <div class="form-group"><label>Dolap Envanteri:</label><input type="text" id="arac-env" placeholder="Turbo lans, 110mm emiş hortumu..."></div>
-                        <div class="form-group">
-                            <label>Arıza / Operasyon Durumu:</label>
-                            <select id="arac-durum">
-                                <option value="🟢 Tam Operasyonel">🟢 Tam Operasyonel</option>
-                                <option value="🔴 Arızalı / Kullanılamaz">🔴 Arızalı / Kullanılamaz</option>
-                                <option value="🟡 Bakımda">🟡 Bakımda</option>
-                            </select>
+                    <div id="arac-form-box" style="display:none;" class="form-grid">
+                        <div class="form-group"><label>Plaka / Kod:</label><input type="text" id="arac-plaka" placeholder="01 BIC 466"></div>
+                        <div class="form-group"><label>Araç Tipi:</label><input type="text" id="arac-tip" placeholder="Arazöz"></div>
+                        <div class="form-group"><label>Muayene Tarihi:</label><input type="date" id="arac-muayene"></div>
+                        <div class="form-group"><label>Ekipmanlar:</label><input type="text" id="arac-ekipman" placeholder="Turbo Lans, Hortum"></div>
+                        <div class="form-group"><label>Arıza Durumu:</label><select id="arac-durum"><option>🟢 Tam Operasyonel</option><option>🔴 Arızalı / Bakımda</option></select></div>
+                        <div class="form-group" style="grid-column: 1 / -1;"><button class="btn" onclick="addNewVehicleCard()">Araç Kartını Kaydet</button></div>
+                    </div>
+
+                    <div id="arac-cards-container" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:15px; margin-top:15px;">
+                        <div style="background:#0f172a; border:1px solid var(--border-color); border-radius:8px; padding:15px;">
+                            <h3 style="color:var(--primary); font-size:15px;">🚛 01 BIC 466 (Arazöz)</h3>
+                            <p style="font-size:12px; color:var(--text-muted);"><strong>Muayene:</strong> 15.10.2026</p>
+                            <p style="font-size:12px; color:var(--text-muted);"><strong>Durum:</strong> <span class="badge bg-green">🟢 Operasyonel</span></p>
+                            <p style="font-size:12px; color:var(--text-muted);"><strong>Ekipman:</strong> Turbo Lans, 110mm Hortum</p>
                         </div>
-                        <div class="form-group" style="grid-column: 1 / -1;"><button class="btn" onclick="addVehicle()">Araç Kaydını Ekle</button></div>
                     </div>
-
-                    <table>
-                        <thead>
-                            <tr><th>Araç Plaka / Kod</th><th>Araç Tipi</th><th>Dolap Envanteri</th><th>Arıza Durumu</th><th>İşlem</th></tr>
-                        </thead>
-                        <tbody id="arac-list">
-                            <tr>
-                                <td>01 IT 110 (AOSB-1)</td>
-                                <td>Arazöz / İlk Müdahale</td>
-                                <td>Storz 110 Lans, 85mm Hortum, Turbo Lans</td>
-                                <td><span class="badge bg-green">🟢 Tam Operasyonel</span></td>
-                                <td><button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="alert('Dolap 1: Turbo Lans
-Dolap 2: 85mm Hortum
-Dolap 3: Jeneratör')">Dolap Ara</button></td>
-                            </tr>
-                            <tr>
-                                <td>01 IT 112 (AOSB-2)</td>
-                                <td>Merdivenli Araç (32m)</td>
-                                <td>Kurtarma Sedyesi, Jeneratör, Ayırıcı Kesici</td>
-                                <td><span class="badge bg-red">🔴 Sol Pompa Arızalı</span></td>
-                                <td><button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="alert('Dolap 1: Kesici Ayırıcı Set
-Dolap 2: SCBA Setleri')">Dolap Ara</button></td>
-                            </tr>
-                        </tbody>
-                    </table>
                 </div>
             </section>
 
-            <!-- MODÜL 4: YSC TAKİP & HARİTA -->
+            <!-- MODÜL 4: AKILLI YSC KONTROL -->
             <section id="mod4" class="module-section">
                 <div class="card">
                     <div class="card-header">
-                        <h2>🧯 Modül 4: Yangın Söndürme Cihazları (YSC) Takip</h2>
+                        <h2>🧯 Modül 4: Akıllı YSC Kontrol Otomasyonu</h2>
+                        <div>
+                            <button class="btn btn-secondary" onclick="getSmartYSCLocation()">📍 GPS Konum Al</button>
+                            <button class="btn btn-success" onclick="toggleForm('ysc-form-box')">+ Yeni YSC Ekle</button>
+                        </div>
                     </div>
-                    <div class="form-grid">
-                        <div class="form-group"><label>Envanter No:</label><input type="text" id="ysc-no" placeholder="YSC-2026-042"></div>
-                        <div class="form-group"><label>Cihaz Tipi & Kg:</label><select id="ysc-tip"><option>6 kg KKT (Kuru Kimyevi Toz)</option><option>5 kg CO2 (Karbondioksit)</option><option>9 kg Köpüklü</option></select></div>
-                        <div class="form-group"><label>Konum / Plaka / Bölge:</label><input type="text" id="ysc-konum" placeholder="AOSB İtfaiye Garaj İçi"></div>
-                        <div class="form-group"><label>Durum:</label><select id="ysc-durum"><option value="🟢 Sağlam / Basınç Normal">🟢 Sağlam / Basınç Normal</option><option value="🔴 Arızalı / Basınç Düşük">🔴 Arızalı / Basınç Düşük</option><option value="🟡 Bakım Zamanı Yaklaştı">🟡 Bakım Zamanı Yaklaştı</option></select></div>
-                    </div>
-                    <button class="btn" onclick="addYSC()">YSC Cihazı Kaydet</button>
 
-                    <h3 style="color:var(--accent); font-size:14px; margin-top:20px; margin-bottom:8px;">Kayıtlı YSC Cihazları</h3>
+                    <div id="ysc-warning-banner" style="display:none; background:#7f1d1d; color:#fecaca; padding:10px; border-radius:6px; margin-bottom:15px; font-weight:bold; font-size:13px;"></div>
+
+                    <div id="ysc-form-box" style="display:none;" class="form-grid">
+                        <div class="form-group">
+                            <label>YSC Kod / Numarası:</label>
+                            <input type="text" id="ysc-no" placeholder="Örn: YSC1" oninput="checkYSCCodeHistory(this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label>Cihaz Tipi & Ağırlık:</label>
+                            <select id="ysc-tip"><option>6 kg KKT (Kuru Kimyevi Toz)</option><option>5 kg CO2 (Karbondioksit)</option><option>9 kg Köpüklü</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Konum (GPS / Manuel):</label>
+                            <input type="text" id="ysc-konum" placeholder="Konum bilgisi">
+                        </div>
+                        <div class="form-group"><label>Kontrol Tarihi:</label><input type="date" id="ysc-kontrol" value="2026-11-06"></div>
+                        <div class="form-group"><label>Sonraki Kontrol:</label><input type="date" id="ysc-son" value="2027-05-06"></div>
+                        <div class="form-group" style="grid-column: 1 / -1;"><button class="btn" onclick="saveYSCRecord()">YSC Kontrolünü Kaydet</button></div>
+                    </div>
+
+                    <div id="ysc-history-detail" style="display:none; margin-top:15px; background:#0f172a; padding:15px; border-radius:8px; border:1px solid var(--accent);">
+                        <h3 style="color:var(--accent); font-size:14px; margin-bottom:8px;">📜 <span id="history-ysc-code">YSC1</span> Cihazının Geçmişi</h3>
+                        <div id="history-ysc-timeline" style="font-size:12px; color:var(--text-muted); line-height:1.6;"></div>
+                    </div>
+
+                    <h3 style="color:var(--accent); font-size:14px; margin-top:20px; margin-bottom:8px;">Kayıtlı YSC Cihaz Listesi</h3>
                     <table>
                         <thead>
-                            <tr><th>Envanter No</th><th>Tip / Ağırlık</th><th>Konum / Plaka</th><th>Basınç / Kontrol Durumu</th></tr>
+                            <tr><th>YSC Kodu</th><th>Tip / Ağırlık</th><th>Konum (GPS)</th><th>Son Kontrol</th><th>Geçmiş</th></tr>
                         </thead>
                         <tbody id="ysc-list">
-                            <tr><td>YSC-2026-001</td><td>6 kg KKT</td><td>AOSB Garaj İçi</td><td><span class="badge bg-green">🟢 Sağlam / Basınç Normal</span></td></tr>
-                            <tr><td>YSC-2026-002</td><td>5 kg CO2</td><td>01 IT 110 Arazöz İçi</td><td><span class="badge bg-yellow">🟡 Bakım Zamanı Yaklaştı</span></td></tr>
+                            <tr>
+                                <td>YSC1</td>
+                                <td>6 kg KKT</td>
+                                <td>Lat: 36.958, Lng: 35.418 (AOSB Garaj)</td>
+                                <td>06.11.2026</td>
+                                <td><button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="viewYSCHistory('YSC1')">🔍 Tüm Geçmiş</button></td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
             </section>
 
-            <!-- MODÜL 5: HİDRANT & 3KM GPS NAVİGASYON -->
+            <!-- MODÜL 5: HİDRANT & GPS -->
             <section id="mod5" class="module-section">
                 <div class="card">
                     <div class="card-header">
-                        <h2>📍 Modül 5: Yangın Hidrantları & 3 km GPS En Yakın Navigasyon</h2>
-                        <button class="btn btn-success" onclick="findNearestHydrant()">🎯 En Yakın Sağlam Hidrantı Bul</button>
+                        <h2>📍 Modül 5: Yangın Hidrantları & Kod Numaralı Takip</h2>
+                        <button class="btn btn-success" onclick="toggleForm('hidrant-form')">+ Yeni Hidrant Ekle</button>
                     </div>
 
-                    <div id="gps-alert" style="display:none; margin-bottom:15px;" class="card">
-                        <h3 style="color:var(--success); font-size:14px;">🎯 EN YAKIN SAĞLAM HİDRANT TESPİT EDİLDİ</h3>
-                        <p style="font-size:13px; margin:5px 0;"><strong>Hidrant No:</strong> H-101 | <strong>Mesafe:</strong> 250 Metre (Kuş Uçuşu)</p>
-                        <p style="font-size:12px; color:var(--text-muted);">Adres: AOSB 1. Cadde Girişi</p>
-                        <button class="btn btn-success" style="margin-top:8px;" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=36.958,35.418', '_blank')">🗺️ Google Maps Canlı Navigasyonu Başlat</button>
+                    <div id="hidrant-warning-banner" style="display:none; background:#7f1d1d; color:#fecaca; padding:10px; border-radius:6px; margin-bottom:15px; font-weight:bold; font-size:13px;"></div>
+
+                    <div id="hidrant-form" style="display:none;" class="form-grid">
+                        <div class="form-group">
+                            <label>Hidrant Kodu / Numarası:</label>
+                            <input type="text" id="h-no" placeholder="Örn: H1" oninput="checkHydrantCodeHistory(this.value)">
+                        </div>
+                        <div class="form-group"><label>Bölge / Adres:</label><input type="text" id="h-adres" placeholder="4. Cadde Kavşağı"></div>
+                        <div class="form-group">
+                            <label>Durum:</label>
+                            <select id="h-durum"><option>🟢 Sağlam / Basınç Yüksek</option><option>🔴 Kırık / Su Yok</option><option>🟧 Bakımda</option></select>
+                        </div>
+                        <div class="form-group"><label>GPS Konumu:</label><input type="text" id="h-gps" placeholder="36.958, 35.418"></div>
+                        <div class="form-group" style="grid-column: 1 / -1; display:flex; gap:10px;">
+                            <button class="btn btn-secondary" type="button" onclick="getLiveLocation('h-gps')">📍 Konum Çek</button>
+                            <button class="btn" type="button" onclick="saveHydrantRecord()">Hidrant Kaydet</button>
+                        </div>
                     </div>
 
                     <div id="map" class="map-box"></div>
 
-                    <h3 style="color:var(--accent); font-size:14px; margin-top:15px; margin-bottom:8px;">Bölgedeki Hidrant Durum Listesi</h3>
+                    <h3 style="color:var(--accent); font-size:14px; margin-top:20px; margin-bottom:8px;">Hidrant Listesi</h3>
                     <table>
                         <thead>
-                            <tr><th>Hidrant No</th><th>Bölge / Adres</th><th>Durum / Arıza</th><th>Mesafe</th><th>İşlem</th></tr>
+                            <tr><th>Hidrant Kodu</th><th>Adres / Konum</th><th>Durum</th><th>Geçmiş</th><th>İşlem</th></tr>
                         </thead>
-                        <tbody>
-                            <tr><td>H-101</td><td>1. Cadde Girişi</td><td><span class="badge bg-green">🟢 Sağlam</span></td><td>250m</td><td><button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=36.958,35.418', '_blank')">Yol Tarifi</button></td></tr>
-                            <tr><td>H-102</td><td>Organize Sanayi Camii Yanı</td><td><span class="badge bg-red">🔴 Kırık / Su Yok</span></td><td>780m</td><td><button class="btn btn-danger" style="padding:2px 6px; font-size:11px;" onclick="alert('Arıza Ekiplerine Bildirildi!')">Arıza Kaydı</button></td></tr>
-                            <tr><td>H-103</td><td>Çapraz Kavşak No:4</td><td><span class="badge bg-orange">🟧 Onarım Aşamasında</span></td><td>1.2km</td><td><button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=36.954,35.412', '_blank')">Yol Tarifi</button></td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- MODÜL 6 & 14: GEÇİCİ YETKİLENDİRME -->
-            <section id="mod6" class="module-section">
-                <div class="card">
-                    <div class="card-header">
-                        <h2>🔑 Modül 6 & 14: Geçici Yetkilendirme & Anında İptal Sistemi</h2>
-                    </div>
-                    <p style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">Varsayılan yetkilendirme süresi <strong>8 saattir</strong>. İstenildiği anda tek tıkla canlıda iptal edilebilir.</p>
-                    
-                    <div class="form-grid">
-                        <div class="form-group"><label>Yetki Verilecek Personel:</label><select id="yetki-personel"><option>Ramazan Baytekin</option><option>Ahmet Yılmaz</option></select></div>
-                        <div class="form-group"><label>Yetkili Kılınacak Modül:</label><select id="yetki-modul"><option>Modül 3: Araç Envanter & Arıza</option><option>Modül 5: Hidrant Takip</option><option>Modül 4: YSC Takip</option></select></div>
-                        <div class="form-group"><label>Süre (Saat):</label><input type="number" id="yetki-sure" value="8"></div>
-                    </div>
-                    <button class="btn" onclick="grantPermission()">Geçici Yetki Tanımla (8 Saat)</button>
-
-                    <h3 style="color:var(--accent); font-size:14px; margin-top:20px; margin-bottom:8px;">Aktif Geçici Yetkiler</h3>
-                    <table>
-                        <thead>
-                            <tr><th>Personel</th><th>Modül</th><th>Kalan Süre</th><th>Durum</th><th>İşlem</th></tr>
-                        </thead>
-                        <tbody id="yetki-list">
+                        <tbody id="hidrant-list">
                             <tr>
-                                <td>Ramazan Baytekin</td>
-                                <td>Araç Envanter Düzenleme</td>
-                                <td>06 Saat 14 Dk</td>
-                                <td><span class="badge bg-green">Aktif</span></td>
-                                <td><button class="btn btn-danger" style="padding:2px 8px; font-size:11px;" onclick="revokePermission(this)">YETKİYİ ANINDA İPTAL ET</button></td>
+                                <td>H1</td>
+                                <td>1. Cadde Girişi (36.958, 35.418)</td>
+                                <td><span class="badge bg-green">🟢 Sağlam</span></td>
+                                <td><span style="font-size:11px; color:var(--text-muted);">Basınç Testi Yapıldı</span></td>
+                                <td><button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=36.958,35.418', '_blank')">Yol Tarifi</button></td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </section>
 
-            <!-- MODÜL 8: EĞİTİM DOKÜMANLARI -->
+            <!-- MODÜL 6: GEÇİCİ YETKİLENDİRME -->
+            <section id="mod6" class="module-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>🔑 Modül 6: 1 Saatlik Geçici Admin Yetkisi</h2>
+                        <button class="btn btn-success admin-only" onclick="toggleForm('yetki-form-box')">+ Yetki Tanımla</button>
+                    </div>
+
+                    <div id="yetki-form-box" style="display:none;" class="form-grid">
+                        <div class="form-group"><label>Personel TC Kimlik:</label><input type="text" id="yetki-tc" placeholder="11 Haneli TC"></div>
+                        <div class="form-group" style="grid-column: 1 / -1;"><button class="btn btn-success" onclick="alert('Geçici Admin Yetkisi Tanımlandı!')">1 Saatlik Yetki Ver</button></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- MODÜL 8: EĞİTİM DOKÜMANLARI (VERİ GİRİŞ BUTONLU) -->
             <section id="mod8" class="module-section">
                 <div class="card">
                     <div class="card-header">
                         <h2>📚 Modül 8: Eğitim ve Doküman Merkezi</h2>
+                        <button class="btn btn-success" onclick="toggleForm('doc-form')">+ Yeni Eğitim Dokümanı Ekle</button>
                     </div>
-                    <div class="form-grid">
-                        <div class="form-group"><label>Doküman / Eğitim Adı:</label><input type="text" id="doc-title" placeholder="Örn: Solunum Cihazı (SCBA) Kullanım Standartı"></div>
-                        <div class="form-group"><label>Kategori:</label><select id="doc-cat"><option>KKD & Solunum</option><option>Yangın Müdahale</option><option>Tehlikeli Maddeler (ADR)</option></select></div>
-                        <div class="form-group"><label>Google Drive / Bağlantı Linki:</label><input type="text" id="doc-link" placeholder="https://drive.google.com/..."></div>
-                    </div>
-                    <button class="btn" onclick="addDocument()">Dokümanı Yükle & Yayınla</button>
 
-                    <h3 style="color:var(--accent); font-size:14px; margin-top:20px; margin-bottom:8px;">Eğitim Doküman Kütüphanesi</h3>
+                    <div id="doc-form" style="display:none;" class="form-grid">
+                        <div class="form-group"><label>Doküman Adı:</label><input type="text" id="doc-title" placeholder="Örn: SCBA Solunum Cihazı Standardı"></div>
+                        <div class="form-group"><label>Kategori:</label><select id="doc-cat"><option>KKD & Solunum</option><option>Yangın Müdahale</option><option>ADR Tehlikeli Madde</option></select></div>
+                        <div class="form-group"><label>Bağlantı Linki / Google Drive:</label><input type="text" id="doc-link" placeholder="https://drive.google.com/..."></div>
+                        <div class="form-group" style="grid-column: 1 / -1;"><button class="btn" onclick="addDocument()">Dokümanı Kaydet ve Yayınla</button></div>
+                    </div>
+
                     <table>
                         <thead>
-                            <tr><th>Başlık</th><th>Kategori</th><th>Bağlantı</th></tr>
+                            <tr><th>Doküman Adı</th><th>Kategori</th><th>Bağlantı</th></tr>
                         </thead>
                         <tbody id="doc-list">
-                            <tr><td>Solunum Cihazı (SCBA) Kullanım Standartı</td><td>KKD & Solunum</td><td><a href="#" style="color:var(--accent);" onclick="alert('Google Drive Dokümanına Yönlendiriliyorsunuz...'); return false;">Dokümanı Aç</a></td></tr>
+                            <tr><td>SCBA Solunum Cihazı Standardı</td><td>KKD & Solunum</td><td><a href="#" style="color:var(--accent);">Görüntüle</a></td></tr>
                         </tbody>
                     </table>
                 </div>
             </section>
 
-            <!-- MODÜL 9: DUYURU YÖNETİMİ -->
+            <!-- MODÜL 9: DUYURU YÖNETİMİ (VERİ GİRİŞ BUTONLU) -->
             <section id="mod9" class="module-section">
                 <div class="card">
                     <div class="card-header">
                         <h2>📢 Modül 9: Duyuru Yönetimi & Bildirimler</h2>
+                        <button class="btn btn-success" onclick="toggleForm('duyuru-form')">+ Yeni Duyuru Ekle</button>
                     </div>
-                    <div class="form-grid">
-                        <div class="form-group"><label>Duyuru Başlığı:</label><input type="text" id="duyuru-title" placeholder="Örn: Hafta Sonu Hidrant Genel Denetimi"></div>
+
+                    <div id="duyuru-form" style="display:none;" class="form-grid">
+                        <div class="form-group"><label>Duyuru Başlığı:</label><input type="text" id="duyuru-title" placeholder="Örn: Hidrant Genel Kontrolü"></div>
                         <div class="form-group" style="grid-column: 1 / -1;"><label>Duyuru İçeriği:</label><textarea id="duyuru-text" rows="3" placeholder="Duyuru metni..."></textarea></div>
+                        <div class="form-group" style="grid-column: 1 / -1;"><button class="btn" onclick="addAnnouncement()">Duyuruyu Yayınla</button></div>
                     </div>
-                    <button class="btn" onclick="addAnnouncement()">Duyuruyu Yayınla (72 Saat Işıklı 'YENİ' Etiketiyle)</button>
                 </div>
             </section>
 
-            <!-- MODÜL 10: EĞİTİM PLANLAMA -->
+            <!-- MODÜL 10: EĞİTİM PLANLAMA (VERİ GİRİŞ BUTONLU) -->
             <section id="mod10" class="module-section">
                 <div class="card">
                     <div class="card-header">
                         <h2>📅 Modül 10: Eğitim Planlama & Vardiya Takvimi</h2>
+                        <button class="btn btn-success" onclick="toggleForm('plan-form')">+ Yeni Eğitim Planı Ekle</button>
                     </div>
-                    <div class="form-grid">
-                        <div class="form-group"><label>Eğitim Konusu:</label><input type="text" id="plan-konu" placeholder="Örn: Fabrika Köpük Sistemleri"></div>
-                        <div class="form-group"><label>Vardiya Oturumu:</label><select id="plan-vardiya"><option>08.00 - 16.00 Vardiyası</option><option>16.00 - 00.00 Vardiyası</option><option>00.00 - 08.00 Vardiyası</option></select></div>
-                        <div class="form-group"><label>Eğitmen Amir:</label><input type="text" id="plan-egitmen" value="Murat Ortaç"></div>
-                    </div>
-                    <button class="btn" onclick="addTrainingPlan()">Eğitim Oturumunu Planla</button>
 
-                    <h3 style="color:var(--accent); font-size:14px; margin-top:20px; margin-bottom:8px;">Planlanan Oturumlar</h3>
+                    <div id="plan-form" style="display:none;" class="form-grid">
+                        <div class="form-group"><label>Eğitim Konusu:</label><input type="text" id="plan-konu" placeholder="Örn: Fabrika Köpük Sistemleri"></div>
+                        <div class="form-group"><label>Vardiya Oturumu:</label><select id="plan-vardiya"><option>08.00 - 16.00 Vardiyası</option><option>16.00 - 00.00 Vardiyası</option></select></div>
+                        <div class="form-group"><label>Eğitmen Amir:</label><input type="text" id="plan-egitmen" value="Murat Ortaç"></div>
+                        <div class="form-group" style="grid-column: 1 / -1;"><button class="btn" onclick="addTrainingPlan()">Eğitimi Planla</button></div>
+                    </div>
+
+                    <h3 style="color:var(--accent); font-size:14px; margin-top:15px; margin-bottom:8px;">Planlanan Eğitimler</h3>
                     <table>
                         <thead>
-                            <tr><th>Eğitim Konusu</th><th>Vardiya Oturumu</th><th>Eğitmen</th></tr>
+                            <tr><th>Eğitim Konusu</th><th>Vardiya</th><th>Eğitmen</th></tr>
                         </thead>
                         <tbody id="plan-list">
-                            <tr><td>Fabrika Köpük Sistemleri Uygulaması</td><td>08.00 - 16.00 Vardiyası</td><td>Murat Ortaç</td></tr>
+                            <tr><td>Fabrika Köpük Sistemleri</td><td>08.00 - 16.00 Vardiyası</td><td>Murat Ortaç</td></tr>
                         </tbody>
                     </table>
                 </div>
             </section>
 
-            <!-- MODÜL 11: FORMLAR & BELGE MERKEZİ -->
+            <!-- MODÜL 11: FORMLAR -->
             <section id="mod11" class="module-section">
                 <div class="card">
                     <div class="card-header">
-                        <h2>📄 Modül 11: Formlar ve Belge Merkezi</h2>
+                        <h2>📄 Modül 11: Formlar ve Belge Şablonları</h2>
+                        <button class="btn btn-success" onclick="alert('Form Şablonu Yükleme Alanı')">+ Yeni Form Ekle</button>
                     </div>
-                    <table>
-                        <thead>
-                            <tr><th>Form Şablon Adı</th><th>Kategori</th><th>Format</th><th>İşlem</th></tr>
-                        </thead>
-                        <tbody>
-                            <tr><td>Vardiya Devir Teslim Formu</td><td>Operasyon</td><td>PDF / Form</td><td><button class="btn btn-secondary" style="padding:2px 8px; font-size:11px;" onclick="window.print()">Form Doldur & Yazdır</button></td></tr>
-                            <tr><td>Araç Arıza Bildirim Formu</td><td>Teknik</td><td>PDF / Form</td><td><button class="btn btn-secondary" style="padding:2px 8px; font-size:11px;" onclick="window.print()">Form Doldur & Yazdır</button></td></tr>
-                            <tr><td>Hidrant Kontrol Audit Formu</td><td>Denetim</td><td>PDF / Form</td><td><button class="btn btn-secondary" style="padding:2px 8px; font-size:11px;" onclick="window.print()">Form Doldur & Yazdır</button></td></tr>
-                        </tbody>
-                    </table>
+                    <p style="font-size:13px; color:var(--text-muted);">Yazdırılabilir maktu evraklar ve formlar.</p>
                 </div>
             </section>
 
-            <!-- MODÜL 12: CANLI SOHBET (50 SINIRI) -->
+            <!-- MODÜL 12: CANLI SOHBET -->
             <section id="mod12" class="module-section">
                 <div class="card">
                     <div class="card-header">
-                        <h2>💬 Modül 12: Operasyonel Canlı Sohbet (Kapasite: 18 / 50)</h2>
-                        <span style="font-size:11px; color:var(--text-muted);">* Mesajlar 24 saat sonra otomatik temizlenir.</span>
+                        <h2>💬 Modül 12: Canlı Sohbet</h2>
                     </div>
-
                     <div class="chat-box" id="chatContainer">
-                        <div class="chat-msg">
-                            <div class="chat-meta"><span>Ramazan Baytekin</span><span>18:40</span></div>
-                            <span>Amirim H-102 nolu hidrant kontrol edildi, su basıncı yetersiz. Arıza kaydı girildi.</span>
-                        </div>
-                        <div class="chat-msg me">
-                            <div class="chat-meta"><span>Murat Ortaç (Vardiya Amiri)</span><span>18:42</span></div>
-                            <span>Tamamdır Ramazan, ilgili birime haber verildi. Araç dolap kontrollerini tamamlayalım.</span>
-                        </div>
+                        <div class="chat-msg me"><div class="chat-meta"><span>Murat Ortaç</span></div><span>İyi vardiyalar arkadaşlar.</span></div>
                     </div>
-
                     <div style="display:flex; gap:10px;">
                         <input type="text" id="chatInput" placeholder="Mesajınızı yazın..." onkeypress="if(event.key==='Enter') sendChat()">
                         <button class="btn" style="width:120px;" onclick="sendChat()">Gönder</button>
@@ -501,34 +615,40 @@ Dolap 2: SCBA Setleri')">Dolap Ara</button></td>
                 </div>
             </section>
 
-            <!-- MODÜL 13: FİRMALAR & DOĞALGAZ REHBERİ -->
+            <!-- MODÜL 13: FİRMALAR & NAVİGASYON -->
             <section id="mod13" class="module-section">
                 <div class="card">
                     <div class="card-header">
-                        <h2>🏢 Modül 13: İşletme Bilgi Sistemi & Doğalgaz Rehberi</h2>
+                        <h2>🏢 Modül 13: İşletme Bilgi Sistemi & Otomatik GPS Navigasyon</h2>
+                        <button class="btn btn-success" onclick="toggleForm('firma-add-form')">+ Yeni İşletme / GPS Ekle</button>
                     </div>
+
+                    <div id="firma-add-form" style="display:none;" class="form-grid">
+                        <div class="form-group"><label>Firma Adı:</label><input type="text" id="f-name" placeholder="Firma Adı"></div>
+                        <div class="form-group"><label>Adres / Cadde:</label><input type="text" id="f-adres" placeholder="1. Cadde No:4"></div>
+                        <div class="form-group"><label>GPS Koordinatı (Enlem, Boylam):</label><input type="text" id="f-gps" placeholder="36.958, 35.418"></div>
+                        <div class="form-group" style="grid-column: 1 / -1; display:flex; gap:10px;">
+                            <button class="btn btn-secondary" type="button" onclick="getLiveLocation('f-gps')">📍 Konumumu Çek</button>
+                            <button class="btn" type="button" onclick="addCompanyRecord()">Firma Kaydet</button>
+                        </div>
+                    </div>
+
                     <table>
                         <thead>
-                            <tr><th>Firma / Fabrika Adı</th><th>Bölge / Cadde</th><th>Doğalgaz Durumu</th><th>Acil İletişim</th></tr>
+                            <tr><th>Firma / Fabrika Adı</th><th>Adres</th><th>Otomatik GPS</th><th>Canlı Navigasyon</th></tr>
                         </thead>
-                        <tbody>
+                        <tbody id="firmalar-list">
                             <tr>
                                 <td>Kastamonu Entegre A.Ş.</td>
                                 <td>1. Cadde No:4</td>
-                                <td><span class="badge bg-red" style="animation:pulse 1.5s infinite;">🔥 DOĞALGAZ VAR!</span></td>
-                                <td>0322 xxx xx xx</td>
+                                <td><span class="badge bg-green">36.9581, 35.4182</span></td>
+                                <td><button class="btn btn-success" style="padding:4px 10px; font-size:11px;" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=36.9581,35.4182', '_blank')">🗺️ Haritalarda Git (Navigasyon)</button></td>
                             </tr>
                             <tr>
                                 <td>Sasa Polyester A.Ş.</td>
                                 <td>3. Cadde No:12</td>
-                                <td><span class="badge bg-red" style="animation:pulse 1.5s infinite;">🔥 DOĞALGAZ VAR!</span></td>
-                                <td>0322 xxx xx xx</td>
-                            </tr>
-                            <tr>
-                                <td>Bossa Tekstil</td>
-                                <td>2. Cadde No:8</td>
-                                <td><span class="badge bg-gray">BİLGİ BEKLENİYOR</span></td>
-                                <td>0322 xxx xx xx</td>
+                                <td><span class="badge bg-green">36.9610, 35.4220</span></td>
+                                <td><button class="btn btn-success" style="padding:4px 10px; font-size:11px;" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=36.9610,35.4220', '_blank')">🗺️ Haritalarda Git (Navigasyon)</button></td>
                             </tr>
                         </tbody>
                     </table>
@@ -538,208 +658,375 @@ Dolap 2: SCBA Setleri')">Dolap Ara</button></td>
         </main>
     </div>
 
-    <!-- LEAFLET JS & SCRIPT CODES -->
+    <!-- LEAFLET JS & SCRIPT -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // NAVIGATION SWITCHER
-        function showModule(modId, element) {
-            document.querySelectorAll('.module-section').forEach(sec => sec.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-            
-            document.getElementById(modId).classList.add('active');
-            element.classList.add('active');
+        let currentUser = null;
+        let isAdmin = false;
 
-            if(modId === 'mod5') {
-                setTimeout(initMap, 200);
+        const yscDatabase = {
+            "YSC1": [
+                { tarih: "06.11.2026", durum: "🟢 Sağlam / Basınç Normal", konum: "AOSB Garaj İçi" },
+                { tarih: "06.05.2026", durum: "🟡 Basınç Kontrol Edildi", konum: "AOSB Garaj İçi" }
+            ]
+        };
+
+        const hidrantDatabase = {
+            "H1": [
+                { tarih: "06.11.2026", durum: "🟢 Sağlam / Basınç Yüksek", adres: "1. Cadde Girişi" }
+            ]
+        };
+
+        function updateClockAndWeather() {
+            const now = new Date();
+            document.getElementById('live-clock').innerText = "📅 " + now.toLocaleString('tr-TR');
+        }
+        setInterval(updateClockAndWeather, 1000);
+        updateClockAndWeather();
+
+        function switchLoginTab(tab) {
+            document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.login-form').forEach(f => f.classList.remove('active'));
+
+            if (tab === 'admin') {
+                document.querySelectorAll('.login-tab')[0].classList.add('active');
+                document.getElementById('admin-login-form').classList.add('active');
+            } else {
+                document.querySelectorAll('.login-tab')[1].classList.add('active');
+                document.getElementById('user-login-form').classList.add('active');
             }
         }
 
-        function toggleForm(formId) {
-            const f = document.getElementById(formId);
-            f.style.display = f.style.display === 'none' ? 'grid' : 'none';
+        function handleAdminLogin() {
+            const user = document.getElementById('admin-user').value.trim();
+            const pass = document.getElementById('admin-pass').value.trim();
+
+            if (user === "12544424006" && pass === "394397") {
+                isAdmin = true;
+                currentUser = "Vardiya Amiri (ADMIN)";
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('current-user-display').innerText = currentUser;
+                document.body.classList.add('is-admin');
+                alert("Hoş geldiniz Murat Amirim!");
+            } else {
+                alert("Hatalı Admin Bilgisi!");
+            }
         }
 
-        // PERSONEL ADD FUNCTION
-        function addPersonnel() {
-            const name = document.getElementById('p-name').value;
-            const role = document.getElementById('p-role').value;
-            const shift = document.getElementById('p-shift').value;
-            const size = document.getElementById('p-size').value;
-            const phone = document.getElementById('p-phone').value;
+        function handleUserLogin() {
+            const tc = document.getElementById('personel-tc').value.trim();
+            const pass = document.getElementById('personel-pass').value.trim();
 
-            if(!name) { alert('Lütfen personel adını giriniz!'); return; }
-
-            const tbody = document.getElementById('p-list');
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${name}</td><td>${role}</td><td><span class="badge bg-green">${shift}</span></td><td>${size}</td><td>${phone}</td><td><button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;">Düzenle</button></td>`;
-            tbody.appendChild(tr);
-
-            document.getElementById('p-name').value = '';
-            toggleForm('p-form');
-            alert('Personel başarıyla eklendi Amirim!');
+            if (tc.length === 11 && pass === "MRTORTC") {
+                isAdmin = false;
+                currentUser = `Personel (TC: ${tc})`;
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('current-user-display').innerText = currentUser;
+                document.body.classList.remove('is-admin');
+                alert("Personel Girişi Başarılı!");
+            } else {
+                alert("Hatalı Giriş!");
+            }
         }
 
-        // OLAY RAPORU EKLEME
+        function logout() { location.reload(); }
+
+        function handleFirmaSearchChange(val) {
+            if(!val) return;
+            const options = document.querySelectorAll('#firma-options option');
+            let isFound = false;
+            options.forEach(opt => {
+                if(opt.value.toLowerCase() === val.toLowerCase()) isFound = true;
+            });
+
+            if(isFound) {
+                alert(`✅ Kayıtlı Firma Seçildi: ${val}`);
+            } else {
+                alert(`ℹ️ "${val}" sisteme yeni firma olarak kaydolacak.`);
+            }
+        }
+
+        function validatePhotoCount(input) {
+            if (input.files.length > 10) {
+                alert("⚠️ En fazla 10 adet fotoğraf seçebilirsiniz!");
+                input.value = "";
+            }
+        }
+
         function addIncident() {
             const tur = document.getElementById('olay-tur').value;
+            const firma = document.getElementById('olay-firma-input').value;
             const konum = document.getElementById('olay-konum').value;
-            const ekip = document.getElementById('olay-ekip').value;
-            const saat = document.getElementById('olay-saat').value;
+            const cikis = document.getElementById('cikis-zaman').value || "Belirtilmedi";
+            const donus = document.getElementById('donus-zaman').value || "Devam ediyor";
+            const arac = document.getElementById('olay-arac').value;
+            const personel = document.getElementById('olay-personel').value || "Ekip";
+            const photoCount = document.getElementById('olay-photos').files.length;
             const ozet = document.getElementById('olay-ozet').value;
 
-            if(!konum) { alert('Lütfen olay konumunu giriniz!'); return; }
+            if(!firma) { alert("Lütfen bir firma seçiniz veya yazınız!"); return; }
+            if(!konum) { alert("Lütfen olay konumunu giriniz!"); return; }
 
             const tbody = document.getElementById('olay-list');
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td>Bugün ${saat}</td><td>${tur}</td><td>${konum}</td><td>${ekip}</td><td>${ozet}</td>`;
+            tr.innerHTML = `
+                <td>${firma}</td>
+                <td>${tur}</td>
+                <td>Çıkış: ${cikis}<br>Dönüş: ${donus}</td>
+                <td>${arac}<br>(${personel})</td>
+                <td><span class="badge bg-green">🖼️ ${photoCount} Foto</span></td>
+                <td><button class="btn btn-danger admin-only" style="padding:2px 6px; font-size:11px;" onclick="this.closest('tr').remove()">Sil</button></td>
+            `;
             tbody.prepend(tr);
+            
+            const datalist = document.getElementById('firma-options');
+            let exists = false;
+            document.querySelectorAll('#firma-options option').forEach(o => { if(o.value === firma) exists = true; });
+            if(!exists) {
+                const opt = document.createElement('option');
+                opt.value = firma;
+                datalist.appendChild(opt);
+            }
 
-            document.getElementById('olay-konum').value = '';
-            document.getElementById('olay-ozet').value = '';
-            alert('Olay raporu sisteme kaydedildi!');
+            alert("Olay raporu ve fotoğraflar başarıyla kaydedildi!");
+            toggleForm('olay-form-box');
         }
 
-        // ARAÇ EKLEME
-        function addVehicle() {
+        function addNewVehicleCard() {
             const plaka = document.getElementById('arac-plaka').value;
             const tip = document.getElementById('arac-tip').value;
-            const env = document.getElementById('arac-env').value;
+            const muayene = document.getElementById('arac-muayene').value;
+            const ekipman = document.getElementById('arac-ekipman').value;
             const durum = document.getElementById('arac-durum').value;
 
-            if(!plaka) { alert('Lütfen araç plakasını giriniz!'); return; }
+            if(!plaka) { alert("Plaka/Kod yazmalısınız!"); return; }
 
-            const tbody = document.getElementById('arac-list');
-            const tr = document.createElement('tr');
-            let badgeStyle = durum.includes('Tam') ? 'bg-green' : (durum.includes('Arızalı') ? 'bg-red' : 'bg-yellow');
-            tr.innerHTML = `<td>${plaka}</td><td>${tip}</td><td>${env}</td><td><span class="badge ${badgeStyle}">${durum}</span></td><td><button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="alert('Dolap detayları görüntülendi')">Dolap Ara</button></td>`;
-            tbody.appendChild(tr);
-
-            toggleForm('arac-form');
-            alert('Araç kaydı eklendi!');
+            const container = document.getElementById('arac-cards-container');
+            const card = document.createElement('div');
+            card.style.cssText = 'background:#0f172a; border:1px solid var(--border-color); border-radius:8px; padding:15px;';
+            card.innerHTML = `
+                <h3 style="color:var(--primary); font-size:15px;">🚛 ${plaka} (${tip})</h3>
+                <p style="font-size:12px; color:var(--text-muted);"><strong>Muayene:</strong> ${muayene || 'Bilinmiyor'}</p>
+                <p style="font-size:12px; color:var(--text-muted);"><strong>Durum:</strong> <span class="badge ${durum.includes('Tam')?'bg-green':'bg-red'}">${durum}</span></p>
+                <p style="font-size:12px; color:var(--text-muted);"><strong>Ekipman:</strong> ${ekipman}</p>
+            `;
+            container.appendChild(card);
+            toggleForm('arac-form-box');
+            alert("Yeni araç kartı eklendi!");
         }
 
-        // YSC EKLEME
-        function addYSC() {
-            const no = document.getElementById('ysc-no').value;
+        function getSmartYSCLocation() {
+            if(navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(pos => {
+                    const gpsStr = `Lat: ${pos.coords.latitude.toFixed(4)}, Lng: ${pos.coords.longitude.toFixed(4)} (AOSB Garaj)`;
+                    document.getElementById('ysc-konum').value = gpsStr;
+                    const autoCode = "YSC1";
+                    document.getElementById('ysc-no').value = autoCode;
+                    checkYSCCodeHistory(autoCode);
+                    alert(`📍 Bulunduğunuz konum algılandı! Bu konumda daha önce kontrol edilen cihaz: ${autoCode}`);
+                });
+            }
+        }
+
+        function checkYSCCodeHistory(code) {
+            const banner = document.getElementById('ysc-warning-banner');
+            const historyBox = document.getElementById('ysc-history-detail');
+            const historyTimeline = document.getElementById('history-ysc-timeline');
+            
+            const upperCode = code.toUpperCase().trim();
+
+            if(yscDatabase[upperCode]) {
+                const nextNum = Object.keys(yscDatabase).length + 1;
+                banner.innerHTML = `⚠️ <strong>${upperCode}</strong> kodlu YSC daha önce sisteme girilmiş! Mevcut kaydın üzerine işlem yapıyorsunuz. Önerilen Sıradaki Yeni Kod: <strong>YSC${nextNum}</strong>`;
+                banner.style.display = 'block';
+
+                document.getElementById('history-ysc-code').innerText = upperCode;
+                let html = '<ul>';
+                yscDatabase[upperCode].forEach(item => {
+                    html += `<li><strong>Tarih:</strong> ${item.tarih} | <strong>Durum:</strong> ${item.durum} | <strong>Konum:</strong> ${item.konum}</li>`;
+                });
+                html += '</ul>';
+                historyTimeline.innerHTML = html;
+                historyBox.style.display = 'block';
+            } else {
+                banner.style.display = 'none';
+                historyBox.style.display = 'none';
+            }
+        }
+
+        function saveYSCRecord() {
+            const code = document.getElementById('ysc-no').value.toUpperCase().trim();
             const tip = document.getElementById('ysc-tip').value;
             const konum = document.getElementById('ysc-konum').value;
-            const durum = document.getElementById('ysc-durum').value;
+            const tarih = document.getElementById('ysc-kontrol').value;
 
-            if(!no) { alert('Lütfen YSC envanter nosunu giriniz!'); return; }
+            if(!code) { alert("Lütfen bir YSC Kodu giriniz!"); return; }
+
+            if(!yscDatabase[code]) yscDatabase[code] = [];
+            yscDatabase[code].unshift({ tarih: tarih, durum: tip, konum: konum });
 
             const tbody = document.getElementById('ysc-list');
             const tr = document.createElement('tr');
-            let badgeStyle = durum.includes('Sağlam') ? 'bg-green' : (durum.includes('Arızalı') ? 'bg-red' : 'bg-yellow');
-            tr.innerHTML = `<td>${no}</td><td>${tip}</td><td>${konum}</td><td><span class="badge ${badgeStyle}">${durum}</span></td>`;
-            tbody.appendChild(tr);
-
-            document.getElementById('ysc-no').value = '';
-            alert('YSC Cihazı sisteme işlendi!');
+            tr.innerHTML = `
+                <td>${code}</td>
+                <td>${tip}</td>
+                <td>${konum || 'AOSB'}</td>
+                <td>${tarih}</td>
+                <td><button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="viewYSCHistory('${code}')">🔍 Tüm Geçmiş</button></td>
+            `;
+            tbody.prepend(tr);
+            toggleForm('ysc-form-box');
+            alert(`${code} kodlu YSC başarıyla kaydedildi!`);
         }
 
-        // GEÇİCİ YETKİ
-        function grantPermission() {
-            const p = document.getElementById('yetki-personel').value;
-            const m = document.getElementById('yetki-modul').value;
-            const s = document.getElementById('yetki-sure').value;
+        function viewYSCHistory(code) {
+            checkYSCCodeHistory(code);
+            document.getElementById('ysc-history-detail').scrollIntoView({ behavior: 'smooth' });
+        }
 
-            const tbody = document.getElementById('yetki-list');
+        function checkHydrantCodeHistory(code) {
+            const banner = document.getElementById('hidrant-warning-banner');
+            const upperCode = code.toUpperCase().trim();
+
+            if(hidrantDatabase[upperCode]) {
+                const nextNum = Object.keys(hidrantDatabase).length + 1;
+                banner.innerHTML = `⚠️ <strong>${upperCode}</strong> kodlu hidrant daha önce sisteme girilmiş! Önerilen Sıradaki Kod: <strong>H${nextNum}</strong>`;
+                banner.style.display = 'block';
+            } else {
+                banner.style.display = 'none';
+            }
+        }
+
+        function saveHydrantRecord() {
+            const code = document.getElementById('h-no').value.toUpperCase().trim();
+            const adres = document.getElementById('h-adres').value;
+            const durum = document.getElementById('h-durum').value;
+            const gps = document.getElementById('h-gps').value;
+
+            if(!code) { alert("Lütfen bir Hidrant Kodu giriniz!"); return; }
+
+            if(!hidrantDatabase[code]) hidrantDatabase[code] = [];
+            hidrantDatabase[code].unshift({ tarih: "06.11.2026", durum: durum, adres: adres });
+
+            const tbody = document.getElementById('hidrant-list');
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${p}</td><td>${m}</td><td>0${s} Saat 00 Dk</td><td><span class="badge bg-green">Aktif</span></td><td><button class="btn btn-danger" style="padding:2px 8px; font-size:11px;" onclick="revokePermission(this)">YETKİYİ ANINDA İPTAL ET</button></td>`;
-            tbody.appendChild(tr);
-
-            alert(`${p} kişisine ${m} yetkisi ${s} saatliğine tanımlandı.`);
+            tr.innerHTML = `
+                <td>${code}</td>
+                <td>${adres} (${gps || 'GPS'})</td>
+                <td><span class="badge bg-green">${durum}</span></td>
+                <td><span style="font-size:11px; color:var(--text-muted);">Basınç Testi Yapıldı</span></td>
+                <td><button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${gps}', '_blank')">Yol Tarifi</button></td>
+            `;
+            tbody.prepend(tr);
+            toggleForm('hidrant-form');
+            alert(`${code} kodlu Hidrant kaydedildi!`);
         }
 
-        function revokePermission(btn) {
-            const row = btn.closest('tr');
-            row.querySelector('.badge').className = 'badge bg-red';
-            row.querySelector('.badge').innerText = 'İptal Edildi';
-            btn.disabled = true;
-            btn.style.opacity = '0.5';
-            alert('Yetki anında canlıda iptal edildi!');
-        }
-
-        // DOKÜMAN EKLEME
         function addDocument() {
             const title = document.getElementById('doc-title').value;
             const cat = document.getElementById('doc-cat').value;
             const link = document.getElementById('doc-link').value;
-
-            if(!title) { alert('Lütfen doküman başlığını giriniz!'); return; }
-
+            if(!title) { alert("Doküman adını giriniz!"); return; }
             const tbody = document.getElementById('doc-list');
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${title}</td><td>${cat}</td><td><a href="${link || '#'}" style="color:var(--accent);" target="_blank">Dokümanı Aç</a></td>`;
+            tr.innerHTML = `<td>${title}</td><td>${cat}</td><td><a href="${link || '#'}" style="color:var(--accent);" target="_blank">Görüntüle</a></td>`;
             tbody.appendChild(tr);
-
-            document.getElementById('doc-title').value = '';
-            alert('Eğitim dokümanı kütüphaneye eklendi!');
+            toggleForm('doc-form');
+            alert("Eğitim dokümanı eklendi!");
         }
 
-        // DUYURU EKLEME
         function addAnnouncement() {
             const title = document.getElementById('duyuru-title').value;
             const text = document.getElementById('duyuru-text').value;
-
-            if(!title) { alert('Duyuru başlığı boş olamaz!'); return; }
-
-            const banner = document.querySelector('.announcement-banner span:last-child');
-            banner.innerText = `📢 ${title}: ${text}`;
-            alert('Duyuru 72 saatlik ışıklı YENİ etiketiyle üst bantta yayınlandı!');
+            if(!title) { alert("Duyuru başlığı giriniz!"); return; }
+            document.querySelector('.announcement-banner span:last-child').innerText = `📢 ${title}: ${text}`;
+            toggleForm('duyuru-form');
+            alert("Duyuru başarıyla yayınlandı!");
         }
 
-        // EĞİTİM PLANLAMA
         function addTrainingPlan() {
             const konu = document.getElementById('plan-konu').value;
             const vardiya = document.getElementById('plan-vardiya').value;
             const egitmen = document.getElementById('plan-egitmen').value;
-
-            if(!konu) { alert('Eğitim konusunu giriniz!'); return; }
-
+            if(!konu) { alert("Eğitim konusunu giriniz!"); return; }
             const tbody = document.getElementById('plan-list');
             const tr = document.createElement('tr');
             tr.innerHTML = `<td>${konu}</td><td>${vardiya}</td><td>${egitmen}</td>`;
             tbody.appendChild(tr);
-
-            document.getElementById('plan-konu').value = '';
-            alert('Eğitim oturumu takvime eklendi!');
+            toggleForm('plan-form');
+            alert("Eğitim planı kaydedildi!");
         }
 
-        // CHAT FUNCTION
+        function addCompanyRecord() {
+            const name = document.getElementById('f-name').value;
+            const adres = document.getElementById('f-adres').value;
+            const gps = document.getElementById('f-gps').value;
+
+            if(!name) { alert("Firma adı giriniz!"); return; }
+            const tbody = document.getElementById('firmalar-list');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${name}</td>
+                <td>${adres}</td>
+                <td><span class="badge bg-green">${gps || '36.958, 35.418'}</span></td>
+                <td><button class="btn btn-success" style="padding:4px 10px; font-size:11px;" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${gps}', '_blank')">🗺️ Haritalarda Git (Navigasyon)</button></td>
+            `;
+            tbody.appendChild(tr);
+            toggleForm('firma-add-form');
+            alert("Yeni işletme ve GPS rotası eklendi!");
+        }
+
+        function showModule(id, el) {
+            document.querySelectorAll('.module-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            el.classList.add('active');
+            if(id === 'mod5') setTimeout(initMap, 200);
+        }
+
+        function toggleForm(id) {
+            const f = document.getElementById(id);
+            f.style.display = f.style.display === 'none' ? 'grid' : 'none';
+        }
+
+        function getLiveLocation(id) {
+            if(navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(pos => {
+                    const loc = `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
+                    document.getElementById(id).value = loc;
+                    alert("Konum Alındы: " + loc);
+                });
+            }
+        }
+
+        let mapInit = false;
+        function initMap() {
+            if(mapInit) return;
+            mapInit = true;
+            const map = L.map('map').setView([36.958, 35.418], 14);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            L.marker([36.958, 35.418]).addTo(map).bindPopup('🟢 H1 Hidrantı').openPopup();
+        }
+
+        function askAI() {
+            const input = document.getElementById('ai-input');
+            if(!input.value) return;
+            const box = document.getElementById('ai-chat-container');
+            box.innerHTML += `<div class="chat-msg me"><div class="chat-meta"><span>Siz</span></div><span>${input.value}</span></div>`;
+            input.value = '';
+            setTimeout(() => {
+                box.innerHTML += `<div class="chat-msg ai"><div class="chat-meta"><span>🔥 KIVILCIM AI</span></div><span>Anlaşıldı Murat Amirim. Sorunuz işlendi.</span></div>`;
+                box.scrollTop = box.scrollHeight;
+            }, 400);
+        }
+
+        function closeEmergencyModal() { document.getElementById('emergency-modal').style.display = 'none'; }
+        function addPersonnel() { alert("Personel başarıyla kaydedildi!"); }
         function sendChat() {
             const input = document.getElementById('chatInput');
-            const msg = input.value.trim();
-            if(!msg) return;
-
-            const box = document.getElementById('chatContainer');
-            const div = document.createElement('div');
-            div.className = 'chat-msg me';
-            div.innerHTML = `<div class="chat-meta"><span>Murat Ortaç (Vardiya Amiri)</span><span>Şimdi</span></div><span>${msg}</span>`;
-            box.appendChild(div);
-            box.scrollTop = box.scrollHeight;
+            if(!input.value) return;
+            document.getElementById('chatContainer').innerHTML += `<div class="chat-msg me"><div class="chat-meta"><span>Murat Ortaç</span></div><span>${input.value}</span></div>`;
             input.value = '';
-        }
-
-        // MAP & GPS NAV
-        let mapInitialized = false;
-        function initMap() {
-            if(mapInitialized) return;
-            mapInitialized = true;
-
-            const map = L.map('map').setView([36.958, 35.418], 14); // Adana OSB Koordinatı
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap'
-            }).addTo(map);
-
-            // Hidrant Pinleri
-            L.marker([36.958, 35.418]).addTo(map).bindPopup('🟢 H-101: Sağlam').openPopup();
-            L.marker([36.962, 35.422]).addTo(map).bindPopup('🔴 H-102: Arızalı (Su Yok)');
-            L.marker([36.954, 35.412]).addTo(map).bindPopup('🟧 H-103: Onarım Aşamasında');
-        }
-
-        function findNearestHydrant() {
-            document.getElementById('gps-alert').style.display = 'block';
         }
     </script>
 </body>
