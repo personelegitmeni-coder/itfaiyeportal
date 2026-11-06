@@ -58,6 +58,9 @@
         .blinking-btn {
             background: #22c55e !important; color: white !important; padding: 5px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; animation: blinkEffect 1.2s infinite ease-in-out; box-shadow: 0 0 10px rgba(34, 197, 94, 0.7);
         }
+        .blinking-badge {
+            background: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; animation: blinkEffect 1s infinite ease-in-out; display: inline-block; margin-left: 5px;
+        }
 
         .announcement-banner { background: #854d0e; color: #fef08a; padding: 10px 20px; text-align: center; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .badge-new { background: var(--danger); color: white; font-weight: bold; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
@@ -177,7 +180,7 @@
 
     <div class="announcement-banner">
         <span class="badge-new">YENİ</span>
-        <span>🤖 M2 Tutanak Yükleme, M3 Yeniden-Eskiye Sıralama, M5 Hidrant Kodu Arama, M10 Eğitmen Adı ve M13 Excel & Arama modülleri güncellendi.</span>
+        <span>🤖 Personel Ekle butonu aktif edildi ve M13 Firmalar modülüne "Doğalgaz Var" yanıp sönen uyarı efekti eklendi.</span>
     </div>
 
     <div class="main-wrapper">
@@ -195,13 +198,13 @@
             <div class="nav-item" onclick="showModule('mod10', this)"><span>📅 Eğitim Planlama (Eğitmen)</span><span class="mod-no">M10</span></div>
             <div class="nav-item" onclick="showModule('mod11', this)"><span>📄 Formlar & Dosya Yükle</span><span class="mod-no">M11</span></div>
             <div class="nav-item" onclick="showModule('mod12', this)"><span>💬 Canlı Sohbet (8 Saat)</span><span class="mod-no">M12</span></div>
-            <div class="nav-item" onclick="showModule('mod13', this)"><span>🏢 Firmalar (Excel & Arama)</span><span class="mod-no">M13</span></div>
+            <div class="nav-item" onclick="showModule('mod13', this)"><span>🏢 Firmalar (Doğalgaz Uyarı)</span><span class="mod-no">M13</span></div>
         </nav>
 
         <!-- MAIN CONTENT AREA -->
         <main>
 
-            <!-- MODÜL 1: PERSONEL KÜNYESİ -->
+            <!-- MODÜL 1: PERSONEL KÜNYESİ (ÇALIŞAN EKLE BUTONU) -->
             <section id="mod1" class="module-section active">
                 <div class="card">
                     <div class="card-header">
@@ -298,7 +301,7 @@
                 </div>
             </section>
 
-            <!-- MODÜL 3: ARAÇ KARTLARI & SIRALAMA -->
+            <!-- MODÜL 3: ARAÇ KARTLARI -->
             <section id="mod3" class="module-section">
                 <div class="card">
                     <div class="card-header">
@@ -365,7 +368,7 @@
                 </div>
             </section>
 
-            <!-- MODÜL 5: HİDRANT KODU ARAMA & GEÇMİŞ İŞLEMLERİ -->
+            <!-- MODÜL 5: HİDRANT KODU ARAMA & GEÇMİŞ İŞLEMLER -->
             <section id="mod5" class="module-section">
                 <div class="card">
                     <div class="card-header">
@@ -466,7 +469,7 @@
                 </div>
             </section>
 
-            <!-- MODÜL 10: EĞİTİM PLANLAMA (EĞİTMEN ADI İLE) -->
+            <!-- MODÜL 10: EĞİTİM PLANLAMA -->
             <section id="mod10" class="module-section">
                 <div class="card">
                     <div class="card-header">
@@ -515,11 +518,11 @@
                 </div>
             </section>
 
-            <!-- MODÜL 13: FİRMALAR (EXCEL & ARAMA AKTİF) -->
+            <!-- MODÜL 13: FİRMALAR (DOĞALGAZ UYARI IŞIĞI) -->
             <section id="mod13" class="module-section">
                 <div class="card">
                     <div class="card-header">
-                        <h2>🏢 Modül 13: İşletme Bilgi Sistemi (Excel Yükleme & Arama)</h2>
+                        <h2>🏢 Modül 13: İşletme Bilgi Sistemi (Excel, Arama & Doğalgaz Uyarı)</h2>
                         <div>
                             <input type="text" id="firma-listesi-arama" placeholder="Firma Ara..." style="display:inline-block; width:160px; padding:6px; font-size:12px;" oninput="filterFirmalarTable(this.value)">
                             <button class="btn btn-secondary" onclick="document.getElementById('excel-file').click()">📊 Excel Yükle</button>
@@ -532,12 +535,16 @@
                         <div class="form-group"><label>Firma Adı:</label><input type="text" id="f-name"></div>
                         <div class="form-group"><label>Adres:</label><input type="text" id="f-adres"></div>
                         <div class="form-group"><label>GPS Konumu:</label><input type="text" id="f-gps" placeholder="36.958, 35.418"></div>
-                        <div class="form-group" style="grid-column: 1 / -1; display:flex; gap:10px;">
+                        <div class="form-group" style="display:flex; align-items:center; gap:10px; margin-top:15px;">
+                            <input type="checkbox" id="f-dogalgaz" style="width:20px; height:20px;">
+                            <label for="f-dogalgaz" style="color:var(--danger); font-weight:bold; font-size:14px;">🔥 Bu Firmada DOĞALGAZ VAR</label>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1; display:flex; gap:10px; margin-top:10px;">
                             <button class="btn btn-secondary" type="button" onclick="getLiveLocationAuto('f-gps')">📍 Otomatik GPS Konumu Çek</button>
                             <button class="btn" type="button" onclick="addCompanyRecord()">Firmayı Kaydet</button>
                         </div>
                     </div>
-                    <table><thead><tr><th>Firma Adı</th><th>Adres</th><th>GPS</th><th>Navigasyon</th></tr></thead><tbody id="firmalar-list"><tr><td>Kastamonu Entegre A.Ş.</td><td>1. Cadde</td><td><span class="badge bg-green">36.9581, 35.4182</span></td><td><button class="btn btn-success" style="padding:4px 10px; font-size:11px;" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=36.9581,35.4182', '_blank')">Navigasyon</button></td></tr></tbody></table>
+                    <table><thead><tr><th>Firma Adı</th><th>Adres</th><th>GPS</th><th>Navigasyon</th></tr></thead><tbody id="firmalar-list"><tr><td>Kastamonu Entegre A.Ş. <span class="blinking-badge">DOĞALGAZ VAR</span></td><td>1. Cadde</td><td><span class="badge bg-green">36.9581, 35.4182</span></td><td><button class="btn btn-success" style="padding:4px 10px; font-size:11px;" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=36.9581,35.4182', '_blank')">Navigasyon</button></td></tr></tbody></table>
                 </div>
             </section>
 
@@ -612,11 +619,56 @@
         }
 
         function loadFromLocalStorage() {
+            loadPersonnelTable();
             loadIncidentsTable();
             loadTrainingPlans();
             loadChatMessages();
             loadAnnouncements();
             loadDocuments();
+        }
+
+        // M1 PERSONEL EKLEME (ÇALIŞAN BUTON)
+        function addPersonnel() {
+            const tc = document.getElementById('p-tc').value;
+            const name = document.getElementById('p-name').value;
+            const role = document.getElementById('p-role').value;
+            const shift = document.getElementById('p-shift').value;
+            const kan = document.getElementById('p-kan').value;
+            const giris = document.getElementById('p-giris').value;
+            const izin = document.getElementById('p-izin').value || "0";
+            const ayakkabi = document.getElementById('p-ayakkabi').value;
+            const tisort = document.getElementById('p-tisort').value;
+            const nomex = document.getElementById('p-nomex').value;
+            const bot = document.getElementById('p-bot').value;
+
+            if(!tc || !name) { alert("TC ve Ad Soyad zorunludur!"); return; }
+
+            saveToStorage('osb_personel', { tc, name, role, shift, kan, giris, izin, ayakkabi, tisort, nomex, bot });
+            loadPersonnelTable();
+            toggleForm('p-form');
+            alert("Personel başarıyla kaydedildi!");
+        }
+
+        function loadPersonnelTable() {
+            let personeller = JSON.parse(localStorage.getItem('osb_personel')) || [];
+            let tbody = document.getElementById('p-list');
+            if(!tbody) return;
+            // Statik satırı koruyarak üzerine ekleyelim veya sıfırdan kuralım
+            tbody.innerHTML = `
+                <tr>
+                    <td><b>12544424006</b><br>Murat Ortaç</td>
+                    <td>Vardiya Amiri</td>
+                    <td>01.01.2020</td>
+                    <td><span class="badge bg-green">14 Gün</span></td>
+                    <td>43 / L / 52 / 43</td>
+                    <td><button class="btn btn-secondary admin-only" style="padding:2px 6px; font-size:11px;" onclick="editPersonnel(this)">Düzenle</button> <button class="btn btn-danger admin-only" style="padding:2px 6px; font-size:11px;" onclick="this.closest('tr').remove()">Sil</button></td>
+                </tr>
+            `;
+            personeller.forEach(item => {
+                let tr = document.createElement('tr');
+                tr.innerHTML = `<td><b>${item.tc}</b><br>${item.name}</td><td>${item.role}</td><td>${item.giris}</td><td><span class="badge bg-green">${item.izin} Gün</span></td><td>${item.ayakkabi} / ${item.tisort} / ${item.nomex} / ${item.bot}</td><td><button class="btn btn-secondary admin-only" style="padding:2px 6px; font-size:11px;">Düzenle</button> <button class="btn btn-danger admin-only" style="padding:2px 6px; font-size:11px;" onclick="this.closest('tr').remove()">Sil</button></td>`;
+                tbody.appendChild(tr);
+            });
         }
 
         // M2 OLAY RAPORLARI VE FİRMA FİLTRELEME & TUTANAK
@@ -635,9 +687,7 @@
             });
         }
 
-        function loadIncidentsTable() {
-            filterIncidentsByCompany('');
-        }
+        function loadIncidentsTable() { filterIncidentsByCompany(''); }
 
         function addIncident() {
             const tur = document.getElementById('olay-tur').value;
@@ -974,7 +1024,7 @@
             });
         }
 
-        // M13 FİRMALAR EXCEL & ARAMA
+        // M13 FİRMALAR EXCEL & ARAMA & DOĞALGAZ UYARI
         function importExcelFirmalar(input) {
             const file = input.files[0];
             if(!file) return;
@@ -1015,11 +1065,15 @@
             const name = document.getElementById('f-name').value;
             const adres = document.getElementById('f-adres').value;
             const gps = document.getElementById('f-gps').value || "36.958, 35.418";
+            const dogalgazVar = document.getElementById('f-dogalgaz').checked;
+
             if(!name) { alert("Firma adı giriniz!"); return; }
 
             let tbody = document.getElementById('firmalar-list');
             let tr = document.createElement('tr');
-            tr.innerHTML = `<td>${name}</td><td>${adres || 'OSB'}</td><td><span class="badge bg-green">${gps}</span></td><td><button class="btn btn-success" style="padding:4px 10px; font-size:11px;" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${gps}', '_blank')">Navigasyon</button></td>`;
+            let displayName = dogalgazVar ? `${name} <span class="blinking-badge">DOĞALGAZ VAR</span>` : name;
+
+            tr.innerHTML = `<td>${displayName}</td><td>${adres || 'OSB'}</td><td><span class="badge bg-green">${gps}</span></td><td><button class="btn btn-success" style="padding:4px 10px; font-size:11px;" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${gps}', '_blank')">Navigasyon</button></td>`;
             tbody.appendChild(tr);
             toggleForm('firma-add-form');
             alert("Firma eklendi!");
