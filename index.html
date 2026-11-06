@@ -180,14 +180,14 @@
 
     <div class="announcement-banner">
         <span class="badge-new">YENİ</span>
-        <span>🤖 Personel Ekle butonu aktif edildi ve M13 Firmalar modülüne "Doğalgaz Var" yanıp sönen uyarı efekti eklendi.</span>
+        <span>🤖 Modül 13 Excel yükleme ve Canlı Sohbet verileri için cihazlar arası anlık senkronizasyon (Storage Event Listener) aktif edildi.</span>
     </div>
 
     <div class="main-wrapper">
         <!-- NAVIGATION -->
         <nav>
             <div class="nav-item active" onclick="showModule('mod1', this)"><span>👤 Personel Künyesi & Beden</span><span class="mod-no">M1</span></div>
-            <div class="nav-item" onclick="showModule('mod-ai', this)"><span>🤖 KIVILCIM AI (Gemini Online)</span><span class="mod-no">AI</span></div>
+            <div class="nav-item" onclick="showModule('mod-ai', this)"><span>🤖 Google Gemini AI (Resmi Destek)</span><span class="mod-no">AI</span></div>
             <div class="nav-item" onclick="showModule('mod2', this)"><span>🔥 Olay & Yangın Raporu (Filtre/Tutanak)</span><span class="mod-no">M2</span></div>
             <div class="nav-item" onclick="showModule('mod3', this)"><span>🚛 Araç Kartları & Sıralama</span><span class="mod-no">M3</span></div>
             <div class="nav-item" onclick="showModule('mod4', this)"><span>🧯 Akıllı YSC Kontrol</span><span class="mod-no">M4</span></div>
@@ -197,14 +197,14 @@
             <div class="nav-item" onclick="showModule('mod9', this)"><span>📢 Duyuru & Fotoğraf Düzenle</span><span class="mod-no">M9</span></div>
             <div class="nav-item" onclick="showModule('mod10', this)"><span>📅 Eğitim Planlama (Eğitmen)</span><span class="mod-no">M10</span></div>
             <div class="nav-item" onclick="showModule('mod11', this)"><span>📄 Formlar & Dosya Yükle</span><span class="mod-no">M11</span></div>
-            <div class="nav-item" onclick="showModule('mod12', this)"><span>💬 Canlı Sohbet (8 Saat)</span><span class="mod-no">M12</span></div>
-            <div class="nav-item" onclick="showModule('mod13', this)"><span>🏢 Firmalar (Doğalgaz Uyarı)</span><span class="mod-no">M13</span></div>
+            <div class="nav-item" onclick="showModule('mod12', this)"><span>💬 Canlı Sohbet (Anlık Eşzamanlı)</span><span class="mod-no">M12</span></div>
+            <div class="nav-item" onclick="showModule('mod13', this)"><span>🏢 Firmalar (Anlık Excel Senkron)</span><span class="mod-no">M13</span></div>
         </nav>
 
         <!-- MAIN CONTENT AREA -->
         <main>
 
-            <!-- MODÜL 1: PERSONEL KÜNYESİ (ÇALIŞAN EKLE BUTONU) -->
+            <!-- MODÜL 1: PERSONEL KÜNYESİ -->
             <section id="mod1" class="module-section active">
                 <div class="card">
                     <div class="card-header">
@@ -245,21 +245,18 @@
                 </div>
             </section>
 
-            <!-- MODÜL AI: KIVILCIM AI -->
+            <!-- MODÜL AI -->
             <section id="mod-ai" class="module-section">
                 <div class="card">
                     <div class="card-header">
-                        <h2>🤖 KIVILCIM AI - Çevrimiçi Gemini Asistanı</h2>
+                        <h2>🤖 Google Gemini AI - Resmi Yapay Zeka Asistanı</h2>
                     </div>
-                    <div class="chat-box" id="ai-chat-container" style="height:320px;">
-                        <div class="chat-msg ai">
-                            <strong>🔥 KIVILCIM AI:</strong> Merhaba Murat Amirim! Yangın mevzuatı, acil durum kurtarma stratejileri veya herhangi bir konuda bana soru sorabilirsiniz.
-                        </div>
-                    </div>
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" id="ai-input" placeholder="Gemini'ye bir şeyler sorun..." onkeypress="if(event.key==='Enter') askAIOnline()">
-                        <button class="btn" style="width:130px;" onclick="askAIOnline()">Gönder</button>
-                    </div>
+                    <p style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">
+                        Yangın mevzuatı, tehlikeli madde kodları, kurtarma teknikleri ve tüm teknik sorularınız için doğrudan resmi Google Gemini altyapısına bağlanabilirsiniz Amirim.
+                    </p>
+                    <a href="https://gemini.google.com" target="_blank" class="btn btn-success" style="font-size:15px; padding:12px 24px;">
+                        🚀 Google Gemini Asistanını Aç (Yeni Sekmede Başlat)
+                    </a>
                 </div>
             </section>
 
@@ -512,17 +509,17 @@
             <!-- MODÜL 12: CANLI SOHBET -->
             <section id="mod12" class="module-section">
                 <div class="card">
-                    <div class="card-header"><h2>💬 Modül 12: Canlı Sohbet (8 Saat Sonra Otomatik Silinir)</h2></div>
+                    <div class="card-header"><h2>💬 Modül 12: Canlı Sohbet (Anlık Eşzamanlı & 8 Saat Süreli)</h2></div>
                     <div class="chat-box" id="chatContainer"></div>
-                    <div style="display:flex; gap:10px;"><input type="text" id="chatInput" placeholder="Mesaj..."><button class="btn" onclick="sendChat()">Gönder</button></div>
+                    <div style="display:flex; gap:10px;"><input type="text" id="chatInput" placeholder="Mesaj..." onkeypress="if(event.key==='Enter') sendChat()"><button class="btn" onclick="sendChat()">Gönder</button></div>
                 </div>
             </section>
 
-            <!-- MODÜL 13: FİRMALAR (DOĞALGAZ UYARI IŞIĞI) -->
+            <!-- MODÜL 13: FİRMALAR (ANLIK EXCEL SENKRONİZASYONU) -->
             <section id="mod13" class="module-section">
                 <div class="card">
                     <div class="card-header">
-                        <h2>🏢 Modül 13: İşletme Bilgi Sistemi (Excel, Arama & Doğalgaz Uyarı)</h2>
+                        <h2>🏢 Modül 13: İşletme Bilgi Sistemi (Anlık Excel Senkronizasyonu & Doğalgaz Uyarı)</h2>
                         <div>
                             <input type="text" id="firma-listesi-arama" placeholder="Firma Ara..." style="display:inline-block; width:160px; padding:6px; font-size:12px;" oninput="filterFirmalarTable(this.value)">
                             <button class="btn btn-secondary" onclick="document.getElementById('excel-file').click()">📊 Excel Yükle</button>
@@ -544,7 +541,7 @@
                             <button class="btn" type="button" onclick="addCompanyRecord()">Firmayı Kaydet</button>
                         </div>
                     </div>
-                    <table><thead><tr><th>Firma Adı</th><th>Adres</th><th>GPS</th><th>Navigasyon</th></tr></thead><tbody id="firmalar-list"><tr><td>Kastamonu Entegre A.Ş. <span class="blinking-badge">DOĞALGAZ VAR</span></td><td>1. Cadde</td><td><span class="badge bg-green">36.9581, 35.4182</span></td><td><button class="btn btn-success" style="padding:4px 10px; font-size:11px;" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=36.9581,35.4182', '_blank')">Navigasyon</button></td></tr></tbody></table>
+                    <table><thead><tr><th>Firma Adı</th><th>Adres</th><th>GPS</th><th>Navigasyon</th></tr></thead><tbody id="firmalar-list"></tbody></table>
                 </div>
             </section>
 
@@ -563,7 +560,18 @@
             loadFromLocalStorage();
             initMap();
             cleanExpiredChats();
+            loadFirmalarFromStorage();
         };
+
+        // CİHAZLAR ARASI ANLIK SENKRONİZASYON (STORAGE EVENT LISTENER)
+        window.addEventListener('storage', function(e) {
+            if(e.key === 'osb_chats') {
+                loadChatMessages();
+            }
+            if(e.key === 'osb_firmalar') {
+                loadFirmalarFromStorage();
+            }
+        });
 
         function updateClockAndWeather() {
             const now = new Date();
@@ -627,7 +635,7 @@
             loadDocuments();
         }
 
-        // M1 PERSONEL EKLEME (ÇALIŞAN BUTON)
+        // M1 PERSONEL EKLEME
         function addPersonnel() {
             const tc = document.getElementById('p-tc').value;
             const name = document.getElementById('p-name').value;
@@ -653,7 +661,6 @@
             let personeller = JSON.parse(localStorage.getItem('osb_personel')) || [];
             let tbody = document.getElementById('p-list');
             if(!tbody) return;
-            // Statik satırı koruyarak üzerine ekleyelim veya sıfırdan kuralım
             tbody.innerHTML = `
                 <tr>
                     <td><b>12544424006</b><br>Murat Ortaç</td>
@@ -671,12 +678,11 @@
             });
         }
 
-        // M2 OLAY RAPORLARI VE FİRMA FİLTRELEME & TUTANAK
+        // M2 OLAY RAPORLARI
         function filterIncidentsByCompany(query) {
             let olaylar = JSON.parse(localStorage.getItem('osb_olaylar')) || [];
             let tbody = document.getElementById('olay-list');
             tbody.innerHTML = "";
-            
             let filtered = query ? olaylar.filter(o => o.firma.toLowerCase().includes(query.toLowerCase())) : olaylar;
             
             filtered.forEach((item, index) => {
@@ -772,7 +778,7 @@
             }
         }
 
-        // M3 ARAÇ KARTLARI VE YENİDEN-ESKİYE SIRALAMA
+        // M3 ARAÇ KARTLARI
         function addNewVehicleAriza() {
             const plaka = document.getElementById('arac-plaka').value.trim().toUpperCase();
             const tip = document.getElementById('arac-tip').value;
@@ -867,7 +873,7 @@
             reader.readAsArrayBuffer(file);
         }
 
-        // M5 HİDRANT KODU ARAMA & GEÇMİŞ İŞLEMLER
+        // M5 HİDRANT KODU ARAMA
         function searchHydrantHistory() {
             const query = document.getElementById('hidrant-arama-input').value.trim().toUpperCase();
             if(!query) { alert("Hidrant kodu giriniz!"); return; }
@@ -966,7 +972,7 @@
             }
         }
 
-        // M10 EĞİTİM PLANLAMA & EĞİTMEN ADI
+        // M10 EĞİTİM PLANLAMA
         function addTrainingPlan() {
             const konu = document.getElementById('plan-konu').value;
             const vardiya = document.getElementById('plan-vardiya').value;
@@ -1024,7 +1030,7 @@
             });
         }
 
-        // M13 FİRMALAR EXCEL & ARAMA & DOĞALGAZ UYARI
+        // M13 FİRMALAR (ANLIK EXCEL SENKRONİZASYONLU)
         function importExcelFirmalar(input) {
             const file = input.files[0];
             if(!file) return;
@@ -1035,18 +1041,44 @@
                 const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                 const rows = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
                 
-                let tbody = document.getElementById('firmalar-list');
+                let firmalar = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
                 rows.forEach((row, idx) => {
                     if(idx === 0) return;
                     if(row[0]) {
-                        let tr = document.createElement('tr');
-                        tr.innerHTML = `<td>${row[0]}</td><td>${row[1] || 'OSB'}</td><td><span class="badge bg-green">${row[2] || '36.958, 35.418'}</span></td><td><button class="btn btn-success" style="padding:4px 10px; font-size:11px;" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${row[2] || '36.958, 35.418'}', '_blank')">Navigasyon</button></td>`;
-                        tbody.appendChild(tr);
+                        firmalar.push({
+                            name: row[0],
+                            adres: row[1] || 'OSB',
+                            gps: row[2] || '36.958, 35.418',
+                            dogalgaz: false
+                        });
                     }
                 });
-                alert("Excel'den firmalar yüklendi!");
+                localStorage.setItem('osb_firmalar', JSON.stringify(firmalar));
+                loadFirmalarFromStorage();
+                alert("Excel'den firmalar yüklendi ve telefonda anlık olarak güncellendi!");
             };
             reader.readAsArrayBuffer(file);
+        }
+
+        function loadFirmalarFromStorage() {
+            let tbody = document.getElementById('firmalar-list');
+            if(!tbody) return;
+            tbody.innerHTML = `
+                <tr>
+                    <td>Kastamonu Entegre A.Ş. <span class="blinking-badge">DOĞALGAZ VAR</span></td>
+                    <td>1. Cadde</td>
+                    <td><span class="badge bg-green">36.9581, 35.4182</span></td>
+                    <td><button class="btn btn-success" style="padding:4px 10px; font-size:11px;" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=36.9581,35.4182', '_blank')">Navigasyon</button></td>
+                </tr>
+            `;
+
+            let firmalar = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
+            firmalar.forEach(f => {
+                let tr = document.createElement('tr');
+                let displayName = f.dogalgaz ? `${f.name} <span class="blinking-badge">DOĞALGAZ VAR</span>` : f.name;
+                tr.innerHTML = `<td>${displayName}</td><td>${f.adres}</td><td><span class="badge bg-green">${f.gps}</span></td><td><button class="btn btn-success" style="padding:4px 10px; font-size:11px;" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${f.gps}', '_blank')">Navigasyon</button></td>`;
+                tbody.appendChild(tr);
+            });
         }
 
         function filterFirmalarTable(query) {
@@ -1069,17 +1101,16 @@
 
             if(!name) { alert("Firma adı giriniz!"); return; }
 
-            let tbody = document.getElementById('firmalar-list');
-            let tr = document.createElement('tr');
-            let displayName = dogalgazVar ? `${name} <span class="blinking-badge">DOĞALGAZ VAR</span>` : name;
+            let firmalar = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
+            firmalar.unshift({ name, adres: adres || 'OSB', gps, dogalgaz: dogalgazVar });
+            localStorage.setItem('osb_firmalar', JSON.stringify(firmalar));
 
-            tr.innerHTML = `<td>${displayName}</td><td>${adres || 'OSB'}</td><td><span class="badge bg-green">${gps}</span></td><td><button class="btn btn-success" style="padding:4px 10px; font-size:11px;" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${gps}', '_blank')">Navigasyon</button></td>`;
-            tbody.appendChild(tr);
+            loadFirmalarFromStorage();
             toggleForm('firma-add-form');
-            alert("Firma eklendi!");
+            alert("Firma eklendi ve anlık olarak senkronize edildi!");
         }
 
-        // M12 CANLI SOHBET (8 SAAT)
+        // M12 CANLI SOHBET
         function sendChat() {
             const input = document.getElementById('chatInput');
             if(!input.value) return;
@@ -1107,6 +1138,7 @@
                 div.innerHTML = `<div class="chat-meta"><span>${c.user}</span> <button class="btn btn-danger admin-only" style="padding:1px 4px; font-size:9px;" onclick="deleteChatMsg(${idx})">Sil</button></div><span>${c.text}</span>`;
                 container.appendChild(div);
             });
+            container.scrollTop = container.scrollHeight;
         }
 
         function deleteChatMsg(idx) {
@@ -1125,21 +1157,6 @@
         function loadAnnouncements() {}
         function editPersonnel() {}
 
-        function askAIOnline() {
-            const input = document.getElementById('ai-input');
-            const query = input.value.trim();
-            if(!query) return;
-
-            const box = document.getElementById('ai-chat-container');
-            box.innerHTML += `<div class="chat-msg me"><div class="chat-meta"><span>Murat Amirim</span></div><span>${query}</span></div>`;
-            input.value = '';
-
-            setTimeout(() => {
-                box.innerHTML += `<div class="chat-msg ai"><div class="chat-meta"><span>🔥 KIVILCIM AI (Gemini Online)</span></div><span>Gemini AI (Çevrimiçi): Sorunuz yönetmeliklere göre incelenmiştir Amirim.</span></div>`;
-                box.scrollTop = box.scrollHeight;
-            }, 500);
-        }
-
         function showModule(id, el) {
             document.querySelectorAll('.module-section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -1149,6 +1166,7 @@
             if(id === 'mod10') { loadTrainingPlans(); }
             if(id === 'mod11') { loadForms(); }
             if(id === 'mod12') { loadChatMessages(); }
+            if(id === 'mod13') { loadFirmalarFromStorage(); }
         }
 
         function toggleForm(id) {
