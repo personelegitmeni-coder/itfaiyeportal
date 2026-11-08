@@ -150,18 +150,31 @@
                 <div class="login-tab active" onclick="switchLoginTab('admin')">🔑 Admin Girişi</div>
                 <div class="login-tab" onclick="switchLoginTab('user')">👤 Personel Girişi</div>
             </div>
-            <div id="admin-login-form" class="login-form active">
+            <!-- Tarayıcının şifre kaydetme (autocomplete) özelliğini tetiklemesi için form etiketi kullanıldı -->
+            <form id="admin-login-form" class="login-form active" onsubmit="event.preventDefault(); handleAdminLogin();">
                 <p style="font-size:12px; color:var(--text-muted); margin-bottom:5px;">Lütfen 11 haneli TC ve şifrenizi giriniz.</p>
-                <div class="form-group"><label>Admin TC Kimlik No:</label><input type="text" id="admin-user" placeholder="11 Haneli TC"></div>
-                <div class="form-group"><label>Admin Şifre:</label><input type="password" id="admin-pass" placeholder="Şifreniz"></div>
-                <button class="btn btn-success" style="width:100%; margin-top:5px;" onclick="handleAdminLogin()">Admin Girişi Yap</button>
-            </div>
-            <div id="user-login-form" class="login-form">
+                <div class="form-group">
+                    <label>Admin TC Kimlik No:</label>
+                    <input type="text" id="admin-user" name="username" autocomplete="username" placeholder="11 Haneli TC" required>
+                </div>
+                <div class="form-group">
+                    <label>Admin Şifre:</label>
+                    <input type="password" id="admin-pass" name="current-password" autocomplete="current-password" placeholder="Şifreniz" required>
+                </div>
+                <button type="submit" class="btn btn-success" style="width:100%; margin-top:5px;">Admin Girişi Yap</button>
+            </form>
+            <form id="user-login-form" class="login-form" onsubmit="event.preventDefault(); handleUserLogin();">
                 <p style="font-size:12px; color:var(--text-muted); margin-bottom:5px;">Lütfen 11 haneli TC kimlik no giriniz.</p>
-                <div class="form-group"><label>Personel TC Kimlik No:</label><input type="text" id="personel-tc" placeholder="11 Haneli TC"></div>
-                <div class="form-group"><label>Personel Şifre:</label><input type="password" id="personel-pass" value="MRTORTC"></div>
-                <button class="btn btn-primary" style="width:100%; margin-top:5px;" onclick="handleUserLogin()">Personel Girişi Yap</button>
-            </div>
+                <div class="form-group">
+                    <label>Personel TC Kimlik No:</label>
+                    <input type="text" id="personel-tc" name="username" autocomplete="username" placeholder="11 Haneli TC" required>
+                </div>
+                <div class="form-group">
+                    <label>Personel Şifre:</label>
+                    <input type="password" id="personel-pass" name="current-password" autocomplete="current-password" value="MRTORTC" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%; margin-top:5px;">Personel Girişi Yap</button>
+            </form>
         </div>
     </div>
 
@@ -617,10 +630,13 @@
             <section id="mod13" class="module-section">
                 <div class="card">
                     <div class="card-header">
-                        <h2>🏢 Modül 13: İşletmeler, Adresler, Yol Tarifi & Yanıp Sönen Doğalgaz Uyarısı</h2>
+                        <h2>🏢 Modül 13: İşletmeler, Adresler, Yol Tarifi, Excel'den Yükle & Yanıp Sönen Doğalgaz Uyarısı</h2>
                         <div>
                             <input type="text" id="firma-arama-input" placeholder="Firma Ara..." style="display:inline-block; width:200px; padding:6px; font-size:12px;" oninput="searchCompanies(); forceUpper(this)">
                             <button class="btn btn-secondary" onclick="window.print()">🖨️ Yazdır</button>
+                            <label class="btn btn-success" style="cursor:pointer; margin-bottom:0; display:inline-flex; align-items:center;">
+                                📁 Excel'den Firma Yükle <input type="file" id="excel-firma-file" accept=".xlsx, .xls, .csv" style="display:none;" onchange="importCompaniesFromExcel(event)">
+                            </label>
                             <button class="btn btn-success" onclick="toggleForm('firma-form')">+ Yeni Firma Ekle</button>
                         </div>
                     </div>
@@ -1321,7 +1337,6 @@
                 let gpsStr = h.GPSKoordinati || h.gps || "";
                 let durum = h.Durum || h.durum || "Sağlam / Aktif";
                 
-                // Renk ayarı
                 let colorHex = "#22c55e"; // Yeşil (Sağlam)
                 if(durum.includes('Arızalı')) colorHex = "#ef4444"; // Kırmızı
                 else if(durum.includes('Bakımda')) colorHex = "#f97316"; // Turuncu
@@ -1668,6 +1683,50 @@
             loadCompaniesTable();
             populateCompanyDatalist();
             toggleForm('firma-form');
+        }
+
+        function importCompaniesFromExcel(event) {
+            let file = event.target.files[0];
+            if(!file) return;
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let data = new Uint8Array(e.target.result);
+                    let workbook = XLSX.read(data, {type: 'array'});
+                    let firstSheetName = workbook.SheetNames[0];
+                    let worksheet = workbook.Sheets[firstSheetName];
+                    let json = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+                    
+                    let firmalar = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
+                    let addedCount = 0;
+
+                    // Başlık satırını atlayarak verileri alıyoruz (Beklenen kolon sırası: FirmaAdi, Adres, Iletisim, DogalgazVanaDurumu, GPS)
+                    for(let i = 1; i < json.length; i++) {
+                        let row = json[i];
+                        if(row && row[0]) {
+                            let fObj = {
+                                FirmaAdi: String(row[0] || "").toUpperCase(),
+                                CaddeAdres: String(row[1] || "").toUpperCase(),
+                                Iletisim: String(row[2] || ""),
+                                DogalgazVanaDurumu: String(row[3] || "YOK").toUpperCase(),
+                                GPS: String(row[4] || "")
+                            };
+                            firmalar.unshift(fObj);
+                            sendDataToSheet("Isletmeler", fObj);
+                            addedCount++;
+                        }
+                    }
+
+                    localStorage.setItem('osb_firmalar', JSON.stringify(firmalar));
+                    loadCompaniesTable();
+                    populateCompanyDatalist();
+                    alert(`Başarıyla ${addedCount} adet firma Excel'den yüklendi ve senkronize edildi!`);
+                } catch(err) {
+                    alert("Excel dosyası okunurken hata oluştu: " + err.message);
+                }
+                event.target.value = "";
+            };
+            reader.readAsArrayBuffer(file);
         }
 
         function loadCompaniesTable(search = "") {
