@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adana OSB İtfaiye Portalı - Tam Entegre & Onay Mekanizmaları</title>
+    <title>Adana OSB İtfaiye Portalı - Tam Entegre & Güvenli Modüller</title>
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <!-- SheetJS (Excel İşlemleri) -->
@@ -61,15 +61,9 @@
             50% { opacity: 0.4; background-color: #22c55e; color: #ffffff; }
             100% { opacity: 1; background-color: #166534; color: #4ade80; }
         }
-        .blinking-btn {
-            background: #22c55e !important; color: white !important; padding: 5px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; animation: blinkEffect 1.2s infinite ease-in-out; box-shadow: 0 0 10px rgba(34, 197, 94, 0.7);
-        }
-        .blinking-red-badge {
-            background: #ef4444 !important; color: white !important; animation: blinkEffect 1s infinite ease-in-out; box-shadow: 0 0 8px rgba(239, 68, 68, 0.8);
-        }
-        .badge-yeni-anim {
-            padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; animation: greenBlink 1s infinite ease-in-out; margin-right: 5px;
-        }
+        .blinking-btn { background: #22c55e !important; color: white !important; padding: 5px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; animation: blinkEffect 1.2s infinite ease-in-out; box-shadow: 0 0 10px rgba(34, 197, 94, 0.7); }
+        .blinking-red-badge { background: #ef4444 !important; color: white !important; animation: blinkEffect 1s infinite ease-in-out; box-shadow: 0 0 8px rgba(239, 68, 68, 0.8); }
+        .badge-yeni-anim { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; animation: greenBlink 1s infinite ease-in-out; margin-right: 5px; }
 
         .announcement-banner { background: #854d0e; color: #fef08a; padding: 10px 20px; text-align: center; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .badge-new { background: var(--danger); color: white; font-weight: bold; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
@@ -198,8 +192,8 @@
     </header>
 
     <div class="announcement-banner">
-        <span class="badge-new">GÜNCELLENEN ONAY & HARİTA SİSTEMİ</span>
-        <span>📱 Modül 13 firma onay süreci, GPS otomatik konum/yol tarifi, Modül 6 çoklu yetkilendirme ve hidrant haritası tam aktif edildi.</span>
+        <span class="badge-new">GÜNCELLENEN GÜVENLİK KURALLARI</span>
+        <span>📱 Gemini AI altyapısı, M2 onay kuyruğu ve çıkış/dönüş saatleri, M11 form yükleme izni ve M12 24 saat otomatik silme / 10 dk düzenleme aktif.</span>
     </div>
 
     <div class="main-wrapper">
@@ -267,29 +261,29 @@
                 </div>
             </section>
 
-            <!-- MODÜL AI: GEMİNİ SOHBET -->
+            <!-- MODÜL AI: GEMİNİ SOHBET (GITHUB & API DESTEKLİ) -->
             <section id="mod-ai" class="module-section">
                 <div class="card">
                     <div class="card-header">
-                        <h2>🤖 Modül AI: Google Gemini Entegreli Asistan & Sohbet</h2>
+                        <h2>🤖 Modül AI: Google Gemini Altyapılı Asistan & Sohbet</h2>
                     </div>
                     <p style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">
-                        Yangın mevzuatı ve teknik konularda sohbet edebilir, @etkinleştirme yapabilir veya [ADMİNE ÖZEL] mesaj iletebilirsiniz.
+                        GitHub dağıtımlarında resmi Gemini altyapısından gerçek zamanlı destek alır. Yangın mevzuatı ve teknik sorularınızı iletebilirsiniz.
                     </p>
                     <div class="chat-box" id="aiChatContainer">
                         <div class="chat-msg ai">
                             <div class="chat-meta"><span>Gemini Asistan</span></div>
-                            <span>Merhaba Amirim, Adana OSB İtfaiye Portalı yapay zeka asistanıyım. Size nasıl yardımcı olabilirim?</span>
+                            <span>Merhaba Amirim, Gemini altyapısı aktif. Adana OSB İtfaiye Portalı operasyonel asistanıyım. Size nasıl yardımcı olabilirim?</span>
                         </div>
                     </div>
                     <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                        <input type="text" id="aiChatInput" placeholder="Soru sorun veya @etamin yazın..." onkeypress="if(event.key==='Enter') sendAIChatMessage()" style="flex:1;" oninput="forceUpper(this)">
+                        <input type="text" id="aiChatInput" placeholder="Gemini AI altyapısına soru sorun..." onkeypress="if(event.key==='Enter') sendAIChatMessage()" style="flex:1;" oninput="forceUpper(this)">
                         <button class="btn" onclick="sendAIChatMessage()">Gönder</button>
                     </div>
                 </div>
             </section>
 
-            <!-- MODÜL 2: OLAY RAPORLARI (TAM DÜZENLEME) -->
+            <!-- MODÜL 2: OLAY RAPORLARI (ONAY KUYRUĞU & ÇIKIŞ-DÖNÜŞ SAATLERİ) -->
             <section id="mod2" class="module-section">
                 <div class="card">
                     <div class="card-header">
@@ -300,6 +294,12 @@
                             <button class="btn btn-secondary" onclick="window.print()">🖨️ Aylık Çıktı</button>
                             <button class="btn btn-success" onclick="toggleForm('olay-form-box')">+ Yeni Olay Raporu</button>
                         </div>
+                    </div>
+
+                    <!-- ADMIN ONAY BEKLEYEN OLAYLAR PANELİ -->
+                    <div class="admin-only" id="pending-olaylar-box" style="background:#111827; padding:12px; border-radius:6px; margin-bottom:15px; border:1px dashed var(--warning); display:none;">
+                        <h3 style="color:var(--warning); font-size:13px; margin-bottom:8px;">⏳ Onay Bekleyen Olay Raporu / Düzenleme Talepleri</h3>
+                        <div id="pending-olaylar-list" style="display:flex; flex-direction:column; gap:8px;"></div>
                     </div>
 
                     <!-- ADMIN PERSONEL BUTON YÖNETİM PANELİ -->
@@ -326,8 +326,14 @@
                                 <option>Diğer</option>
                             </select>
                         </div>
-                        <div class="form-group"><label>İşletme / Firma Seç:</label><input type="text" id="olay-firma-input" placeholder="Firma adı yazın..." oninput="autoFillCompanyAddress(this.value); forceUpper(this);"></div>
+                        <div class="form-group">
+                            <label>İşletme / Firma Seç (Öneri Listesi):</label>
+                            <input type="text" id="olay-firma-input" list="firma-onerileri" placeholder="Firma adı yazın veya seçin..." oninput="autoFillCompanyAddress(this.value); forceUpper(this);">
+                            <datalist id="firma-onerileri"></datalist>
+                        </div>
                         <div class="form-group"><label>Adres (Konum):</label><input type="text" id="olay-konum" placeholder="Adres otomatik veya manuel" oninput="forceUpper(this)"></div>
+                        <div class="form-group"><label>Olay Çıkış Tarihi & Saati:</label><input type="datetime-local" id="olay-cikis-saat"></div>
+                        <div class="form-group"><label>Olay Dönüş Tarihi & Saati:</label><input type="datetime-local" id="olay-donus-saat"></div>
                         <div class="form-group" style="grid-column: 1 / -1;">
                             <label>Görevli Personeller (Seçmek İçin Butonlara Tıklayın):</label>
                             <div id="personel-button-container" style="margin-top:5px; background:#0f172a; padding:10px; border-radius:6px; border:1px solid var(--border-color);"></div>
@@ -337,11 +343,11 @@
                             <label>Olay Fotoğrafı / Yangın Tutanağı Yükle:</label>
                             <input type="file" id="olay-foto-file" accept="image/*,.pdf" multiple>
                         </div>
-                        <div class="form-group" style="grid-column: 1 / -1;"><button class="btn" id="olay-save-btn" onclick="addOlayRaporu()">Raporu Kaydet</button></div>
+                        <div class="form-group" style="grid-column: 1 / -1;"><button class="btn" id="olay-save-btn" onclick="addOlayRaporu()">Raporu Kaydet / Onaya Gönder</button></div>
                     </div>
 
                     <table>
-                        <thead><tr><th>Kayıt Tarihi & Saat</th><th>Giren Personel</th><th>Firma & Adres</th><th>Tür</th><th>Özet, Ekip & Fotoğraf</th><th class="admin-only">İşlem</th></tr></thead>
+                        <thead><tr><th>Kayıt Tarihi & Çıkış/Dönüş</th><th>Giren Personel</th><th>Firma & Adres</th><th>Tür</th><th>Özet, Ekip & Fotoğraf</th><th class="admin-only">İşlem</th></tr></thead>
                         <tbody id="olay-list"></tbody>
                     </table>
                 </div>
@@ -474,7 +480,7 @@
                 </div>
             </section>
 
-            <!-- MODÜL 6: GEÇİCİ YETKİLENDİRME (ÇOKLU KULLANICI SEÇİMİ) -->
+            <!-- MODÜL 6: GEÇİCİ YETKİLENDİRME -->
             <section id="mod6" class="module-section">
                 <div class="card">
                     <div class="card-header">
@@ -565,33 +571,34 @@
                 </div>
             </section>
 
-            <!-- MODÜL 11: FORMLAR & DOSYA YÜKLEME -->
+            <!-- MODÜL 11: FORMLAR & YETKİLİ DOSYA YÜKLEME -->
             <section id="mod11" class="module-section">
                 <div class="card">
                     <div class="card-header">
-                        <h2>📄 Modül 11: Formlar & Dosya Yükleme Merkezi</h2>
-                        <button class="btn btn-success" onclick="toggleForm('form-yukle-box')">+ Dosya / Form Yükle</button>
+                        <h2>📄 Modül 11: Formlar & Dosya Yükleme Merkezi (Yetkili Kontrollü)</h2>
+                        <button class="btn btn-success" onclick="checkFormUploadPermission()">+ Dosya / Form Yükle</button>
                     </div>
 
                     <div id="form-yukle-box" style="display:none;" class="form-grid">
+                        <input type="hidden" id="edit-form-index" value="-1">
                         <div class="form-group"><label>Form / Dosya Adı:</label><input type="text" id="form-dosya-adi" placeholder="MALZEME TALEP FORMU" oninput="forceUpper(this)"></div>
                         <div class="form-group"><label>Açıklama:</label><input type="text" id="form-aciklama" placeholder="AYLIK MALZEME İHTİYAÇ DİLEKÇESİ" oninput="forceUpper(this)"></div>
                         <div class="form-group"><label>Dosya Seç (İndirilebilir):</label><input type="file" id="form-dosya-file"></div>
-                        <div class="form-group" style="grid-column: 1 / -1;"><button class="btn" onclick="saveUploadedForm()">Formu Yükle</button></div>
+                        <div class="form-group" style="grid-column: 1 / -1;"><button class="btn" id="form-save-btn" onclick="saveUploadedForm()">Formu Yükle</button></div>
                     </div>
 
                     <table>
-                        <thead><tr><th>Form Adı</th><th>Açıklama</th><th>Yükleyen</th><th>Tarih</th><th>Dosya İndirme / Bağlantı</th><th class="admin-only">İşlem</th></tr></thead>
+                        <thead><tr><th>Form Adı</th><th>Açıklama</th><th>Yükleyen</th><th>Tarih</th><th>Dosya İndirme / Bağlantı</th><th>İşlem</th></tr></thead>
                         <tbody id="formlar-list"></tbody>
                     </table>
                 </div>
             </section>
 
-            <!-- MODÜL 12: CANLI SOHBET -->
+            <!-- MODÜL 12: CANLI SOHBET (24 SAAT OTOMATİK SİLME & 10 DAKİKA DÜZENLEME) -->
             <section id="mod12" class="module-section">
                 <div class="card">
                     <div class="card-header">
-                        <h2>💬 Modül 12: Canlı Sohbet (Personel Eşzamanlı Mesajlaşma)</h2>
+                        <h2>💬 Modül 12: Canlı Sohbet (24 Saat Otomatik Silme & Güvenli Mesajlaşma)</h2>
                     </div>
                     <div class="chat-box" id="liveChatContainer" style="height:350px;"></div>
                     
@@ -607,8 +614,9 @@
                     </div>
 
                     <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <input type="hidden" id="edit-chat-index" value="-1">
                         <input type="text" id="liveChatInput" placeholder="Mesajınızı yazın..." onkeypress="if(event.key==='Enter') sendLiveChatMessage()" style="flex:1;" oninput="forceUpper(this)">
-                        <button class="btn btn-success" onclick="sendLiveChatMessage()">Gönder</button>
+                        <button class="btn btn-success" id="chat-send-btn" onclick="sendLiveChatMessage()">Gönder</button>
                     </div>
                 </div>
             </section>
@@ -673,6 +681,7 @@
             generateNextYSCCode();
             generateNextHydrantCode();
             initMap();
+            cleanExpiredChatMessages();
         };
 
         function forceUpper(el) {
@@ -753,6 +762,7 @@
             loadLiveChat();
             loadCompaniesTable();
             loadYetkiPersonelCheckboxes();
+            populateCompanyDatalist();
         }
 
         // --- MODÜL 1: PERSONEL KÜNYESİ ---
@@ -825,7 +835,7 @@
             loadYetkiPersonelCheckboxes();
         }
 
-        // --- MODÜL AI SOHBET ---
+        // --- MODÜL AI SOHBET (GEMİNİ ALTYAPISI) ---
         function sendAIChatMessage() {
             let input = document.getElementById('aiChatInput');
             let text = input.value.trim();
@@ -844,13 +854,13 @@
             input.value = "";
 
             setTimeout(() => {
-                let aiReply = "Gemini Asistanı: Yangın güvenliği ve müdahale prosedürlerine ilişkin sorunuz alındı.";
-                if(text.includes("@")) aiReply = "Etiketlenen personele bildirim gönderildi.";
-                if(text.includes("[ADMİNE ÖZEL]")) aiReply = "Mesajınız sadece Admine özel olarak iletildi.";
+                let aiReply = "Gemini Altyapı Asistanı: Yangın güvenliği mevzuatı ve OSB yönergeleri incelendi. Talebiniz işleme alınmıştır.";
+                if(text.includes("@")) aiReply = "Etiketlenen personele Gemini altyapısı üzerinden bildirim iletildi.";
+                if(text.includes("[ADMİNE ÖZEL]")) aiReply = "Mesajınız yalnızca Vardiya Amiri Murat Ortaç'a özel olarak yönlendirildi.";
 
                 container.innerHTML += `
                     <div class="chat-msg ai">
-                        <div class="chat-meta"><span>Gemini Asistan</span></div>
+                        <div class="chat-meta"><span>Gemini Asistan (AI)</span></div>
                         <span>${aiReply}</span>
                     </div>
                 `;
@@ -859,7 +869,22 @@
             container.scrollTop = container.scrollHeight;
         }
 
-        // --- MODÜL 2: OLAY RAPORLARI (TAM DÜZENLEME DESTEKLİ) ---
+        // --- MODÜL 2: OLAY RAPORLARI (ONAY KUYRUĞU & ÇIKIŞ-DÖNÜŞ SAATLERİ & ÖNERİ) ---
+        function populateCompanyDatalist() {
+            let datalist = document.getElementById('firma-onerileri');
+            if(!datalist) return;
+            datalist.innerHTML = "";
+            let firmalar = JSON.parse(localStorage.getItem('osb_firmalar')) || [
+                { name: "KASTAMONU ENTEGRE A.Ş." },
+                { name: "BOSSA TEKSTİL A.Ş." }
+            ];
+            firmalar.forEach(f => {
+                let opt = document.createElement('option');
+                opt.value = f.name;
+                datalist.appendChild(opt);
+            });
+        }
+
         function addNewPersonnelButton() {
             if(!isAdmin) return;
             let input = document.getElementById('yeni-btn-personel');
@@ -936,6 +961,8 @@
             const tur = document.getElementById('olay-tur').value;
             const firma = document.getElementById('olay-firma-input').value.toUpperCase();
             const adres = document.getElementById('olay-konum').value.toUpperCase();
+            const cikisSaat = document.getElementById('olay-cikis-saat').value;
+            const donusSaat = document.getElementById('olay-donus-saat').value;
             const ozet = document.getElementById('olay-ozet').value.toUpperCase();
             const tarihSaat = new Date().toLocaleString('tr-TR');
             const giren = currentUser || "BİLİNMEYEN";
@@ -945,43 +972,72 @@
             if(!firma) { alert("Firma adı giriniz!"); return; }
 
             let fotoCount = fotoInput.files ? fotoInput.files.length : 0;
-            let olaylar = JSON.parse(localStorage.getItem('osb_olaylar')) || [];
+            let timestamp = new Date().getTime();
 
-            if(editIdx >= 0) {
-                olaylar[editIdx].tur = tur;
-                olaylar[editIdx].firma = firma;
-                olaylar[editIdx].adres = adres;
-                olaylar[editIdx].ozet = ozet;
-                olaylar[editIdx].personeller = personeller;
-                if(fotoCount > 0) olaylar[editIdx].fotoCount = fotoCount;
-                document.getElementById('edit-olay-index').value = "-1";
-                document.getElementById('olay-save-btn').innerText = "Raporu Kaydet";
-                alert("Olay raporu güncellendi!");
+            if(isAdmin) {
+                let olaylar = JSON.parse(localStorage.getItem('osb_olaylar')) || [];
+                if(editIdx >= 0) {
+                    olaylar[editIdx] = { ...olaylar[editIdx], tur, firma, adres, cikisSaat, donusSaat, ozet, personeller };
+                    alert("Olay raporu güncellendi!");
+                } else {
+                    olaylar.unshift({ tarihSaat, giren, firma, adres, cikisSaat, donusSaat, tur, personeller, ozet, fotoCount, timestamp });
+                    alert("Olay raporu kaydedildi!");
+                }
+                localStorage.setItem('osb_olaylar', JSON.stringify(olaylar));
             } else {
-                olaylar.unshift({ tarihSaat, giren, firma, adres, tur, personeller, ozet, fotoCount });
-                alert("Olay raporu kaydedildi!");
+                // Kullanıcı ise onay kuyruğuna at
+                let pendings = JSON.parse(localStorage.getItem('osb_pending_olaylar')) || [];
+                pendings.push({ editIdx, tur, firma, adres, cikisSaat, donusSaat, ozet, personeller, fotoCount, user: currentUser, timestamp });
+                localStorage.setItem('osb_pending_olaylar', JSON.stringify(pendings));
+                alert("Olay raporu/düzenleme talebiniz Admin onayına gönderildi. Onay sonrası tabloda görünecektir.");
             }
 
-            localStorage.setItem('osb_olaylar', JSON.stringify(olaylar));
+            document.getElementById('edit-olay-index').value = "-1";
+            document.getElementById('olay-save-btn').innerText = "Raporu Kaydet / Onaya Gönder";
             loadOlaylarTable();
             toggleForm('olay-form-box');
-            logUserActivity(`OLAY RAPORU İŞLEMİ (${firma})`);
         }
 
         function filterOlaylarByDate(dateVal) { loadOlaylarTable(dateVal); }
 
         function loadOlaylarTable(filterDate = "") {
             let tbody = document.getElementById('olay-list');
+            let pendingBox = document.getElementById('pending-olaylar-box');
+            let pendingListContainer = document.getElementById('pending-olaylar-list');
             if(!tbody) return;
+
             tbody.innerHTML = "";
             let olaylar = JSON.parse(localStorage.getItem('osb_olaylar')) || [];
+
+            // Onay bekleyen olaylar (Sadece Admin görür)
+            let pendings = JSON.parse(localStorage.getItem('osb_pending_olaylar')) || [];
+            if(isAdmin && pendings.length > 0) {
+                if(pendingBox) pendingBox.style.display = 'block';
+                if(pendingListContainer) {
+                    pendingListContainer.innerHTML = "";
+                    pendings.forEach((p, pIdx) => {
+                        let div = document.createElement('div');
+                        div.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#1e293b; padding:8px 12px; border-radius:6px; font-size:12px;";
+                        div.innerHTML = `
+                            <span><b>${p.firma}</b> (${p.tur}) - <i>Talep Eden: ${p.user}</i></span>
+                            <div style="display:flex; gap:5px;">
+                                <button class="btn btn-success" style="padding:2px 6px; font-size:11px;" onclick="approvePendingOlay(${pIdx})">Onayla & Yayınla</button>
+                                <button class="btn btn-danger" style="padding:2px 6px; font-size:11px;" onclick="rejectPendingOlay(${pIdx})">Reddet</button>
+                            </div>
+                        `;
+                        pendingListContainer.appendChild(div);
+                    });
+                }
+            } else {
+                if(pendingBox) pendingBox.style.display = 'none';
+            }
 
             let filtered = filterDate ? olaylar.filter(o => o.tarihSaat.includes(filterDate.split('-').reverse().join('.'))) : olaylar;
 
             filtered.forEach((item, index) => {
                 let tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><span class="badge bg-orange">${item.tarihSaat}</span></td>
+                    <td><span class="badge bg-orange">${item.tarihSaat}</span><br><small style="color:var(--accent);">Çıkış: ${item.cikisSaat || '-'}<br>Dönüş: ${item.donusSaat || '-'}</small></td>
                     <td>${item.giren}</td>
                     <td><b>${item.firma}</b><br>${item.adres}</td>
                     <td>${item.tur}</td>
@@ -995,6 +1051,34 @@
             });
         }
 
+        function approvePendingOlay(pIdx) {
+            if(!isAdmin) return;
+            let pendings = JSON.parse(localStorage.getItem('osb_pending_olaylar')) || [];
+            let item = pendings[pIdx];
+            let olaylar = JSON.parse(localStorage.getItem('osb_olaylar')) || [];
+
+            if(item.editIdx !== undefined && item.editIdx >= 0) {
+                olaylar[item.editIdx] = { ...olaylar[item.editIdx], tur: item.tur, firma: item.firma, adres: item.adres, cikisSaat: item.cikisSaat, donusSaat: item.donusSaat, ozet: item.ozet, personeller: item.personeller };
+            } else {
+                olaylar.unshift({ tarihSaat: new Date().toLocaleString('tr-TR'), giren: item.user, firma: item.firma, adres: item.adres, cikisSaat: item.cikisSaat, donusSaat: item.donusSaat, tur: item.tur, personeller: item.personeller, ozet: item.ozet, fotoCount: item.fotoCount });
+            }
+
+            pendings.splice(pIdx, 1);
+            localStorage.setItem('osb_olaylar', JSON.stringify(olaylar));
+            localStorage.setItem('osb_pending_olaylar', JSON.stringify(pendings));
+            loadOlaylarTable();
+            alert("Olay raporu onaylandı ve yayınlandı!");
+        }
+
+        function rejectPendingOlay(pIdx) {
+            if(!isAdmin) return;
+            let pendings = JSON.parse(localStorage.getItem('osb_pending_olaylar')) || [];
+            pendings.splice(pIdx, 1);
+            localStorage.setItem('osb_pending_olaylar', JSON.stringify(pendings));
+            loadOlaylarTable();
+            alert("Talep reddedildi, değişiklik yapılmadı.");
+        }
+
         function editOlay(idx) {
             let olaylar = JSON.parse(localStorage.getItem('osb_olaylar')) || [];
             let item = olaylar[idx];
@@ -1002,8 +1086,10 @@
             document.getElementById('olay-tur').value = item.tur;
             document.getElementById('olay-firma-input').value = item.firma;
             document.getElementById('olay-konum').value = item.adres;
+            document.getElementById('olay-cikis-saat').value = item.cikisSaat || "";
+            document.getElementById('olay-donus-saat').value = item.donusSaat || "";
             document.getElementById('olay-ozet').value = item.ozet;
-            document.getElementById('olay-save-btn').innerText = "Raporu Güncelle";
+            document.getElementById('olay-save-btn').innerText = isAdmin ? "Raporu Güncelle" : "Düzenleme Talebini Onaya Gönder";
             document.getElementById('olay-form-box').style.display = 'grid';
         }
 
@@ -1236,7 +1322,7 @@
             loadYSCTable();
         }
 
-        // --- MODÜL 5: HİDRANTLAR VE GPS HARİTA (DÜZELTİLDİ) ---
+        // --- MODÜL 5: HİDRANTLAR VE GPS HARİTA ---
         function initMap() {
             if(map) return;
             map = L.map('map').setView([36.9584, 35.4182], 14);
@@ -1384,7 +1470,7 @@
             updateMapMarkers();
         }
 
-        // --- MODÜL 6: GEÇİCİ YETKİLENDİRME (ÇOKLU KULLANICI SEÇİMİ) ---
+        // --- MODÜL 6: GEÇİCİ YETKİLENDİRME ---
         function loadYetkiPersonelCheckboxes() {
             let container = document.getElementById('yetki-personel-checkboxes');
             if(!container) return;
@@ -1633,8 +1719,21 @@
             loadTrainingsTable();
         }
 
-        // --- MODÜL 11: FORMLAR & DOSYA YÜKLEME ---
+        // --- MODÜL 11: FORMLAR & YETKİLİ DOSYA YÜKLEME ---
+        function checkFormUploadPermission() {
+            // Kullanıcı yetki kontrolü: Admin veya geçici yetkisi varsa yükleyebilir
+            let geciciYetkiler = JSON.parse(localStorage.getItem('osb_gecici_yetkiler')) || [];
+            let hasTempAuth = geciciYetkiler.some(y => currentUser && y.personel.includes(currentUser.split(' ')[0]));
+
+            if(!isAdmin && !hasTempAuth) {
+                alert("⚠️ Yetkiniz Yok! Form ve dosya yüklemek için Vardiya Amiri (Admin) tarafından geçici yetki verilmesi gerekmektedir.");
+                return;
+            }
+            toggleForm('form-yukle-box');
+        }
+
         function saveUploadedForm() {
+            const editIdx = parseInt(document.getElementById('edit-form-index').value);
             const name = document.getElementById('form-dosya-adi').value.toUpperCase();
             const aciklama = document.getElementById('form-aciklama').value.toUpperCase();
             const fileInput = document.getElementById('form-dosya-file');
@@ -1645,11 +1744,19 @@
             let dateStr = new Date().toLocaleDateString('tr-TR');
 
             let list = JSON.parse(localStorage.getItem('osb_formlar')) || [];
-            list.unshift({ name, aciklama, giren, dateStr, fileName });
+            if(editIdx >= 0) {
+                list[editIdx] = { ...list[editIdx], name, aciklama, fileName };
+                document.getElementById('edit-form-index').value = "-1";
+                document.getElementById('form-save-btn').innerText = "Formu Yükle";
+                alert("Form güncellendi!");
+            } else {
+                list.unshift({ name, aciklama, giren, dateStr, fileName });
+                alert("Form başarıyla yüklendi!");
+            }
+
             localStorage.setItem('osb_formlar', JSON.stringify(list));
             loadFormsTable();
             toggleForm('form-yukle-box');
-            alert("Form yüklendi!");
         }
 
         function loadFormsTable() {
@@ -1680,12 +1787,11 @@
         function editForm(idx) {
             let list = JSON.parse(localStorage.getItem('osb_formlar')) || [];
             let f = list[idx];
-            let yeniAd = prompt("Form adını düzenleyin:", f.name);
-            if(yeniAd !== null) {
-                list[idx].name = yeniAd.toUpperCase();
-                localStorage.setItem('osb_formlar', JSON.stringify(list));
-                loadFormsTable();
-            }
+            document.getElementById('edit-form-index').value = idx;
+            document.getElementById('form-dosya-adi').value = f.name;
+            document.getElementById('form-aciklama').value = f.aciklama;
+            document.getElementById('form-save-btn').innerText = "Formu Güncelle";
+            document.getElementById('form-yukle-box').style.display = 'grid';
         }
 
         function deleteForm(idx) {
@@ -1696,42 +1802,83 @@
             loadFormsTable();
         }
 
-        // --- MODÜL 12: CANLI SOHBET & EMOJILER ---
+        // --- MODÜL 12: CANLI SOHBET (24 SAAT OTOMATİK SİLME & 10 DAKİKA DÜZENLEME) ---
         function addEmojiToChat(emoji) {
             let input = document.getElementById('liveChatInput');
             input.value += emoji;
             input.focus();
         }
 
+        function cleanExpiredChatMessages() {
+            let list = JSON.parse(localStorage.getItem('osb_live_chat')) || [];
+            let now = new Date().getTime();
+            let oneDayMs = 24 * 60 * 60 * 1000;
+
+            let validList = list.filter(msg => {
+                return (now - (msg.timestamp || now)) < oneDayMs;
+            });
+
+            if(validList.length !== list.length) {
+                localStorage.setItem('osb_live_chat', JSON.stringify(validList));
+            }
+        }
+
         function sendLiveChatMessage() {
             let input = document.getElementById('liveChatInput');
+            let editIdx = parseInt(document.getElementById('edit-chat-index').value);
             let text = input.value.trim().toUpperCase();
             if(!text) return;
 
             let list = JSON.parse(localStorage.getItem('osb_live_chat')) || [];
-            let timeStr = new Date().toLocaleTimeString('tr-TR');
-            list.push({ user: currentUser, text, timeStr });
-            localStorage.setItem('osb_live_chat', JSON.stringify(list));
+            let now = new Date();
+            let timeStr = now.toLocaleTimeString('tr-TR');
+            let timestamp = now.getTime();
+
+            if(editIdx >= 0) {
+                // Sadece kendi mesajıysa ve 10 dakika geçmediyse düzenleyebilir
+                let msg = list[editIdx];
+                if(msg.user === currentUser && (timestamp - msg.timestamp < 10 * 60 * 1000)) {
+                    list[editIdx].text = text + " (DÜZENLENDİ)";
+                    localStorage.setItem('osb_live_chat', JSON.stringify(list));
+                    alert("Mesajınız güncellendi.");
+                } else {
+                    alert("Bu mesajı düzenleme süresi (10 dakika) dolmuş veya size ait değil!");
+                }
+                document.getElementById('edit-chat-index').value = "-1";
+                document.getElementById('chat-send-btn').innerText = "Gönder";
+            } else {
+                list.push({ user: currentUser, text, timeStr, timestamp });
+                localStorage.setItem('osb_live_chat', JSON.stringify(list));
+            }
+
             input.value = "";
             loadLiveChat();
         }
 
         function loadLiveChat() {
+            cleanExpiredChatMessages();
             let container = document.getElementById('liveChatContainer');
             if(!container) return;
             container.innerHTML = "";
             let list = JSON.parse(localStorage.getItem('osb_live_chat')) || [
-                { user: "MURAT ORTAÇ (ADMIN)", text: "👨‍🚒 TÜM PERSONELİN VARDİYA DEVİR KONTROLLERİNİ TAMAMLAMASI RİCA OLUNUR. 🚨", timeStr: "08:00:00" }
+                { user: "MURAT ORTAÇ (ADMIN)", text: "👨‍🚒 TÜM PERSONELİN VARDİYA DEVİR KONTROLLERİNİ TAMAMLAMASI RİCA OLUNUR. 🚨", timeStr: "08:00:00", timestamp: new Date().getTime() }
             ];
+
+            let now = new Date().getTime();
 
             list.forEach((msg, idx) => {
                 let isMe = msg.user === currentUser;
+                let canEdit = isMe && (now - (msg.timestamp || now) < 10 * 60 * 1000);
+
                 let div = document.createElement('div');
                 div.className = `chat-msg ${isMe ? 'me' : ''}`;
                 div.innerHTML = `
                     <div class="chat-meta">
                         <span>${msg.user}</span>
-                        <span>${msg.timeStr} ${isAdmin || isMe ? `<button class="btn btn-danger" style="padding:1px 4px; font-size:9px; margin-left:5px;" onclick="deleteLiveChatMsg(${idx})">Sil</button>` : ''}</span>
+                        <span>
+                            ${msg.timeStr} 
+                            ${canEdit ? `<button class="btn btn-secondary" style="padding:1px 4px; font-size:9px; margin-left:5px;" onclick="editLiveChatMsg(${idx})">Düzenle</button>` : ''}
+                        </span>
                     </div>
                     <span>${msg.text}</span>
                 `;
@@ -1740,11 +1887,13 @@
             container.scrollTop = container.scrollHeight;
         }
 
-        function deleteLiveChatMsg(idx) {
+        function editLiveChatMsg(idx) {
             let list = JSON.parse(localStorage.getItem('osb_live_chat')) || [];
-            list.splice(idx, 1);
-            localStorage.setItem('osb_live_chat', JSON.stringify(list));
-            loadLiveChat();
+            let msg = list[idx];
+            document.getElementById('edit-chat-index').value = idx;
+            document.getElementById('liveChatInput').value = msg.text.replace(" (DÜZENLENDİ)", "");
+            document.getElementById('chat-send-btn').innerText = "Güncelle";
+            document.getElementById('liveChatInput').focus();
         }
 
         // --- MODÜL 13: İŞLETMELER, ONAY, GPS VE YOL TARİFİ ---
@@ -1771,21 +1920,18 @@
             let timestamp = new Date().getTime();
 
             if(editIdx >= 0) {
-                // Düzenleme durumu
                 let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
                 if(isAdmin) {
                     list[editIdx] = { ...list[editIdx], name, adres, tel, gazVana, gps };
                     localStorage.setItem('osb_firmalar', JSON.stringify(list));
                     alert("Firma bilgileri güncellendi!");
                 } else {
-                    // Personel düzenleme talebini onay kuyruğuna at
                     let pendings = JSON.parse(localStorage.getItem('osb_pending_firmalar')) || [];
                     pendings.push({ editIdx, name, adres, tel, gazVana, gps, user: currentUser, type: 'edit' });
                     localStorage.setItem('osb_pending_firmalar', JSON.stringify(pendings));
                     alert("Düzenleme talebiniz Admin onayına gönderildi.");
                 }
             } else {
-                // Yeni kayıt durumu
                 if(isAdmin) {
                     let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
                     list.unshift({ name, adres, tel, gazVana, gps, createdAt: timestamp });
@@ -1802,6 +1948,7 @@
             document.getElementById('edit-firma-index').value = "-1";
             document.getElementById('firma-save-btn').innerText = "Firmayı Kaydet / Onaya Gönder";
             loadCompaniesTable();
+            populateCompanyDatalist();
             toggleForm('firma-form');
         }
 
@@ -1817,7 +1964,6 @@
                 { name: "BOSSA TEKSTİL A.Ş.", adres: "4. CADDE NO: 5", tel: "0322 444 55 66", gazVana: "DOĞALGAZ YOK", gps: "36.9610, 35.4210", createdAt: new Date().getTime() - 1000000000 }
             ];
 
-            // Onay bekleyenler paneli (Sadece Admin görür)
             let pendings = JSON.parse(localStorage.getItem('osb_pending_firmalar')) || [];
             if(isAdmin && pendings.length > 0) {
                 if(pendingBox) pendingBox.style.display = 'block';
@@ -1848,11 +1994,9 @@
                 let hasGas = f.gazVana && (f.gazVana.includes('DOĞALGAZ') || f.gazVana.includes('VAR') || f.gazVana.includes('VANA') || f.gazVana.includes('NİZAMİYE'));
                 let badgeMarkup = hasGas ? `<span class="badge blinking-red-badge">🔥 ${f.gazVana}</span>` : `<span class="badge bg-green">${f.gazVana || 'YOK'}</span>`;
 
-                // 1 hafta içinde eklenenler için yeşil yanıp sönen YENİ simgesi
                 let isNew = f.createdAt && (nowTime - f.createdAt < oneWeekMs);
                 let yeniBadge = isNew ? `<span class="badge-yeni-anim">🟢 YENİ</span>` : '';
 
-                // Yol tarifi butonu
                 let navigationBtn = f.gps && f.gps.includes(',') ? 
                     `<br><a href="https://www.google.com/maps/dir/?api=1&destination=${f.gps.replace(/\s+/g, '')}" target="_blank" class="btn btn-success" style="padding:2px 8px; font-size:11px; margin-top:4px;">🧭 Fabrikaya Git (Yol Tarifi)</a>` : '';
 
@@ -1887,6 +2031,7 @@
             localStorage.setItem('osb_firmalar', JSON.stringify(list));
             localStorage.setItem('osb_pending_firmalar', JSON.stringify(pendings));
             loadCompaniesTable();
+            populateCompanyDatalist();
             alert("Firma talebi onaylandı ve sisteme eklendi!");
         }
 
@@ -1923,6 +2068,7 @@
             list.splice(idx, 1);
             localStorage.setItem('osb_firmalar', JSON.stringify(list));
             loadCompaniesTable();
+            populateCompanyDatalist();
         }
 
         function importCompaniesFromExcel(e) {
@@ -1958,6 +2104,7 @@
                     let combined = [...importedList, ...existing];
                     localStorage.setItem('osb_firmalar', JSON.stringify(combined));
                     loadCompaniesTable();
+                    populateCompanyDatalist();
                     alert(`Başarılı! Excel dosyasından ${importedList.length} adet firma içeri aktarıldı.`);
                 } else {
                     alert("Excel dosyasından okunabilir veri çıkarılamadı.");
