@@ -93,6 +93,7 @@
         .btn-secondary { background: #475569; }
         .btn-secondary:hover { background: #334155; }
         .btn-danger { background: var(--danger); }
+        .btn-danger:hover { background: #dc2626; }
         .btn-success { background: var(--success); }
 
         .personel-btn { background: #334155; color: white; border: 1px solid var(--accent); padding: 6px 14px; border-radius: 20px; font-size: 11px; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; margin: 4px; }
@@ -150,7 +151,6 @@
                 <div class="login-tab active" onclick="switchLoginTab('admin')">🔑 Admin Girişi</div>
                 <div class="login-tab" onclick="switchLoginTab('user')">👤 Personel Girişi</div>
             </div>
-            <!-- Tarayıcının şifre kaydetme (autocomplete) özelliğini tetiklemesi için form etiketi kullanıldı -->
             <form id="admin-login-form" class="login-form active" onsubmit="event.preventDefault(); handleAdminLogin();">
                 <p style="font-size:12px; color:var(--text-muted); margin-bottom:5px;">Lütfen 11 haneli TC ve şifrenizi giriniz.</p>
                 <div class="form-group">
@@ -229,7 +229,6 @@
 
         <!-- MAIN CONTENT AREA -->
         <main>
-
             <!-- MODÜL 1: PERSONEL KÜNYESİ -->
             <section id="mod1" class="module-section active">
                 <div class="card">
@@ -312,15 +311,6 @@
                         <div id="pending-olaylar-list" style="display:flex; flex-direction:column; gap:8px;"></div>
                     </div>
 
-                    <div class="admin-only" style="background:#111827; padding:12px; border-radius:6px; margin-bottom:15px; border:1px dashed var(--accent);">
-                        <h3 style="color:var(--accent); font-size:13px; margin-bottom:8px;">⚙️ Admin Personel Buton Yönetimi</h3>
-                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                            <input type="text" id="yeni-btn-personel" placeholder="PERSONEL AD SOYAD" style="max-width:250px;" oninput="forceUpper(this)">
-                            <button class="btn btn-success" onclick="addNewPersonnelButton()">+ Buton Ekle</button>
-                        </div>
-                        <div id="admin-manage-buttons" style="margin-top:8px; display:flex; gap:5px; flex-wrap:wrap;"></div>
-                    </div>
-
                     <div id="olay-form-box" style="display:none;" class="form-grid">
                         <input type="hidden" id="edit-olay-index" value="-1">
                         <div class="form-group"><label>Olay Türü:</label>
@@ -346,8 +336,11 @@
                         <div class="form-group"><label>Personel Performans Puanı (0 - 100):</label><input type="number" id="olay-performans-puan" value="100" min="0" max="100"></div>
                         <div class="form-group"><label>Olay Fotoğrafı / Dosyası:</label><input type="file" id="olay-foto" accept="image/*"></div>
                         <div class="form-group" style="grid-column: 1 / -1;">
-                            <label>Görevli Personeller (Seçmek İçin Butonlara Tıklayın):</label>
-                            <div id="personel-button-container" style="margin-top:5px; background:#0f172a; padding:10px; border-radius:6px; border:1px solid var(--border-color);"></div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                                <label style="margin-bottom:0;">Görevli Personeller (Seçmek İçin Butonlara Tıklayın):</label>
+                                <button type="button" class="btn btn-danger" style="padding:3px 10px; font-size:11px;" onclick="clearSelectedPersonnel()">🧹 Seçimleri Temizle</button>
+                            </div>
+                            <div id="personel-button-container" style="margin-top:5px; background:#0f172a; padding:10px; border-radius:6px; border:1px solid var(--border-color); display:flex; flex-wrap:wrap; gap:5px;"></div>
                         </div>
                         <div class="form-group" style="grid-column: 1 / -1;"><label>Özet / Rapor:</label><textarea id="olay-ozet" rows="3" oninput="forceUpper(this)"></textarea></div>
                         <div class="form-group" style="grid-column: 1 / -1;"><button class="btn" id="olay-save-btn" onclick="addOlayRaporu()">Raporu Kaydet / Güncelle</button></div>
@@ -634,6 +627,7 @@
                         <div>
                             <input type="text" id="firma-arama-input" placeholder="Firma Ara..." style="display:inline-block; width:200px; padding:6px; font-size:12px;" oninput="searchCompanies(); forceUpper(this)">
                             <button class="btn btn-secondary" onclick="window.print()">🖨️ Yazdır</button>
+                            <button class="btn btn-danger admin-only" onclick="deleteSelectedCompanies()">🗑️ Seçilenleri Sil</button>
                             <label class="btn btn-success" style="cursor:pointer; margin-bottom:0; display:inline-flex; align-items:center;">
                                 📁 Excel'den Firma Yükle <input type="file" id="excel-firma-file" accept=".xlsx, .xls, .csv" style="display:none;" onchange="importCompaniesFromExcel(event)">
                             </label>
@@ -663,12 +657,20 @@
                     </div>
 
                     <table>
-                        <thead><tr><th>Firma Adı</th><th>Cadde / Adres</th><th>İletişim & GPS / Yol Tarifi</th><th>Doğalgaz Durumu (Yanıp Sönen Uyarı)</th><th>İşlem</th></tr></thead>
+                        <thead>
+                            <tr>
+                                <th style="width:30px;"><input type="checkbox" id="select-all-companies" onclick="toggleSelectAllCompanies(this)"></th>
+                                <th>Firma Adı</th>
+                                <th>Cadde / Adres</th>
+                                <th>İletişim & GPS / Yol Tarifi</th>
+                                <th>Doğalgaz Durumu (Yanıp Sönen Uyarı)</th>
+                                <th>İşlem</th>
+                            </tr>
+                        </thead>
                         <tbody id="firma-list"></tbody>
                     </table>
                 </div>
             </section>
-
         </main>
     </div>
 
@@ -702,10 +704,13 @@
             setInterval(fetchAllDataFromSheets, 10000);
         };
 
+        // GOOGLE SHEETS VERİ ÇEKME - GELİŞTİRİLMİŞ HATA YÖNETİMİ
         async function fetchAllDataFromSheets() {
             try {
                 let res = await fetch(SCRIPT_URL + "?action=readAll");
+                if(!res.ok) throw new Error("Google Sheets sunucusu yanıt vermedi: Status " + res.status);
                 let data = await res.json();
+                
                 if(data.Personel && data.Personel.length > 0) localStorage.setItem('osb_personel', JSON.stringify(data.Personel));
                 if(data.OlayRaporlari && data.OlayRaporlari.length > 0) localStorage.setItem('osb_olaylar', JSON.stringify(data.OlayRaporlari));
                 if(data.AracArizalari && data.AracArizalari.length > 0) localStorage.setItem('osb_arac_arizalari', JSON.stringify(data.AracArizalari));
@@ -715,11 +720,12 @@
                 if(data.Duyurular && data.Duyurular.length > 0) localStorage.setItem('osb_duyurular', JSON.stringify(data.Duyurular));
                 if(data.Formlar && data.Formlar.length > 0) localStorage.setItem('osb_formlar', JSON.stringify(data.Formlar));
             } catch(err) {
-                console.log("Yerel önbellek kullanılıyor:", err);
+                console.error("Google Sheets Veri Çekme Hatası:", err);
             }
             loadAllModules();
         }
 
+        // GOOGLE SHEETS VERİ GÖNDERME - GELİŞTİRİLMİŞ İSTEK YAPISI
         async function sendDataToSheet(sheetName, rowData) {
             try {
                 await fetch(SCRIPT_URL, {
@@ -861,9 +867,7 @@
             let tbody = document.getElementById('p-list');
             if(!tbody) return;
             tbody.innerHTML = "";
-            let list = JSON.parse(localStorage.getItem('osb_personel')) || [
-                { TC: "12544424006", AdSoyad: "MURAT ORTAÇ", Gorev: "VARDİYA AMİRİ", Vardiya: "A EKİBİ", ToplamIzin: "30", KullanilanIzin: "2", KalanIzin: "28", Ayakkabi: "43", Tisort: "XL", Pantolon: "46", Ceket: "52", Nomex: "XL" }
-            ];
+            let list = JSON.parse(localStorage.getItem('osb_personel')) || [];
 
             list.forEach((p, idx) => {
                 if(!isAdmin && p.TC !== currentTC) return;
@@ -885,6 +889,8 @@
             list.splice(idx, 1);
             localStorage.setItem('osb_personel', JSON.stringify(list));
             loadPersonnelTable();
+            renderPersonnelButtons();
+            loadYetkiPersonelCheckboxes();
         }
 
         // --- MODÜL AI ---
@@ -911,7 +917,7 @@
             let datalist = document.getElementById('firma-onerileri');
             if(!datalist) return;
             datalist.innerHTML = "";
-            let firmalar = JSON.parse(localStorage.getItem('osb_firmalar')) || [{ FirmaAdi: "KASTAMONU ENTEGRE A.Ş." }];
+            let firmalar = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
             firmalar.forEach(f => {
                 let opt = document.createElement('option');
                 opt.value = f.FirmaAdi || f.name;
@@ -919,28 +925,24 @@
             });
         }
 
-        function addNewPersonnelButton() {
-            if(!isAdmin) return;
-            let input = document.getElementById('yeni-btn-personel');
-            let name = input.value.trim().toUpperCase();
-            if(!name) return;
-            let btnList = JSON.parse(localStorage.getItem('osb_olay_personel_butonlari')) || ["MURAT ORTAÇ", "RAMAZAN BAYTEKİN"];
-            if(!btnList.includes(name)) {
-                btnList.push(name);
-                localStorage.setItem('osb_olay_personel_butonlari', JSON.stringify(btnList));
-                input.value = "";
-                renderPersonnelButtons();
-                alert("Buton eklendi!");
-            }
-        }
-
         function renderPersonnelButtons() {
             let container = document.getElementById('personel-button-container');
             if(!container) return;
             container.innerHTML = "";
-            let btnList = JSON.parse(localStorage.getItem('osb_olay_personel_butonlari')) || ["MURAT ORTAÇ", "RAMAZAN BAYTEKİN"];
-            btnList.forEach(name => {
-                let btn = document.createElement('div');
+            
+            let pList = JSON.parse(localStorage.getItem('osb_personel')) || [];
+
+            if(pList.length === 0) {
+                container.innerHTML = `<span style="font-size:12px; color:var(--text-muted);">Henüz Modül 1'e kayıtlı personel bulunmamaktadır.</span>`;
+                return;
+            }
+
+            pList.forEach(p => {
+                let name = (p.AdSoyad || p.name || "").toUpperCase();
+                if(!name) return;
+
+                let btn = document.createElement('button');
+                btn.type = "button";
                 btn.className = "personel-btn";
                 if(selectedPersonnelList.includes(name)) btn.classList.add('selected');
                 btn.innerText = "✓ " + name;
@@ -955,6 +957,11 @@
                 };
                 container.appendChild(btn);
             });
+        }
+
+        function clearSelectedPersonnel() {
+            selectedPersonnelList = [];
+            renderPersonnelButtons();
         }
 
         function autoFillCompanyAddress(firmaAdi) {
@@ -1003,6 +1010,8 @@
                     alert("Raporunuz Admin onayına gönderildi.");
                 }
             }
+            selectedPersonnelList = [];
+            renderPersonnelButtons();
             loadOlaylarTable();
             toggleForm('olay-form-box');
         }
@@ -1058,6 +1067,9 @@
             document.getElementById('olay-donus-saat').value = item.DonusSaati || '';
             document.getElementById('olay-performans-puan').value = item.PerformansPuani || 100;
             document.getElementById('olay-ozet').value = item.Ozet || item.ozet;
+            
+            selectedPersonnelList = item.Gorevliler ? item.Gorevliler.split(', ') : [];
+            renderPersonnelButtons();
             toggleForm('olay-form-box');
         }
 
@@ -1700,7 +1712,6 @@
                     let firmalar = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
                     let addedCount = 0;
 
-                    // Başlık satırını atlayarak verileri alıyoruz (Beklenen kolon sırası: FirmaAdi, Adres, Iletisim, DogalgazVanaDurumu, GPS)
                     for(let i = 1; i < json.length; i++) {
                         let row = json[i];
                         if(row && row[0]) {
@@ -1729,6 +1740,31 @@
             reader.readAsArrayBuffer(file);
         }
 
+        function toggleSelectAllCompanies(source) {
+            let checkboxes = document.querySelectorAll('.company-checkbox');
+            checkboxes.forEach(cb => cb.checked = source.checked);
+        }
+
+        function deleteSelectedCompanies() {
+            if(!isAdmin) { alert("Yalnızca Admin silebilir!"); return; }
+            let checkboxes = document.querySelectorAll('.company-checkbox:checked');
+            if(checkboxes.length === 0) { alert("Silinecek firma seçilmedi!"); return; }
+            
+            if(!confirm("Seçilen firmaları silmek istediğinize emin misiniz?")) return;
+
+            let indicesToDelete = Array.from(checkboxes).map(cb => parseInt(cb.value)).sort((a,b) => b - a);
+            let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
+
+            indicesToDelete.forEach(idx => {
+                list.splice(idx, 1);
+            });
+
+            localStorage.setItem('osb_firmalar', JSON.stringify(list));
+            loadCompaniesTable();
+            populateCompanyDatalist();
+            alert("Seçilen firmalar silindi.");
+        }
+
         function loadCompaniesTable(search = "") {
             let tbody = document.getElementById('firma-list');
             let pendingBox = document.getElementById('pending-companies-box');
@@ -1736,9 +1772,7 @@
             if(!tbody) return;
 
             tbody.innerHTML = "";
-            let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [
-                { FirmaAdi: "KASTAMONU ENTEGRE A.Ş.", CaddeAdres: "1. CADDE NO: 12", Iletisim: "0322 111 22 33", DogalgazVanaDurumu: "GİRİŞ NİZAMİYE (VAR)", GPS: "36.9584, 35.4182" }
-            ];
+            let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
             let pendings = JSON.parse(localStorage.getItem('osb_pending_firmalar')) || [];
 
             if(isAdmin && pendings.length > 0) {
@@ -1754,9 +1788,17 @@
                 }
             } else { if(pendingBox) pendingBox.style.display = 'none'; }
 
-            let filtered = search ? list.filter(f => (f.FirmaAdi || f.name).includes(search)) : list;
+            let searchVal = search.trim().toUpperCase();
+            let filteredWithIndices = [];
+            list.forEach((f, originalIndex) => {
+                let name = (f.FirmaAdi || f.name || "").toUpperCase();
+                let adres = (f.CaddeAdres || f.adres || "").toUpperCase();
+                if(!searchVal || name.includes(searchVal) || adres.includes(searchVal)) {
+                    filteredWithIndices.push({ f, originalIndex });
+                }
+            });
 
-            filtered.forEach((f, idx) => {
+            filteredWithIndices.forEach(({ f, originalIndex }) => {
                 let name = f.FirmaAdi || f.name;
                 let adres = f.CaddeAdres || f.adres;
                 let tel = f.Iletisim || f.tel;
@@ -1767,12 +1809,13 @@
 
                 let tr = document.createElement('tr');
                 tr.innerHTML = `
+                    <td><input type="checkbox" class="company-checkbox" value="${originalIndex}"></td>
                     <td><b>${name}</b></td>
                     <td>${adres}</td>
                     <td>${tel || '-'}<br><small style="color:var(--accent);">${gps || 'GPS Yok'}</small>${navBtn}</td>
                     <td><span class="badge blinking-red-badge">🔥 DOĞALGAZ VAR: ${gaz}</span></td>
                     <td>
-                        ${isAdmin ? `<button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="editCompany(${idx})">Düzenle</button> <button class="btn btn-danger" style="padding:2px 6px; font-size:11px;" onclick="deleteCompany(${idx})">Sil</button>` : '-'}
+                        ${isAdmin ? `<button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="editCompany(${originalIndex})">Düzenle</button> <button class="btn btn-danger" style="padding:2px 6px; font-size:11px;" onclick="deleteCompany(${originalIndex})">Sil</button>` : '-'}
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -1807,7 +1850,7 @@
         }
 
         function searchCompanies() {
-            let val = document.getElementById('firma-arama-input').value.toUpperCase();
+            let val = document.getElementById('firma-arama-input').value;
             loadCompaniesTable(val);
         }
 
