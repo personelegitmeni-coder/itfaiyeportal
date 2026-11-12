@@ -1,3 +1,46 @@
+<script>
+    // Giriş fonksiyonunu en öne alıyoruz ki ilk önce bu okunsun
+    function handleAdminLogin(event) {
+        if(event) event.preventDefault();
+        try {
+            let passInput = document.getElementById('admin-pass') || document.getElementById('admin-password');
+            let pass = passInput ? passInput.value : '';
+            
+            if(pass) {
+                window.isAdmin = true;
+                window.currentUser = "Admin";
+                localStorage.setItem('osb_is_admin', 'true');
+                localStorage.setItem('osb_current_user', "Admin");
+                
+                let loginScreen = document.getElementById('login-screen') || document.getElementById('login-modal');
+                if(loginScreen) loginScreen.style.display = 'none';
+                
+                if(typeof loadCompaniesTable === 'function') loadCompaniesTable();
+                alert("Admin olarak giriş yapıldı!");
+            } else {
+                alert("Lütfen şifre giriniz!");
+            }
+        } catch(err) {
+            alert("Giriş yapılırken hata oluştu: " + err.message);
+        }
+    }
+
+    function switchLoginTab(tabName) {
+        try {
+            document.querySelectorAll('.login-tab-content, .tab-content').forEach(el => {
+                el.style.display = 'none';
+            });
+            document.querySelectorAll('.login-tab-btn, .tab-btn').forEach(el => {
+                el.classList.remove('active');
+            });
+            let targetTab = document.getElementById(tabName);
+            if(targetTab) targetTab.style.display = 'block';
+        } catch(err) {
+            console.log("Sekme hatası: ", err);
+        }
+    }
+</script>
+
 <!-- Firebase SDK'ları -->
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
@@ -837,48 +880,4 @@
         if(f) f.style.display = f.style.display === 'none' ? 'grid' : 'none';
     }
 
-                  // --- GLOBAL GİRİŞ VE SEKME YÖNETİMİ ---
-
-    window.switchLoginTab = function(tabName) {
-        try {
-            document.querySelectorAll('.login-tab-content, .tab-content').forEach(el => {
-                el.style.display = 'none';
-            });
-            document.querySelectorAll('.login-tab-btn, .tab-btn').forEach(el => {
-                el.classList.remove('active');
-            });
-            
-            let targetTab = document.getElementById(tabName);
-            if(targetTab) {
-                targetTab.style.display = 'block';
-            }
-        } catch(err) {
-            console.log("Sekme değiştirme hatası: ", err);
-        }
-    };
-
-    window.handleAdminLogin = function(event) {
-        if(event) event.preventDefault();
-        try {
-            let passInput = document.getElementById('admin-pass') || document.getElementById('admin-password');
-            let pass = passInput ? passInput.value : '';
-            
-            if(pass) {
-                isAdmin = true;
-                currentUser = "Admin";
-                localStorage.setItem('osb_is_admin', 'true');
-                localStorage.setItem('osb_current_user', currentUser);
-                
-                let loginScreen = document.getElementById('login-screen') || document.getElementById('login-modal');
-                if(loginScreen) loginScreen.style.display = 'none';
-                
-                if(typeof loadCompaniesTable === 'function') loadCompaniesTable();
-                alert("Admin olarak giriş yapıldı!");
-            } else {
-                alert("Lütfen şifre giriniz!");
-            }
-        } catch(err) {
-            alert("Giriş yapılırken hata oluştu: " + err.message);
-        }
-    };
-                 
+               
