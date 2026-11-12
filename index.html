@@ -1776,7 +1776,7 @@
         toggleForm('firma-form');
     }
 
-    function importCompaniesFromExcel(event) {
+   function importCompaniesFromExcel(event) {
             let file = event.target.files[0];
             if(!file) return;
             let reader = new FileReader();
@@ -1787,34 +1787,38 @@
                     let firstSheetName = workbook.SheetNames[0];
                     let worksheet = workbook.Sheets[firstSheetName];
                     
-                    let rows = XLSX.utils.sheet_to_json(worksheet);
+                    // Başlık karmaşasını bitirmek için veriyi doğrudan dizi (array) olarak alıyoruz
+                    let rows = XLSX.utils.sheet_to_json(worksheet, {header: 1});
                     let firmalar = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
                     let addedCount = 0;
 
-                    rows.forEach(row => {
-                        let fName = row['Firmaadi'] || row['Firma Adı'] || row['Firma'] || '';
-                        
-                        if(fName && String(fName).trim() !== "") {
+                    // i = 1 diyerek ilk satırdaki başlığı atlıyoruz, 2. satırdan verileri başlatıyoruz
+                    for(let i = 1; i < rows.length; i++) {
+                        let row = rows[i];
+                        // row[0]: 1. Sütun (Firma Adı), row[1]: 2. Sütun (Adres), row[2]: 3. Sütun (İletişim), row[3]: 4. Sütun (Vana), row[4]: 5. Sütun (GPS)
+                        let fName = row[0] ? String(row[0]).trim() : '';
+
+                        if(fName !== "") {
                             let fObj = {
-                                FirmaAdi: String(fName).toUpperCase(),
-                                CaddeAdres: String(row['Cadde Adres'] || row['Adres'] || "").toUpperCase(),
-                                Iletisim: String(row['Iletisim'] || row['Telefon'] || ""),
-                                DogalgazVanaDurumu: String(row['DogalgazVana'] || row['DogalgazVanaDurumu'] || "YOK").toUpperCase(),
-                                GPS: String(row['GPS'] || "")
+                                FirmaAdi: fName.toUpperCase(),
+                                CaddeAdres: row[1] ? String(row[1]).toUpperCase() : "",
+                                Iletisim: row[2] ? String(row[2]) : "",
+                                DogalgazVanaDurumu: row[3] ? String(row[3]).toUpperCase() : "YOK",
+                                GPS: row[4] ? String(row[4]) : ""
                             };
                             firmalar.unshift(fObj);
                             addedCount++;
                         }
-                    });
+                    }
 
                     localStorage.setItem('osb_firmalar', JSON.stringify(firmalar));
                     
-                    // Firebase veritabanına toplu aktarım (Google Sheets karmaşasını önler, anında senkronize eder)
+                    // Firebase veritabanına anlık ve toplu olarak gönderiyoruz
                     db.ref('Isletmeler').set(firmalar);
 
                     loadCompaniesTable();
                     if(typeof populateCompanyDatalist === 'function') populateCompanyDatalist();
-                    alert(`Başarıyla ${addedCount} adet firma Excel'den hatasız yüklendi!`);
+                    alert(`Başarıyla ${addedCount} adet firma sırasına göre hatasız yüklendi!`);
                 } catch(err) {
                     alert("Excel dosyası okunurken hata oluştu: " + err.message);
                 }
