@@ -1688,7 +1688,7 @@
             document.getElementById('liveChatInput').focus();
         }
 
-        // --- MODÜL 13: İŞLETMELER ---
+       // --- MODÜL 13: İŞLETMELER ---
         function saveCompanyRecord() {
             const name = document.getElementById('f-name').value.toUpperCase();
             const adres = document.getElementById('f-adres').value.toUpperCase();
@@ -1710,6 +1710,10 @@
                     sendDataToSheet("Isletmeler", rowObj);
                 }
                 localStorage.setItem('osb_firmalar', JSON.stringify(list));
+                
+                // Firebase veritabanına senkronize ediliyor
+                db.ref('Isletmeler').set(list);
+
                 alert("Firma kaydedildi / güncellendi.");
             } else {
                 let pendings = JSON.parse(localStorage.getItem('osb_pending_firmalar')) || [];
@@ -1732,31 +1736,38 @@
                     let workbook = XLSX.read(data, {type: 'array'});
                     let firstSheetName = workbook.SheetNames[0];
                     let worksheet = workbook.Sheets[firstSheetName];
-                    let json = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+                    
+                    // Sütun başlıklarını otomatik tanıyan güvenli JSON dönüşümü
+                    let rows = XLSX.utils.sheet_to_json(worksheet);
                     
                     let firmalar = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
                     let addedCount = 0;
 
-                    for(let i = 1; i < json.length; i++) {
-                        let row = json[i];
-                        if(row && row[0]) {
+                    rows.forEach(row => {
+                        // Sizin belirttiğiniz sütun adları ile eşleştirme yapıyoruz (undefined hatasını önler)
+                        let fName = row['Firmaadi'] || row['Firma Adı'] || row['Firma'] || '';
+                        if(fName) {
                             let fObj = {
-                                FirmaAdi: String(row[0] || "").toUpperCase(),
-                                CaddeAdres: String(row[1] || "").toUpperCase(),
-                                Iletisim: String(row[2] || ""),
-                                DogalgazVanaDurumu: String(row[3] || "YOK").toUpperCase(),
-                                GPS: String(row[4] || "")
+                                FirmaAdi: String(fName).toUpperCase(),
+                                CaddeAdres: String(row['Cadde Adres'] || row['Adres'] || "").toUpperCase(),
+                                Iletisim: String(row['Iletisim'] || row['Telefon'] || ""),
+                                DogalgazVanaDurumu: String(row['DogalgazVana'] || row['DogalgazVanaDurumu'] || "YOK").toUpperCase(),
+                                GPS: String(row['GPS'] || "")
                             };
                             firmalar.unshift(fObj);
                             sendDataToSheet("Isletmeler", fObj);
                             addedCount++;
                         }
-                    }
+                    });
 
                     localStorage.setItem('osb_firmalar', JSON.stringify(firmalar));
+                    
+                    // Firebase veritabanına toplu aktarım senkronizasyonu
+                    db.ref('Isletmeler').set(firmalar);
+
                     loadCompaniesTable();
                     populateCompanyDatalist();
-                    alert(`Başarıyla ${addedCount} adet firma Excel'den yüklendi ve senkronize edildi!`);
+                    alert(`Başarıyla ${addedCount} adet firma Excel'den yüklendi ve Firebase ile senkronize edildi!`);
                 } catch(err) {
                     alert("Excel dosyası okunurken hata oluştu: " + err.message);
                 }
@@ -1785,6 +1796,10 @@
             });
 
             localStorage.setItem('osb_firmalar', JSON.stringify(list));
+            
+            // Firebase veritabanından kalıcı olarak siliyoruz
+            db.ref('Isletmeler').set(list);
+
             loadCompaniesTable();
             populateCompanyDatalist();
             alert("Seçilen firmalar silindi.");
@@ -1868,6 +1883,10 @@
             pendings.splice(pIdx, 1);
             localStorage.setItem('osb_firmalar', JSON.stringify(list));
             localStorage.setItem('osb_pending_firmalar', JSON.stringify(pendings));
+            
+            // Firebase veritabanını güncelliyoruz
+            db.ref('Isletmeler').set(list);
+
             sendDataToSheet("Isletmeler", item);
             loadCompaniesTable();
             populateCompanyDatalist();
@@ -1884,6 +1903,10 @@
             let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
             list.splice(idx, 1);
             localStorage.setItem('osb_firmalar', JSON.stringify(list));
+            
+            // Firebase veritabanından kalıcı olarak siliyoruz
+            db.ref('Isletmeler').set(list);
+
             loadCompaniesTable();
             populateCompanyDatalist();
         }
