@@ -1,8 +1,8 @@
-<script>
-    // Giriş fonksiyonunu en öne alıyoruz ki ilk önce bu okunsun
-    function handleAdminLogin(event) {
-        if(event) event.preventDefault();
-        try {
+document.addEventListener("DOMContentLoaded", function() {
+    const loginForm = document.getElementById('admin-login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', function(event) {
+            event.preventDefault();
             let passInput = document.getElementById('admin-pass') || document.getElementById('admin-password');
             let pass = passInput ? passInput.value : '';
             
@@ -12,18 +12,22 @@
                 localStorage.setItem('osb_is_admin', 'true');
                 localStorage.setItem('osb_current_user', "Admin");
                 
+                // 1. Giriş ekranını gizle
                 let loginScreen = document.getElementById('login-screen') || document.getElementById('login-modal');
                 if(loginScreen) loginScreen.style.display = 'none';
-                
+
+                // 2. Ana uygulama panelini görünür yap
+                let mainApp = document.getElementById('app') || document.getElementById('main-container') || document.getElementById('dashboard');
+                if(mainApp) mainApp.style.display = 'block';
+
                 if(typeof loadCompaniesTable === 'function') loadCompaniesTable();
                 alert("Admin olarak giriş yapıldı!");
             } else {
                 alert("Lütfen şifre giriniz!");
             }
-        } catch(err) {
-            alert("Giriş yapılırken hata oluştu: " + err.message);
-        }
+        });
     }
+});
 
     function switchLoginTab(tabName) {
         try {
