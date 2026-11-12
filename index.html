@@ -705,11 +705,12 @@
         };
 
         // GOOGLE SHEETS VERİ ÇEKME - GELİŞTİRİLMİŞ HATA YÖNETİMİ
-        async function fetchAllDataFromSheets() {
+       async function fetchAllDataFromSheets() {
     try {
-        // Zaman damgası ekleyerek tarayıcı/Google önbelleğe almasını engelliyoruz
-        let cacheBuster = "?action=readAll&t=" + new Date().getTime();
-        let res = await fetch(SCRIPT_URL + cacheBuster);
+        // Tarayıcının önbellekte (cache) takılı kalmasını önlemek için benzersiz zaman damgası ekliyoruz
+        let noCacheUrl = SCRIPT_URL + "?action=readAll&_cb=" + new Date().getTime() + Math.random();
+        
+        let res = await fetch(noCacheUrl, { cache: "no-store" });
         if(!res.ok) throw new Error("Google Sheets sunucusu yanıt vermedi: Status " + res.status);
         let data = await res.json();
         
