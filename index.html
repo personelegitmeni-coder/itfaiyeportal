@@ -139,7 +139,19 @@
             table { width: 100%; color: black; }
             th { background: #eee !important; color: black !important; }
         }
+        
     </style>
+    <script>
+document.addEventListener("DOMContentLoaded", () => {
+    // Eğer daha önce giriş yapılmamışsa veya oturum düşmüşse giriş ekranı açık kalır
+    const isLoggedIn = localStorage.getItem("osb_logged_in") === "true";
+    const overlay = document.getElementById("login-overlay");
+    
+    if (!isLoggedIn && overlay) {
+        overlay.style.display = "flex";
+    }
+});
+</script>
 </head>
 <body>
 
