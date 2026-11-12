@@ -141,22 +141,10 @@
         }
         
     </style>
-    <script>
-document.addEventListener("DOMContentLoaded", () => {
-    // Eğer daha önce giriş yapılmamışsa veya oturum düşmüşse giriş ekranı açık kalır
-    const isLoggedIn = localStorage.getItem("osb_logged_in") === "true";
-    const overlay = document.getElementById("login-overlay");
-    
-    if (!isLoggedIn && overlay) {
-        overlay.style.display = "flex";
-    }
-});
-</script>
 </head>
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-    // Sayfa açıldığında oturum kontrolü
     const isLoggedIn = localStorage.getItem("osb_logged_in") === "true";
     const overlay = document.getElementById("login-overlay");
     
@@ -165,11 +153,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// GİRİŞ KONTROLÜ VE KÜNYE (TC) DOĞRULAMASI
 window.handleLogin = function(e, admin) {
     e.preventDefault();
     
     const tcInput = admin ? document.getElementById("admin-user").value.trim() : document.getElementById("personel-tc").value.trim();
+    const passInput = admin ? document.getElementById("admin-pass").value.trim() : document.getElementById("personel-pass").value.trim();
     
     if (!/^\d{11}$/.test(tcInput)) {
         alert("TC Kimlik Numarası 11 haneli olmalıdır!");
@@ -177,27 +165,36 @@ window.handleLogin = function(e, admin) {
     }
 
     if (admin) {
-        // Admin giriş kontrolü (Örn: Sabit admin TC'leri veya şifre kontrolü ekleyebilirsiniz)
+        // Admin giriş kontrolü (Şifre korumalı)
+        if (passInput !== "MRTORTC" && passInput !== "123456") {
+            alert("❌ HATA: Admin şifresi yanlış!");
+            return;
+        }
         window.isAdmin = true;
-        window.currentUser = "ADMIN (" + tcInput + ")";
+        window.currentUser = "ADMİN (" + tcInput + ")";
     } else {
-        // PERSONEL KÜNYE / TC KONTROLÜ (Modül 1 Veritabanı Taraması)
+        // PERSONEL KÜNYE / TC KONTROLÜ
         let personelData = localStorage.getItem("osb_Personel");
         let rows = [];
 
         try {
             let parsed = JSON.parse(personelData || "[]");
-            // Array veya Object yapısına göre satırları düzenle
             rows = Array.isArray(parsed) ? parsed : Object.entries(parsed).map(([id, v]) => ({ ...v, tc: v.tc || id }));
         } catch (err) {
             rows = [];
         }
 
-        // Modül 1 veritabanında bu TC var mı diye bakıyoruz
+        // Eğer Modül 1 henüz boşsa ve hiç personel girilmediyse, dışarıdan gelen rastgele TC'yi ASLA sokma!
+        if (rows.length === 0) {
+            alert("❌ HATA: Modül 1'de kayıtlı hiç personel künyesi bulunamadı! Önce Admin olarak girip Modül 1'e personel kaydı eklemelisiniz.");
+            return;
+        }
+
+        // Modül 1 veritabanında bu TC var mı diye titizlikle arıyoruz
         const matchedPersonnel = rows.find(p => String(p.tc || p.TC || "").trim() === tcInput);
 
         if (!matchedPersonnel) {
-            alert("❌ HATA: Bu TC Kimlik Numarasına ait Modül 1'de kayıtlı personel künyesi bulunamadı! Yetkisiz giriş engellendi.");
+            alert("❌ ERİŞİM REDDEDİLDİ: Bu TC Kimlik Numarası Modül 1 personel listesinde kayıtlı değil!");
             return; // KESİNLİKLE İÇERİ ALMAZ!
         }
 
@@ -205,7 +202,7 @@ window.handleLogin = function(e, admin) {
         window.currentUser = (matchedPersonnel.ad || matchedPersonnel.adSoyad || tcInput);
     }
 
-    // Başarılı giriş: Oturumu kilitle ve içeri al
+    // Başarılı giriş
     localStorage.setItem("osb_logged_in", "true");
     localStorage.setItem("osb_is_admin", window.isAdmin ? "true" : "false");
     localStorage.setItem("osb_current_user", window.currentUser);
@@ -222,15 +219,14 @@ window.handleLogin = function(e, admin) {
     }
 };
 
-// Çıkış Yapma Fonksiyonu
 window.logout = function() {
     localStorage.removeItem("osb_logged_in");
     localStorage.removeItem("osb_is_admin");
     localStorage.removeItem("osb_current_user");
-    location.reload(); // Sayfayı yenile ve kilit ekranına dön
+    location.reload();
 };
 </script>
-    
+ 
 <body>
 
     <!-- GİRİŞ OVERLAY -->
