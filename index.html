@@ -1,48 +1,79 @@
-document.addEventListener("DOMContentLoaded", function() {
-    const loginForm = document.getElementById('admin-login-form');
-    if (loginForm) {
-        loginForm.addEventListener('submit', function(event) {
-            event.preventDefault();
-            let passInput = document.getElementById('admin-pass') || document.getElementById('admin-password');
-            let pass = passInput ? passInput.value : '';
-            
-            if(pass) {
-                window.isAdmin = true;
-                window.currentUser = "Admin";
-                localStorage.setItem('osb_is_admin', 'true');
-                localStorage.setItem('osb_current_user', "Admin");
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // 1. Admin Giriş Formu Dinleyicisi
+        const adminForm = document.getElementById('admin-login-form');
+        if (adminForm) {
+            adminForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                let passInput = document.getElementById('admin-pass') || document.getElementById('admin-password');
+                let pass = passInput ? passInput.value : '';
                 
-                // 1. Giriş ekranını kesin olarak gizle
-                let loginScreen = document.getElementById('login-screen') || document.getElementById('login-modal');
-                if(loginScreen) loginScreen.style.display = 'none';
-
-                // 2. Ana uygulama panelini görünür yap (ID veya Class eşleşmesi)
-                let mainApp = document.getElementById('app') || document.getElementById('main-container') || document.getElementById('dashboard');
-                if(mainApp) {
-                    mainApp.style.display = 'block';
+                if(pass) {
+                    window.isAdmin = true;
+                    window.currentUser = "Admin";
+                    localStorage.setItem('osb_is_admin', 'true');
+                    localStorage.setItem('osb_current_user', "Admin");
+                    
+                    // Giriş ekranını gizle, paneli aç
+                    hideLoginAndShowApp();
+                    
+                    if(typeof loadCompaniesTable === 'function') loadCompaniesTable();
                 } else {
-                    // Eğer ID bulunamazsa tüm olası ana panel sınıflarını görünür yap
-                    document.querySelectorAll('.app-container, .main-content, #main-page').forEach(el => {
-                        el.style.display = 'block';
-                    });
+                    alert("Lütfen şifre giriniz!");
                 }
+            });
+        }
 
-                // 3. Tablo yükleme fonksiyonu varsa hataya takılmadan çalıştır
-                try {
-                    if(typeof loadCompaniesTable === 'function') {
-                        loadCompaniesTable();
-                    }
-                } catch(e) {
-                    console.log("Tablo yükleme uyarısı: ", e);
-                }
+        // 2. Kullanıcı/Personel Giriş Formu Dinleyicisi
+        const userForm = document.getElementById('user-login-form');
+        if (userForm) {
+            userForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                window.isAdmin = false;
+                window.currentUser = "Personel";
+                localStorage.setItem('osb_is_admin', 'false');
+                localStorage.setItem('osb_current_user', "Personel");
+                
+                // Giriş ekranını gizle, paneli aç
+                hideLoginAndShowApp();
+                
+                if(typeof loadCompaniesTable === 'function') loadCompaniesTable();
+            });
+        }
+    });
 
-                alert("Admin olarak giriş yapıldı!");
-            } else {
-                alert("Lütfen şifre giriniz!");
-            }
-        });
+    // Ortak Ekran Geçiş Fonksiyonu
+    function hideLoginAndShowApp() {
+        // Giriş ekranlarını gizle
+        let loginScreen = document.getElementById('login-screen') || document.getElementById('login-modal');
+        if(loginScreen) loginScreen.style.display = 'none';
+
+        // Ana uygulama panelini görünür yap
+        let mainApp = document.getElementById('app') || document.getElementById('main-container') || document.getElementById('dashboard');
+        if(mainApp) {
+            mainApp.style.display = 'block';
+        } else {
+            document.querySelectorAll('.app-container, .main-content, #main-page').forEach(el => {
+                el.style.display = 'block';
+            });
+        }
     }
-});
+
+    function switchLoginTab(tabName) {
+        try {
+            document.querySelectorAll('.login-tab-content, .tab-content').forEach(el => {
+                el.style.display = 'none';
+            });
+            document.querySelectorAll('.login-tab-btn, .tab-btn').forEach(el => {
+                el.classList.remove('active');
+            });
+            let targetTab = document.getElementById(targetTabId = tabName);
+            if(targetTab) targetTab.style.display = 'block';
+        } catch(err) {
+            console.log("Sekme hatası: ", err);
+        }
+    }
+</script>
 
 <!-- Firebase SDK'ları -->
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
