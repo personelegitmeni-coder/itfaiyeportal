@@ -42,19 +42,22 @@
         }
     });
 
-    // Ortak Ekran Geçiş Fonksiyonu
+    // Ortak Ekran Geçiş Fonksiyonu (Tüm olası ID ve class'ları kapsar)
     function hideLoginAndShowApp() {
         // Giriş ekranlarını gizle
         let loginScreen = document.getElementById('login-screen') || document.getElementById('login-modal');
         if(loginScreen) loginScreen.style.display = 'none';
 
-        // Ana uygulama panelini görünür yap
-        let mainApp = document.getElementById('app') || document.getElementById('main-container') || document.getElementById('dashboard');
+        // Ana uygulama panelini görünür yap (Genişletilmiş ID ve Class desteği)
+        let mainApp = document.getElementById('app') || document.getElementById('main-container') || document.getElementById('dashboard') || document.getElementById('main-panel') || document.getElementById('icerik');
         if(mainApp) {
             mainApp.style.display = 'block';
         } else {
-            document.querySelectorAll('.app-container, .main-content, #main-page').forEach(el => {
-                el.style.display = 'block';
+            // Hiçbiri bulunamazsa sayfadaki tüm ana uygulama yapılarını görünür yap
+            document.querySelectorAll('.app-container, .main-content, #main-page, .container').forEach(el => {
+                if(!el.id.includes('login')) {
+                    el.style.display = 'block';
+                }
             });
         }
     }
@@ -67,7 +70,8 @@
             document.querySelectorAll('.login-tab-btn, .tab-btn').forEach(el => {
                 el.classList.remove('active');
             });
-            let targetTab = document.getElementById(targetTabId = tabName);
+            // Hata veren kısım düzeltildi:
+            let targetTab = document.getElementById(tabName);
             if(targetTab) targetTab.style.display = 'block';
         } catch(err) {
             console.log("Sekme hatası: ", err);
@@ -80,7 +84,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
 <script>
-  // Firebase Bağlantı Ayarları (itfaiyeportal için güncellendi)
+  // Firebase Bağlantı Ayarları (itfaiyeportal için)
   const firebaseConfig = {
     projectId: "itfaiyeportal",
     databaseURL: "https://itfaiyeportal-default-rtdb.europe-west1.firebasedatabase.app"
