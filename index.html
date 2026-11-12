@@ -1,4 +1,23 @@
 <script>
+    // Sayfa yüklendiğinde formlara ve butonlara otomatik bağlanan akıllı dinleyici
+    document.addEventListener("DOMContentLoaded", function() {
+        const adminForm = document.getElementById('admin-login-form');
+        if (adminForm) {
+            adminForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                direktAdminGirisYap();
+            });
+        }
+
+        const userForm = document.getElementById('user-login-form');
+        if (userForm) {
+            userForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                direktKullaniciGirisYap();
+            });
+        }
+    });
+
     function direktAdminGirisYap() {
         let passInput = document.getElementById('admin-pass') || document.getElementById('admin-password') || document.querySelector('input[type="password"]');
         let pass = passInput ? passInput.value : '';
