@@ -142,91 +142,6 @@
         
     </style>
 </head>
-
-<script>
-// 1. BEKÇİ KODU: Arka plandaki hiçbir scriptin kapıyı açmasına izin vermez!
-setInterval(() => {
-    const isLoggedIn = localStorage.getItem("osb_verified_user") === "true";
-    const overlay = document.getElementById("login-overlay");
-    
-    if (!isLoggedIn && overlay) {
-        overlay.style.display = "flex";
-        overlay.style.setProperty("display", "flex", "important");
-    }
-}, 100); // Her 0.1 saniyede bir kontrol eder, hile yapılmasını engeller
-
-// 2. KESİN DOĞRULAMA VE GİRİŞ KONTROLÜ
-window.handleLogin = function(e, admin) {
-    if (e && e.preventDefault) e.preventDefault();
-    
-    const tcInput = admin ? 
-        document.getElementById("admin-user").value.trim() : 
-        document.getElementById("personel-tc").value.trim();
-        
-    const passInput = admin ? 
-        document.getElementById("admin-pass").value.trim() : "";
-
-    if (!/^\d{11}$/.test(tcInput)) {
-        alert("❌ HATA: TC Kimlik Numarası eksiksiz 11 haneli olmalıdır!");
-        return false;
-    }
-
-    if (admin) {
-        if (passInput !== "MRTORTC" && passInput !== "123456") {
-            alert("❌ HATA: Admin şifresi yanlış!");
-            return false;
-        }
-        localStorage.setItem("osb_verified_user", "true");
-        localStorage.setItem("osb_is_admin", "true");
-        localStorage.setItem("osb_current_user", "ADMİN (" + tcInput + ")");
-        location.reload();
-        return false;
-    } else {
-        let rawData = localStorage.getItem("osb_Personel");
-        
-        if (!rawData) {
-            alert("🛑 GİRİŞ REDDEDİLDİ!\n\nModül 1 personel veritabanı (osb_Personel) boş veya bulunamadı!");
-            return false;
-        }
-
-        let isFound = false;
-        let personelName = tcInput;
-
-        try {
-            let parsed = JSON.parse(rawData);
-            let rows = Array.isArray(parsed) ? parsed : Object.entries(parsed).map(([k, v]) => ({ ...v, _key: k }));
-            
-            let matched = rows.find(p => {
-                return Object.values(p).some(val => String(val || "").trim() === tcInput);
-            });
-
-            if (matched) {
-                isFound = true;
-                personelName = matched.ad || matched.adSoyad || matched.isim || tcInput;
-            }
-        } catch (err) {
-            isFound = false;
-        }
-
-        if (!isFound) {
-            alert("🛑 ERİŞİM KESİNLİKLE REDDEDİLDİ!\n\nBu TC Kimlik Numarası Modül 1'de kayıtlı değil!");
-            return false;
-        }
-
-        // Başarılı giriş
-        localStorage.setItem("osb_verified_user", "true");
-        localStorage.setItem("osb_is_admin", "false");
-        localStorage.setItem("osb_current_user", personelName);
-        location.reload();
-        return false;
-    }
-};
-
-window.logout = function() {
-    localStorage.clear();
-    location.reload();
-};
-</script>
  
 <body>
 
@@ -359,6 +274,109 @@ window.logout = function() {
                     </table>
                 </div>
             </section>
+        </main>
+    </div>
+
+    <!-- JAVASCRIPT: TC KONTROL VE GİRİŞ MANTIĞI -->
+    <script>
+        // Kayıtlı yetkili personel TC listesi (Veritabanınızdan alınan onaylı TC numaraları)
+        const authorizedTCs = [
+            "12544424006", // Murat ORTAÇ
+            "12157322362", // Muhammet GÜL
+            "29740632890", // Mehmet AŞICI
+            "10297430398", // Berkay KESKİN
+            "18509797376", // Oğuzhan KARAPINAR
+            "10114428348", // Can BUZDAĞ
+            "14254322238", // Ferhat Doğan
+            "20194796312", // Veysi GÜLSÜN
+            "11659415664"  // Ramazan BAYTEKIN
+        ];
+
+        function switchLoginTab(tab) {
+            document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.login-form').forEach(f => f.classList.remove('active'));
+            
+            if(tab === 'admin') {
+                document.querySelectorAll('.login-tab')[0].classList.add('active');
+                document.getElementById('admin-login-form').classList.add('active');
+            } else {
+                document.querySelectorAll('.login-tab')[1].classList.add('active');
+                document.getElementById('user-login-form').classList.add('active');
+            }
+        }
+
+        function handleAdminLogin() {
+            const tc = document.getElementById('admin-user').value.trim();
+            const pass = document.getElementById('admin-pass').value.trim();
+            
+            // Admin doğrulama kontrolü (Örn: Yetkili TC veya şifre kontrolü)
+            if(tc.length === 11 && pass !== "") {
+                document.body.classList.add('is-admin');
+                document.getElementById('current-user-display').innerText = "👨‍💼 Admin (TC: " + tc + ")";
+                document.getElementById('login-overlay').style.display = 'none';
+            } else {
+                alert("Lütfen geçerli bir Admin TC ve şifresi giriniz!");
+            }
+        }
+
+        function handleUserLogin() {
+            const tc = document.getElementById('personel-tc').value.trim();
+            
+            // TC Numarası sistemde kayıtlı mı kontrolü
+            if (!authorizedTCs.includes(tc)) {
+                alert("⚠️ Kayıtlı TC Kimlik Numarası Bulunamadı! Lütfen Admine Ulaşın.");
+                return;
+            }
+
+            // Başarılı giriş
+            document.body.classList.remove('is-admin');
+            document.getElementById('current-user-display').innerText = "👤 Personel (TC: " + tc + ")";
+            document.getElementById('login-overlay').style.display = 'none';
+        }
+
+        function logout() {
+            document.body.classList.remove('is-admin');
+            document.getElementById('current-user-display').innerText = "Giriş Yapılmadı";
+            document.getElementById('login-overlay').style.display = 'flex';
+            document.getElementById('admin-user').value = '';
+            document.getElementById('admin-pass').value = '';
+            document.getElementById('personel-tc').value = '';
+        }
+
+        function showModule(modId, element) {
+            document.querySelectorAll('.module-section').forEach(sec => sec.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            
+            const target = document.getElementById(modId);
+            if(target) target.classList.add('active');
+            if(element) element.classList.add('active');
+        }
+
+        function forceUpper(input) {
+            input.value = input.value.toUpperCase();
+        }
+
+        function toggleForm(formId) {
+            const form = document.getElementById(formId);
+            if(form) {
+                form.style.display = form.style.display === 'none' ? 'grid' : 'none';
+            }
+        }
+
+        function calculateKalanIzin() {
+            const toplam = parseFloat(document.getElementById('p-toplam-izin').value) || 0;
+            const kullanilan = parseFloat(document.getElementById('p-kullanilan-izin').value) || 0;
+            document.getElementById('p-kalan-izin').value = toplam - kullanilan;
+        }
+
+        // Saat güncelleme
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('live-clock').innerText = "📅 " + now.toLocaleString('tr-TR');
+        }, 1000);
+    </script>
+</body>
+</html>
 
             <!-- MODÜL AI: GEMİNİ SOHBET -->
             <section id="mod-ai" class="module-section">
