@@ -1,13 +1,11 @@
 <script>
-    // Tarayıcı yüklenir yüklenmez tüm formların otomatik GET isteği atmasını engelle
+    // Sayfa yüklendiğinde formlara ve butonlara otomatik bağlanan akıllı dinleyici
     document.addEventListener("DOMContentLoaded", function() {
         const forms = document.querySelectorAll('form');
         forms.forEach(form => {
             form.addEventListener('submit', function(e) {
-                e.preventDefault(); // Sayfanın yenilenmesini ve URL'ye şifre yazılmasını kesin olarak engelle
-                e.stopPropagation();
+                e.preventDefault();
                 girisIsleminiBaslat();
-                return false;
             });
         });
 
@@ -17,7 +15,6 @@
             if (btnText.includes('giriş') || btnText.includes('login') || (btn.id && btn.id.includes('login'))) {
                 btn.addEventListener('click', function(e) {
                     e.preventDefault();
-                    e.stopPropagation();
                     girisIsleminiBaslat();
                 });
             }
@@ -66,10 +63,12 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
 <script>
+  // Firebase Bağlantı Ayarları (itfaiyeportal)
   const firebaseConfig = {
     projectId: "itfaiyeportal",
     databaseURL: "https://itfaiyeportal-default-rtdb.europe-west1.firebasedatabase.app"
   };
+
   if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
   }
