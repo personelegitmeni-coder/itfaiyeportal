@@ -1777,58 +1777,51 @@
     }
 
     function importCompaniesFromExcel(event) {
-        let file = event.target.files[0];
-        if(!file) return;
-        let reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                let data = new Uint8Array(e.target.result);
-                let workbook = XLSX.read(data, {type: 'array'});
-                let firstSheetName = workbook.SheetNames[0];
-                let worksheet = workbook.Sheets[firstSheetName];
-                
-                let rows = XLSX.utils.sheet_to_json(worksheet);
-                let firmalar = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
-                let addedCount = 0;
-
-                rows.forEach(row => {
-                    // Sütun isimlerindeki boşluk ve büyük/küçük harf farklarını esnekçe yakalıyoruz
-                    let keys = Object.keys(row);
-                    let fNameKey = keys.find(k => k.replace(/\s+/g,'').toLowerCase().includes('firma'));
-                    let adresKey = keys.find(k => k.replace(/\s+/g,'').toLowerCase().includes('adres'));
-                    let telKey = keys.find(k => k.replace(/\s+/g,'').toLowerCase().includes('iletisim') || k.replace(/\s+/g,'').toLowerCase().includes('telefon'));
-                    let vanaKey = keys.find(k => k.replace(/\s+/g,'').toLowerCase().includes('dogalgaz') || k.replace(/\s+/g,'').toLowerCase().includes('vana'));
-                    let gpsKey = keys.find(k => k.replace(/\s+/g,'').toLowerCase().includes('gps') || k.replace(/\s+/g,'').toLowerCase().includes('konum'));
-
-                    let fName = fNameKey ? row[fNameKey] : (row['Firmaadi'] || row['Firma Adı'] || row['Firma'] || '');
+            let file = event.target.files[0];
+            if(!file) return;
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let data = new Uint8Array(e.target.result);
+                    let workbook = XLSX.read(data, {type: 'array'});
+                    let firstSheetName = workbook.SheetNames[0];
+                    let worksheet = workbook.Sheets[firstSheetName];
                     
-                    if(fName && String(fName).trim() !== "") {
-                        let fObj = {
-                            FirmaAdi: String(fName).toUpperCase(),
-                            CaddeAdres: String(adresKey ? row[adresKey] : (row['Cadde Adres'] || row['Adres'] || "")).toUpperCase(),
-                            Iletisim: String(telKey ? row[telKey] : (row['Iletisim'] || row['Telefon'] || "")),
-                            DogalgazVanaDurumu: String(vanaKey ? row[vanaKey] : (row['DogalgazVana'] || row['DogalgazVanaDurumu'] || "YOK")).toUpperCase(),
-                            GPS: String(gpsKey ? row[gpsKey] : (row['GPS'] || ""))
-                        };
-                        firmalar.unshift(fObj);
-                        sendDataToSheet("Isletmeler", fObj);
-                        addedCount++;
-                    }
-                });
+                    let rows = XLSX.utils.sheet_to_json(worksheet);
+                    let firmalar = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
+                    let addedCount = 0;
 
-                localStorage.setItem('osb_firmalar', JSON.stringify(firmalar));
-                db.ref('Isletmeler').set(firmalar); // Firebase'e kaydet
+                    rows.forEach(row => {
+                        let fName = row['Firmaadi'] || row['Firma Adı'] || row['Firma'] || '';
+                        
+                        if(fName && String(fName).trim() !== "") {
+                            let fObj = {
+                                FirmaAdi: String(fName).toUpperCase(),
+                                CaddeAdres: String(row['Cadde Adres'] || row['Adres'] || "").toUpperCase(),
+                                Iletisim: String(row['Iletisim'] || row['Telefon'] || ""),
+                                DogalgazVanaDurumu: String(row['DogalgazVana'] || row['DogalgazVanaDurumu'] || "YOK").toUpperCase(),
+                                GPS: String(row['GPS'] || "")
+                            };
+                            firmalar.unshift(fObj);
+                            addedCount++;
+                        }
+                    });
 
-                loadCompaniesTable();
-                if(typeof populateCompanyDatalist === 'function') populateCompanyDatalist();
-                alert(`Başarıyla ${addedCount} adet firma Excel'den hatasız yüklendi!`);
-            } catch(err) {
-                alert("Excel dosyası okunurken hata oluştu: " + err.message);
-            }
-            event.target.value = "";
-        };
-        reader.readAsArrayBuffer(file);
-    }
+                    localStorage.setItem('osb_firmalar', JSON.stringify(firmalar));
+                    
+                    // Firebase veritabanına toplu aktarım (Google Sheets karmaşasını önler, anında senkronize eder)
+                    db.ref('Isletmeler').set(firmalar);
+
+                    loadCompaniesTable();
+                    if(typeof populateCompanyDatalist === 'function') populateCompanyDatalist();
+                    alert(`Başarıyla ${addedCount} adet firma Excel'den hatasız yüklendi!`);
+                } catch(err) {
+                    alert("Excel dosyası okunurken hata oluştu: " + err.message);
+                }
+                event.target.value = "";
+            };
+            reader.readAsArrayBuffer(file);
+        }
 
     function toggleSelectAllCompanies(source) {
         let checkboxes = document.querySelectorAll('.company-checkbox');
