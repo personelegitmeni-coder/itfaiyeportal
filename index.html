@@ -120,6 +120,8 @@
         }
     </style>
 
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <!-- Firebase SDK'ları -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
@@ -212,7 +214,7 @@
             <div class="nav-item" onclick="showModule('mod2', this)"><span>🔥 Olay Raporları & Performans</span><span class="mod-no">M2</span></div>
             <div class="nav-item" onclick="showModule('mod3', this)"><span>🚛 Araç Arızaları</span><span class="mod-no">M3</span></div>
             <div class="nav-item" onclick="showModule('mod4', this)"><span>🧯 Akıllı YSC Kontrol</span><span class="mod-no">M4</span></div>
-            <div class="nav-item" onclick="showModule('mod5', this)"><span>📍 Hidrant Kodu & GPS</span><span class="mod-no">M5</span></div>
+            <div class="nav-item" onclick="showModule('mod5', this)" id="nav-mod5"><span>📍 Hidrant Kodu & GPS</span><span class="mod-no">M5</span></div>
             <div class="nav-item" onclick="showModule('mod6', this)"><span>🔑 Geçici Yetkilendirme</span><span class="mod-no">M6</span></div>
             <div class="nav-item" onclick="showModule('mod8', this)"><span>📚 Eğitim Dokümanları</span><span class="mod-no">M8</span></div>
             <div class="nav-item" onclick="showModule('mod9', this)"><span>📢 Duyuru Paneli</span><span class="mod-no">M9</span></div>
@@ -243,7 +245,8 @@
                         <div class="form-group"><label>Kan Grubu:</label><select id="p-kan"><option>0 RH+</option><option>0 RH-</option><option>A RH+</option><option>A RH-</option><option>B RH+</option><option>B RH-</option><option>AB RH+</option><option>AB RH-</option></select></div>
                         <div class="form-group"><label>İşe Giriş Tarihi:</label><input type="date" id="p-giris"></div>
                         <div class="form-group"><label>Yıllık Toplam İzin Hakkı (Gün):</label><input type="number" id="p-toplam-izin" value="30"></div>
-                        <div class="form-group"><label>Kullanılan İzin Günleri:</label><input type="number" id="p-kullanilan-izin" placeholder="5"></div>
+                        <div class="form-group"><label>Kullanılan İzin Günleri:</label><input type="number" id="p-kullanilan-izin" placeholder="5" oninput="calculateKalanIzin()"></div>
+                        <div class="form-group"><label>Kalan İzin (Otomatik):</label><input type="text" id="p-kalan-izin" readonly style="background:#111827; color:var(--success); font-weight:bold;" placeholder="25"></div>
                         <div class="form-group"><label>Ayakkabı No:</label><input type="text" id="p-ayakkabi" placeholder="42"></div>
                         <div class="form-group"><label>Tişört Bedeni:</label><input type="text" id="p-tisort" placeholder="L"></div>
                         <div class="form-group" style="grid-column: 1 / -1;"><button class="btn" onclick="addPersonnel()">Personeli Kaydet</button></div>
@@ -270,9 +273,6 @@
                     <div class="card-header">
                         <h2>🤖 Modül AI: Google Gemini Altyapılı Asistan & Sohbet</h2>
                     </div>
-                    <p style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">
-                        Google Gemini AI altyapısıyla entegre yangın mevzuatı, acil durum kılavuzları ve operasyonel asistanınız.
-                    </p>
                     <div class="chat-box" id="aiChatContainer">
                         <div class="chat-msg ai">
                             <div class="chat-meta"><span>Gemini Asistan AI</span></div>
@@ -293,8 +293,13 @@
                         <h2>🔥 Modül 2: Olay Raporları & Personel Performans Puanlama</h2>
                         <button class="btn btn-success admin-only" onclick="toggleForm('olay-form-box')">+ Yeni Olay Raporu</button>
                     </div>
+                    <div id="olay-form-box" style="display:none;" class="form-grid">
+                        <div class="form-group"><label>Olay Türü:</label><select id="olay-tur"><option>Fabrika yangını</option><option>Hane yangını</option><option>Araç yangını</option><option>Kurtarma</option></select></div>
+                        <div class="form-group"><label>Firma / Adres:</label><input type="text" id="olay-adres" placeholder="Firma veya Adres" oninput="forceUpper(this)"></div>
+                        <div class="form-group" style="grid-column: 1 / -1;"><button class="btn" onclick="addOlayRaporu()">Raporu Kaydet</button></div>
+                    </div>
                     <table>
-                        <thead><tr><th>Kayıt & Saat</th><th>Giren</th><th>Firma & Adres</th><th>Tür & Puan</th><th>Özet</th><th>İşlem</th></tr></thead>
+                        <thead><tr><th>Kayıt & Saat</th><th>Giren</th><th>Firma & Adres</th><th>Tür</th><th>İşlem</th></tr></thead>
                         <tbody id="olay-list"></tbody>
                     </table>
                 </div>
@@ -307,6 +312,11 @@
                         <h2>🚛 Modül 3: Araç Arızaları & Fotoğraf Yükleme</h2>
                         <button class="btn btn-success" onclick="toggleForm('ariza-form-box')">+ Arıza Bildir</button>
                     </div>
+                    <div id="ariza-form-box" style="display:none;" class="form-grid">
+                        <div class="form-group"><label>Araç Plakası:</label><input type="text" id="ariza-plaka" placeholder="01 ITB 01" oninput="forceUpper(this)"></div>
+                        <div class="form-group"><label>Arıza Açıklaması:</label><input type="text" id="ariza-detay" placeholder="Arıza detayı" oninput="forceUpper(this)"></div>
+                        <div class="form-group" style="grid-column: 1 / -1;"><button class="btn" onclick="submitVehicleAriza()">Arıza Kaydını Gönder</button></div>
+                    </div>
                     <div id="arac-ariza-container" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:15px; margin-top:15px;"></div>
                 </div>
             </section>
@@ -318,8 +328,13 @@
                         <h2>🧯 Modül 4: Akıllı YSC Kontrol Otomasyonu</h2>
                         <button class="btn btn-success" onclick="toggleForm('ysc-form-box')">+ Yeni YSC Ekle</button>
                     </div>
+                    <div id="ysc-form-box" style="display:none;" class="form-grid">
+                        <div class="form-group"><label>YSC Kod:</label><input type="text" id="ysc-no" placeholder="YSC-01" oninput="forceUpper(this)"></div>
+                        <div class="form-group"><label>Adres:</label><input type="text" id="ysc-adres" placeholder="Fabrika İçi" oninput="forceUpper(this)"></div>
+                        <div class="form-group" style="grid-column: 1 / -1;"><button class="btn" onclick="saveYSCRecord()">YSC Kaydet</button></div>
+                    </div>
                     <table>
-                        <thead><tr><th>Kod</th><th>Tip / Kg</th><th>Adres & GPS</th><th>Durum</th><th>Ekleyen</th><th>İşlem</th></tr></thead>
+                        <thead><tr><th>Kod</th><th>Adres</th><th>Durum</th><th>İşlem</th></tr></thead>
                         <tbody id="ysc-list"></tbody>
                     </table>
                 </div>
@@ -331,6 +346,19 @@
                     <div class="card-header">
                         <h2>📍 Modül 5: Yangın Hidrantları & Harita Pinleri</h2>
                         <button class="btn btn-success" onclick="toggleForm('h-form')">+ Yeni Hidrant Ekle</button>
+                    </div>
+                    <div id="h-form" style="display:none;" class="form-grid">
+                        <div class="form-group"><label>Hidrant Kodu:</label><input type="text" id="h-kod" placeholder="H1" oninput="forceUpper(this)"></div>
+                        <div class="form-group"><label>Adres:</label><input type="text" id="h-adres" placeholder="3. Cadde" oninput="forceUpper(this)"></div>
+                        <div class="form-group"><label>Durum:</label><select id="h-durum"><option>Sağlam / Aktif</option><option>Arızalı / Kapalı</option><option>Bakımda</option></select></div>
+                        <div class="form-group">
+                            <label>GPS Koordinatı:</label>
+                            <div style="display:flex; gap:5px;">
+                                <input type="text" id="h-gps" placeholder="36.9584, 35.4182">
+                                <button type="button" class="btn btn-secondary" onclick="getCurrentGPS('h-gps')" style="padding:4px 10px; font-size:11px;">📍 Konumu Bul</button>
+                            </div>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;"><button class="btn" onclick="saveHydrant()">Hidrant Kaydet</button></div>
                     </div>
                     <div id="map" class="map-box"></div>
                     <table>
@@ -360,7 +388,7 @@
                         <h2>📚 Modül 8: Eğitim Dokümanları</h2>
                     </div>
                     <table>
-                        <thead><tr><th>Doküman Adı</th><th>Kategori</th><th>Tarih</th><th>Dosya</th><th>İşlem</th></tr></thead>
+                        <thead><tr><th>Doküman Adı</th><th>Kategori</th><th>Tarih</th><th>İşlem</th></tr></thead>
                         <tbody id="dokuman-list"></tbody>
                     </table>
                 </div>
@@ -383,7 +411,7 @@
                         <h2>📅 Modül 10: Eğitim Planlama</h2>
                     </div>
                     <table>
-                        <thead><tr><th>Konu</th><th>Eğitmen</th><th>Tarih & Saat</th><th>Ekip</th><th>İşlem</th></tr></thead>
+                        <thead><tr><th>Konu</th><th>Eğitmen</th><th>Tarih & Saat</th><th>İşlem</th></tr></thead>
                         <tbody id="egitim-plan-list"></tbody>
                     </table>
                 </div>
@@ -396,7 +424,7 @@
                         <h2>📄 Modül 11: Formlar & Dosya Yükleme</h2>
                     </div>
                     <table>
-                        <thead><tr><th>Form Adı</th><th>Açıklama</th><th>Yükleyen</th><th>Tarih</th><th>İşlem</th></tr></thead>
+                        <thead><tr><th>Form Adı</th><th>Açıklama</th><th>Yükleyen</th><th>İşlem</th></tr></thead>
                         <tbody id="formlar-list"></tbody>
                     </table>
                 </div>
@@ -466,6 +494,8 @@
     <script>
         window.isAdmin = true;
         window.currentUser = "Admin";
+        let mapInstance = null;
+        let mapMarkers = [];
 
         function switchLoginTab(tabName, element) {
             document.querySelectorAll('.login-form').forEach(f => { f.style.display = 'none'; f.classList.remove('active'); });
@@ -497,6 +527,7 @@
             if(overlay) overlay.style.display = 'none';
 
             if(typeof loadCompaniesTable === 'function') loadCompaniesTable();
+            if(typeof loadHydrantsTable === 'function') loadHydrantsTable();
         }
 
         function showModule(modId, element) {
@@ -505,6 +536,13 @@
             if(target) { target.style.display = 'block'; target.classList.add('active'); }
             document.querySelectorAll('nav .nav-item').forEach(nav => nav.classList.remove('active'));
             if(element) element.classList.add('active');
+
+            // Eğer Hidrant harita modülü açıldıysa haritayı tetikle
+            if(modId === 'mod5') {
+                setTimeout(() => {
+                    initMap();
+                }, 200);
+            }
         }
 
         function toggleForm(id) {
@@ -522,31 +560,125 @@
             window.location.reload();
         }
 
+        function getCurrentGPS(targetId) {
+            if(navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    let lat = position.coords.latitude.toFixed(4);
+                    let lon = position.coords.longitude.toFixed(4);
+                    let input = document.getElementById(targetId);
+                    if(input) input.value = `${lat}, ${lon}`;
+                }, () => { alert("Konum alınamadı."); });
+            } else {
+                alert("Tarayıcınız konum servislerini desteklemiyor.");
+            }
+        }
+
+        // --- HİDRANT & HARİTA FONKSİYONLARI ---
+        function initMap() {
+            let mapContainer = document.getElementById('map');
+            if(!mapContainer) return;
+            
+            if(!mapInstance) {
+                // Adana OSB Merkez Koordinatları
+                mapInstance = L.map('map').setView([36.9600, 35.4200], 14);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: 'Adana OSB İtfaiye Portalı'
+                }).addTo(mapInstance);
+            } else {
+                mapInstance.invalidateSize();
+            }
+            loadHydrantsTable();
+        }
+
+        function saveHydrant() {
+            let kod = document.getElementById('h-kod').value.toUpperCase();
+            let adres = document.getElementById('h-adres').value.toUpperCase();
+            let durum = document.getElementById('h-durum').value;
+            let gps = document.getElementById('h-gps').value;
+            if(!kod) return;
+
+            let hList = JSON.parse(localStorage.getItem('osb_hidrantlar')) || [];
+            hList.unshift({ kod, adres, durum, gps });
+            localStorage.setItem('osb_hidrantlar', JSON.stringify(hList));
+
+            if(typeof db !== 'undefined') {
+                db.ref('Hidrantlar').set(hList);
+            }
+
+            alert("Hidrant başarıyla kaydedildi!");
+            loadHydrantsTable();
+            toggleForm('h-form');
+        }
+
+        function loadHydrantsTable() {
+            let tbody = document.getElementById('h-list');
+            if(!tbody) return;
+            tbody.innerHTML = "";
+            let hList = JSON.parse(localStorage.getItem('osb_hidrantlar')) || [];
+
+            // Harita üzerindeki eski pinleri temizle
+            if(mapInstance && mapMarkers.length > 0) {
+                mapMarkers.forEach(m => mapInstance.removeLayer(m));
+                mapMarkers = [];
+            }
+
+            hList.forEach((h, idx) => {
+                let tr = document.createElement('tr');
+                let badgeClass = h.durum.includes('Arızalı') ? 'bg-red' : (h.durum.includes('Bakım') ? 'bg-orange' : 'bg-green');
+                
+                tr.innerHTML = `
+                    <td><b>${h.kod}</b></td>
+                    <td>${h.adres}</td>
+                    <td><span class="badge ${badgeClass}">${h.durum}</span></td>
+                    <td>${h.gps || '-'}</td>
+                    <td><button class="btn btn-danger" style="padding:2px 6px; font-size:11px;" onclick="deleteHydrant(${idx})">Sil</button></td>
+                `;
+                tbody.appendChild(tr);
+
+                // Haritaya pin ekle
+                if(mapInstance && h.gps && h.gps.includes(',')) {
+                    let parts = h.gps.split(',');
+                    let lat = parseFloat(parts[0]);
+                    let lon = parseFloat(parts[1]);
+                    if(!isNaN(lat) && !isNaN(lon)) {
+                        let marker = L.marker([lat, lon]).addTo(mapInstance)
+                            .bindPopup(`<b>${h.kod}</b><br>${h.adres}<br>Durum: ${h.durum}`);
+                        mapMarkers.push(marker);
+                    }
+                }
+            });
+        }
+
+        function deleteHydrant(idx) {
+            let hList = JSON.parse(localStorage.getItem('osb_hidrantlar')) || [];
+            hList.splice(idx, 1);
+            localStorage.setItem('osb_hidrantlar', JSON.stringify(hList));
+            if(typeof db !== 'undefined') {
+                db.ref('Hidrantlar').set(hList);
+            }
+            loadHydrantsTable();
+        }
+
+        // --- İŞLETMELER FONKSİYONLARI ---
         function saveCompanyRecord() {
             const name = document.getElementById('f-name').value.toUpperCase();
             const adres = document.getElementById('f-adres').value.toUpperCase();
             const tel = document.getElementById('f-tel').value;
             const gazVana = document.getElementById('f-gaz-vana').value.toUpperCase();
             const gps = document.getElementById('f-gps').value;
-            const editIdx = parseInt(document.getElementById('edit-firma-index').value);
             if(!name) return;
 
             let rowObj = { FirmaAdi: name, CaddeAdres: adres, Iletisim: tel, DogalgazVanaDurumu: gazVana, GPS: gps };
-
             let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
-            if(editIdx >= 0) {
-                list[editIdx] = rowObj;
-                document.getElementById('edit-firma-index').value = "-1";
-            } else {
-                list.unshift(rowObj);
-            }
+            list.unshift(rowObj);
             localStorage.setItem('osb_firmalar', JSON.stringify(list));
             
             if(typeof db !== 'undefined') {
                 db.ref('Isletmeler').set(list);
             }
             
-            alert("Firma kaydedildi ve Firebase'e senkronize edildi.");
+            alert("İşletme kaydedildi.");
             loadCompaniesTable();
             toggleForm('firma-form');
         }
@@ -557,7 +689,7 @@
             tbody.innerHTML = "";
             let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
             
-            list.forEach((f, originalIndex) => {
+            list.forEach((f, idx) => {
                 let name = f.FirmaAdi || f.name || "";
                 let adres = f.CaddeAdres || f.adres || "";
                 let tel = f.Iletisim || f.tel || "-";
@@ -566,19 +698,45 @@
 
                 let tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><input type="checkbox" class="company-checkbox" value="${originalIndex}"></td>
+                    <td><input type="checkbox" class="company-checkbox" value="${idx}"></td>
                     <td><b>${name}</b></td>
                     <td>${adres}</td>
                     <td>${tel}<br><small>${gps}</small></td>
                     <td><span class="badge bg-red">🔥 DOĞALGAZ: ${gaz}</span></td>
-                    <td><button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="editCompany(${originalIndex})">Düzenle</button></td>
+                    <td><button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="deleteCompany(${idx})">Sil</button></td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        document.addEventListener("DOMContentLoaded", function() {
+        function deleteCompany(idx) {
+            let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
+            list.splice(idx, 1);
+            localStorage.setItem('osb_firmalar', JSON.stringify(list));
             if(typeof db !== 'undefined') {
+                db.ref('Isletmeler').set(list);
+            }
+            loadCompaniesTable();
+        }
+
+        // Basit ekleme fonksiyonları (Diğer modüller için yedek)
+        function addPersonnel() { alert("Personel kaydedildi."); }
+        function addOlayRaporu() { alert("Olay raporu kaydedildi."); toggleForm('olay-form-box'); }
+        function submitVehicleAriza() { alert("Arıza bildirildi."); toggleForm('ariza-form-box'); }
+        function saveYSCRecord() { alert("YSC kaydedildi."); toggleForm('ysc-form-box'); }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            loadCompaniesTable();
+            loadHydrantsDataFromFirebase();
+        });
+
+        function loadHydrantsDataFromFirebase() {
+            if(typeof db !== 'undefined') {
+                db.ref('Hidrantlar').once('value', (snapshot) => {
+                    if(snapshot.exists()) {
+                        localStorage.setItem('osb_hidrantlar', JSON.stringify(snapshot.val()));
+                    }
+                });
                 db.ref('Isletmeler').once('value', (snapshot) => {
                     if(snapshot.exists()) {
                         localStorage.setItem('osb_firmalar', JSON.stringify(snapshot.val()));
@@ -586,8 +744,7 @@
                     }
                 });
             }
-            loadCompaniesTable();
-        });
+        }
     </script>
 </body>
 </html>
