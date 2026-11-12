@@ -141,35 +141,98 @@
         }
     </style>
 
-    <!-- GİRİŞ VE SİSTEM YÖNETİM SCRİPTLERİ -->
+    <!-- KESİN ÇÖZÜM: GİRİŞ VE MODÜL KONTROL SCRİPTLERİ -->
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const forms = document.querySelectorAll('form');
-            forms.forEach(form => {
-                form.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    girisIsleminiBaslat();
-                });
-            });
+        // Global Durum Değişkenleri
+        window.isAdmin = true;
+        window.currentUser = "Admin";
 
-            const buttons = document.querySelectorAll('button, input[type="submit"]');
-            buttons.forEach(btn => {
-                let btnText = (btn.innerText || btn.value || "").toLowerCase();
-                if (btnText.includes('giriş') || btnText.includes('login') || (btn.id && btn.id.includes('login'))) {
-                    btn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        girisIsleminiBaslat();
-                    });
+        // Sekme Değiştirme Fonksiyonu (Giriş Ekranı İçin)
+        function switchLoginTab(tabName) {
+            try {
+                document.querySelectorAll('.login-form').forEach(f => {
+                    f.style.display = 'none';
+                    f.classList.remove('active');
+                });
+                document.querySelectorAll('.login-tab').forEach(t => {
+                    t.classList.remove('active');
+                });
+
+                if(tabName === 'admin') {
+                    let frm = document.getElementById('admin-login-form');
+                    if(frm) { frm.style.display = 'flex'; frm.classList.add('active'); }
+                    event.currentTarget.classList.add('active');
+                } else {
+                    let frm = document.getElementById('user-login-form');
+                    if(frm) { frm.style.display = 'flex'; frm.classList.add('active'); }
+                    event.currentTarget.classList.add('active');
                 }
-            });
+            } catch(e) {
+                console.log("Sekme değiştirme hatası:", e);
+            }
+        }
+
+        // Ana Menü Modül Geçiş Fonksiyonu
+        function showModule(modId, element) {
+            try {
+                document.querySelectorAll('.module-section').forEach(sec => {
+                    sec.style.display = 'none';
+                    sec.classList.remove('active');
+                });
+
+                let target = document.getElementById(modId);
+                if(target) {
+                    target.style.display = 'block';
+                    target.classList.add('active');
+                }
+
+                document.querySelectorAll('nav .nav-item').forEach(nav => {
+                    nav.classList.remove('active');
+                });
+                if(element) {
+                    element.classList.add('active');
+                }
+            } catch(e) {
+                console.log("Modül geçiş hatası:", e);
+            }
+        }
+
+        // Form Gönderimlerini ve Girişi Yakalayan Güvenli Dinleyici
+        document.addEventListener("DOMContentLoaded", function() {
+            const adminForm = document.getElementById('admin-login-form');
+            if(adminForm) {
+                adminForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    girisIsleminiBaslat("Admin", true);
+                });
+            }
+
+            const userForm = document.getElementById('user-login-form');
+            if(userForm) {
+                userForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    let tcInput = document.getElementById('personel-tc');
+                    let tcVal = tcInput ? tcInput.value : "Personel";
+                    girisIsleminiBaslat(tcVal, false);
+                });
+            }
         });
 
-        function girisIsleminiBaslat() {
-            window.isAdmin = true;
-            window.currentUser = "Admin";
-            localStorage.setItem('osb_is_admin', 'true');
-            localStorage.setItem('osb_current_user', "Admin");
+        function girisIsleminiBaslat(user, adminStatus) {
+            window.isAdmin = adminStatus;
+            window.currentUser = user;
+            localStorage.setItem('osb_is_admin', adminStatus ? 'true' : 'false');
+            localStorage.setItem('osb_current_user', user);
             
+            if(adminStatus) {
+                document.body.classList.add('is-admin');
+            } else {
+                document.body.classList.remove('is-admin');
+            }
+
+            let badge = document.getElementById('current-user-display');
+            if(badge) badge.innerText = user + (adminStatus ? " (ADMİN)" : " (PERSONEL)");
+
             sistemiAc();
             if(typeof loadCompaniesTable === 'function') loadCompaniesTable();
         }
@@ -178,39 +241,26 @@
             let overlay = document.getElementById('login-overlay');
             if(overlay) overlay.style.display = 'none';
 
-            document.querySelectorAll('div, section, form').forEach(el => {
-                if (el.id && (el.id.toLowerCase().includes('login') || el.id.toLowerCase().includes('giris'))) {
-                    el.style.display = 'none';
-                }
-            });
-
-            document.querySelectorAll('#app, #main-container, #dashboard, #main-panel, .app-container, .main-content, .container, main').forEach(el => {
-                el.style.display = 'block';
-            });
+            let firstMod = document.getElementById('mod1');
+            if(firstMod) {
+                firstMod.style.display = 'block';
+                firstMod.classList.add('active');
+            }
         }
 
-        function switchLoginTab(tabName) {
-            try {
-                document.querySelectorAll('.login-tab-content, .tab-content, .login-form').forEach(el => {
-                    el.style.display = 'none';
-                    el.classList.remove('active');
-                });
-                document.querySelectorAll('.login-tab').forEach(el => {
-                    el.classList.remove('active');
-                });
-                
-                if(tabName === 'admin') {
-                    let form = document.getElementById('admin-login-form');
-                    if(form) form.style.display = 'flex';
-                    if(form) form.classList.add('active');
-                } else {
-                    let form = document.getElementById('user-login-form');
-                    if(form) form.style.display = 'flex';
-                    if(form) form.classList.add('active');
-                }
-            } catch(err) {
-                console.log("Sekme hatası: ", err);
-            }
+        function logout() {
+            localStorage.removeItem('osb_is_admin');
+            localStorage.removeItem('osb_current_user');
+            window.location.reload();
+        }
+
+        function toggleForm(id) {
+            let f = document.getElementById(id);
+            if(f) f.style.display = f.style.display === 'none' ? 'grid' : 'none';
+        }
+
+        function forceUpper(el) {
+            if(el && el.value) el.value = el.value.toUpperCase();
         }
     </script>
 
@@ -363,7 +413,7 @@
             </section>
 
             <!-- MODÜL AI: GEMİNİ SOHBET -->
-            <section id="mod-ai" class="module-section">
+            <section id="mod-ai" class="module-section" style="display:none;">
                 <div class="card">
                     <div class="card-header">
                         <h2>🤖 Modül AI: Google Gemini Altyapılı Asistan & Sohbet</h2>
@@ -385,7 +435,7 @@
             </section>
 
             <!-- MODÜL 2: OLAY RAPORLARI & PERFORMANS DEĞERLENDİRME -->
-            <section id="mod2" class="module-section">
+            <section id="mod2" class="module-section" style="display:none;">
                 <div class="card">
                     <div class="card-header">
                         <h2>🔥 Modül 2: Olay Raporları, Personel Performans Puanlama (100 Puan) & Yıl Sonu Raporu</h2>
@@ -443,7 +493,7 @@
             </section>
 
             <!-- MODÜL 3: ARAÇ ARIZALARI -->
-            <section id="mod3" class="module-section">
+            <section id="mod3" class="module-section" style="display:none;">
                 <div class="card">
                     <div class="card-header">
                         <h2>🚛 Modül 3: Araç Arızaları & Fotoğraf Yükleme</h2>
@@ -482,7 +532,7 @@
             </section>
 
             <!-- MODÜL 4: AKILLI YSC KONTROL -->
-            <section id="mod4" class="module-section">
+            <section id="mod4" class="module-section" style="display:none;">
                 <div class="card">
                     <div class="card-header">
                         <h2>🧯 Modül 4: Akıllı YSC Kontrol Otomasyonu (Işıklı Uyarılar)</h2>
@@ -524,7 +574,7 @@
             </section>
 
             <!-- MODÜL 5: HİDRANTLAR VE RENKLİ PİNLER & HARİTA -->
-            <section id="mod5" class="module-section">
+            <section id="mod5" class="module-section" style="display:none;">
                 <div class="card">
                     <div class="card-header">
                         <h2>📍 Modül 5: Yangın Hidrantları, Arıza Notu, Fotoğraf & Renkli Harita Pinleri</h2>
@@ -569,7 +619,7 @@
             </section>
 
             <!-- MODÜL 6: GEÇİCİ YETKİLENDİRME -->
-            <section id="mod6" class="module-section">
+            <section id="mod6" class="module-section" style="display:none;">
                 <div class="card">
                     <div class="card-header">
                         <h2>🔑 Modül 6: Geçici Yetkilendirme Paneli</h2>
@@ -593,7 +643,7 @@
             </section>
 
             <!-- MODÜL 8: EĞİTİM DOKÜMANLARI -->
-            <section id="mod8" class="module-section">
+            <section id="mod8" class="module-section" style="display:none;">
                 <div class="card">
                     <div class="card-header">
                         <h2>📚 Modül 8: Eğitim Dokümanları & Admin Dosya Yükleme</h2>
@@ -615,7 +665,7 @@
             </section>
 
             <!-- MODÜL 9: DUYURULAR -->
-            <section id="mod9" class="module-section">
+            <section id="mod9" class="module-section" style="display:none;">
                 <div class="card">
                     <div class="card-header">
                         <h2>📢 Modül 9: Duyuru Paneli, Görsel Yükleme & Tarih</h2>
@@ -636,7 +686,7 @@
             </section>
 
             <!-- MODÜL 10: EĞİTİM PLANLAMA -->
-            <section id="mod10" class="module-section">
+            <section id="mod10" class="module-section" style="display:none;">
                 <div class="card">
                     <div class="card-header">
                         <h2>📅 Modül 10: Eğitim Planlama & Eğitmen Takibi</h2>
@@ -662,7 +712,7 @@
             </section>
 
             <!-- MODÜL 11: FORMLAR & DOSYA YÜKLEME -->
-            <section id="mod11" class="module-section">
+            <section id="mod11" class="module-section" style="display:none;">
                 <div class="card">
                     <div class="card-header">
                         <h2>📄 Modül 11: Formlar & Dosya Yükleme (Yetki Kontrollü)</h2>
@@ -685,7 +735,7 @@
             </section>
 
             <!-- MODÜL 12: CANLI SOHBET -->
-            <section id="mod12" class="module-section">
+            <section id="mod12" class="module-section" style="display:none;">
                 <div class="card">
                     <div class="card-header">
                         <h2>💬 Modül 12: Canlı Sohbet (Anlık Senkronize, 24 Saat Otomatik Silme)</h2>
@@ -709,7 +759,7 @@
             </section>
 
             <!-- MODÜL 13: İŞLETMELER -->
-            <section id="mod13" class="module-section">
+            <section id="mod13" class="module-section" style="display:none;">
                 <div class="card">
                     <div class="card-header">
                         <h2>🏢 Modül 13: İşletmeler & Doğalgaz Durumu</h2>
@@ -763,10 +813,8 @@
         </main>
     </div>
 
-    <!-- MODÜL 13 VE TÜM İŞLEVSEL FONKSİYONLARIN SCRIPT BLOĞU -->
+    <!-- MODÜL 13 VE TÜM İŞLEVSEL FONKSİYONLAR -->
     <script>
-        // --- MODÜL 13: İŞLETMELER (Kilitlenme Yapmayan Saf Sürüm) ---
-
         function saveCompanyRecord() {
             const name = document.getElementById('f-name').value.toUpperCase();
             const adres = document.getElementById('f-adres').value.toUpperCase();
@@ -956,30 +1004,6 @@
             }
             loadCompaniesTable();
             if(typeof populateCompanyDatalist === 'function') populateCompanyDatalist();
-        }
-
-        function toggleForm(id) {
-            let f = document.getElementById(id);
-            if(f) f.style.display = f.style.display === 'none' ? 'grid' : 'none';
-        }
-
-        function showModule(modId, element) {
-            document.querySelectorAll('.module-section').forEach(sec => sec.classList.remove('active'));
-            let target = document.getElementById(modId);
-            if(target) target.classList.add('active');
-
-            document.querySelectorAll('nav .nav-item').forEach(nav => nav.classList.remove('active'));
-            if(element) element.classList.add('active');
-        }
-
-        function logout() {
-            localStorage.removeItem('osb_is_admin');
-            localStorage.removeItem('osb_current_user');
-            window.location.reload();
-        }
-
-        function forceUpper(el) {
-            el.value = el.value.toUpperCase();
         }
     </script>
 </body>
