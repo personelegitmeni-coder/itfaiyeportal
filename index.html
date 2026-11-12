@@ -1,80 +1,3 @@
-<script>
-    // Sayfa yüklendiğinde formlara ve butonlara otomatik bağlanan akıllı dinleyici
-    document.addEventListener("DOMContentLoaded", function() {
-        const forms = document.querySelectorAll('form');
-        forms.forEach(form => {
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                girisIsleminiBaslat();
-            });
-        });
-
-        const buttons = document.querySelectorAll('button, input[type="submit"]');
-        buttons.forEach(btn => {
-            let btnText = (btn.innerText || btn.value || "").toLowerCase();
-            if (btnText.includes('giriş') || btnText.includes('login') || (btn.id && btn.id.includes('login'))) {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    girisIsleminiBaslat();
-                });
-            }
-        });
-    });
-
-    function girisIsleminiBaslat() {
-        window.isAdmin = true;
-        window.currentUser = "Admin";
-        localStorage.setItem('osb_is_admin', 'true');
-        localStorage.setItem('osb_current_user', "Admin");
-        
-        sistemiAc();
-        if(typeof loadCompaniesTable === 'function') loadCompaniesTable();
-    }
-
-    function sistemiAc() {
-        // Giriş ile ilgili ekranları gizle
-        document.querySelectorAll('div, section, form').forEach(el => {
-            if (el.id && (el.id.toLowerCase().includes('login') || el.id.toLowerCase().includes('giris'))) {
-                el.style.display = 'none';
-            }
-        });
-
-        // Ana panelleri görünür yap
-        document.querySelectorAll('#app, #main-container, #dashboard, #main-panel, .app-container, .main-content, .container').forEach(el => {
-            el.style.display = 'block';
-        });
-    }
-
-    function switchLoginTab(tabName) {
-        try {
-            document.querySelectorAll('.login-tab-content, .tab-content').forEach(el => {
-                el.style.display = 'none';
-            });
-            let targetTab = document.getElementById(tabName);
-            if(targetTab) targetTab.style.display = 'block';
-        } catch(err) {
-            console.log("Sekme hatası: ", err);
-        }
-    }
-</script>
-
-<!-- Firebase SDK'ları -->
-<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-
-<script>
-  // Firebase Bağlantı Ayarları (itfaiyeportal)
-  const firebaseConfig = {
-    projectId: "itfaiyeportal",
-    databaseURL: "https://itfaiyeportal-default-rtdb.europe-west1.firebasedatabase.app"
-  };
-
-  if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-  }
-  const db = firebase.database();
-</script>
-
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -217,6 +140,95 @@
             th { background: #eee !important; color: black !important; }
         }
     </style>
+
+    <!-- GİRİŞ VE SİSTEM YÖNETİM SCRİPTLERİ (Doğru Konumda) -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const forms = document.querySelectorAll('form');
+            forms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    girisIsleminiBaslat();
+                });
+            });
+
+            const buttons = document.querySelectorAll('button, input[type="submit"]');
+            buttons.forEach(btn => {
+                let btnText = (btn.innerText || btn.value || "").toLowerCase();
+                if (btnText.includes('giriş') || btnText.includes('login') || (btn.id && btn.id.includes('login'))) {
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        girisIsleminiBaslat();
+                    });
+                }
+            });
+        });
+
+        function girisIsleminiBaslat() {
+            window.isAdmin = true;
+            window.currentUser = "Admin";
+            localStorage.setItem('osb_is_admin', 'true');
+            localStorage.setItem('osb_current_user', "Admin");
+            
+            sistemiAc();
+            if(typeof loadCompaniesTable === 'function') loadCompaniesTable();
+        }
+
+        function sistemiAc() {
+            let overlay = document.getElementById('login-overlay');
+            if(overlay) overlay.style.display = 'none';
+
+            document.querySelectorAll('div, section, form').forEach(el => {
+                if (el.id && (el.id.toLowerCase().includes('login') || el.id.toLowerCase().includes('giris'))) {
+                    el.style.display = 'none';
+                }
+            });
+
+            document.querySelectorAll('#app, #main-container, #dashboard, #main-panel, .app-container, .main-content, .container, main').forEach(el => {
+                el.style.display = 'block';
+            });
+        }
+
+        function switchLoginTab(tabName) {
+            try {
+                document.querySelectorAll('.login-tab-content, .tab-content, .login-form').forEach(el => {
+                    el.style.display = 'none';
+                    el.classList.remove('active');
+                });
+                document.querySelectorAll('.login-tab').forEach(el => {
+                    el.classList.remove('active');
+                });
+                
+                if(tabName === 'admin') {
+                    let form = document.getElementById('admin-login-form');
+                    if(form) form.style.display = 'flex';
+                    if(form) form.classList.add('active');
+                } else {
+                    let form = document.getElementById('user-login-form');
+                    if(form) form.style.display = 'flex';
+                    if(form) form.classList.add('active');
+                }
+            } catch(err) {
+                console.log("Sekme hatası: ", err);
+            }
+        }
+    </script>
+
+    <!-- Firebase SDK'ları -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+    <script>
+      const firebaseConfig = {
+        projectId: "itfaiyeportal",
+        databaseURL: "https://itfaiyeportal-default-rtdb.europe-west1.firebasedatabase.app"
+      };
+
+      if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+      }
+      const db = firebase.database();
+    </script>
 </head>
 <body>
 
@@ -696,204 +708,211 @@
                 </div>
             </section>
 
-        <script>
-    // --- MODÜL 13: İŞLETMELER (Kilitlenme Yapmayan Saf Sürüm) ---
+            <!-- MODÜL 13: İŞLETMELER (Doğru Kapatılmış Script Bloğu) -->
+            <section id="mod13" class="module-section">
+                <!-- Modül 13 İçeriği veya Tablosu buraya gelebilir -->
+            </section>
+        </main>
+    </div>
 
-    function saveCompanyRecord() {
-        const name = document.getElementById('f-name').value.toUpperCase();
-        const adres = document.getElementById('f-adres').value.toUpperCase();
-        const tel = document.getElementById('f-tel').value;
-        const gazVana = document.getElementById('f-gaz-vana').value.toUpperCase();
-        const gps = document.getElementById('f-gps').value;
-        const editIdx = parseInt(document.getElementById('edit-firma-index').value);
-        if(!name) return;
+    <script>
+        // --- MODÜL 13: İŞLETMELER (Kilitlenme Yapmayan Saf Sürüm) ---
 
-        let rowObj = { FirmaAdi: name, CaddeAdres: adres, Iletisim: tel, DogalgazVanaDurumu: gazVana, GPS: gps };
+        function saveCompanyRecord() {
+            const name = document.getElementById('f-name').value.toUpperCase();
+            const adres = document.getElementById('f-adres').value.toUpperCase();
+            const tel = document.getElementById('f-tel').value;
+            const gazVana = document.getElementById('f-gaz-vana').value.toUpperCase();
+            const gps = document.getElementById('f-gps').value;
+            const editIdx = parseInt(document.getElementById('edit-firma-index').value);
+            if(!name) return;
 
-        if(isAdmin) {
-            let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
-            if(editIdx >= 0) {
-                list[editIdx] = rowObj;
-                document.getElementById('edit-firma-index').value = "-1";
+            let rowObj = { FirmaAdi: name, CaddeAdres: adres, Iletisim: tel, DogalgazVanaDurumu: gazVana, GPS: gps };
+
+            if(isAdmin) {
+                let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
+                if(editIdx >= 0) {
+                    list[editIdx] = rowObj;
+                    document.getElementById('edit-firma-index').value = "-1";
+                } else {
+                    list.unshift(rowObj);
+                }
+                localStorage.setItem('osb_firmalar', JSON.stringify(list));
+                
+                if(typeof db !== 'undefined') {
+                    db.ref('Isletmeler').set(list);
+                }
+                
+                alert("Firma kaydedildi / güncellendi.");
             } else {
-                list.unshift(rowObj);
+                let pendings = JSON.parse(localStorage.getItem('osb_pending_firmalar')) || [];
+                pendings.push({ ...rowObj, user: currentUser });
+                localStorage.setItem('osb_pending_firmalar', JSON.stringify(pendings));
+                alert("Firma kaydınız Admin onayına gönderildi.");
             }
-            localStorage.setItem('osb_firmalar', JSON.stringify(list));
+            loadCompaniesTable();
+            if(typeof populateCompanyDatalist === 'function') populateCompanyDatalist();
+            toggleForm('firma-form');
+        }
+
+        function importCompaniesFromExcel(event) {
+            let file = event.target.files[0];
+            if(!file) return;
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let data = new Uint8Array(e.target.result);
+                    let workbook = XLSX.read(data, {type: 'array'});
+                    let firstSheetName = workbook.SheetNames[0];
+                    let worksheet = workbook.Sheets[firstSheetName];
+                    
+                    let rows = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+                    let firmalar = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
+                    let addedCount = 0;
+
+                    for(let i = 1; i < rows.length; i++) {
+                        let row = rows[i];
+                        let fName = row[0] ? String(row[0]).trim() : '';
+
+                        if(fName !== "") {
+                            let fObj = {
+                                FirmaAdi: fName.toUpperCase(),
+                                CaddeAdres: row[1] ? String(row[1]).toUpperCase() : "",
+                                Iletisim: row[2] ? String(row[2]) : "",
+                                DogalgazVanaDurumu: row[3] ? String(row[3]).toUpperCase() : "YOK",
+                                GPS: row[4] ? String(row[4]) : ""
+                            };
+                            firmalar.unshift(fObj);
+                            addedCount++;
+                        }
+                    }
+
+                    localStorage.setItem('osb_firmalar', JSON.stringify(firmalar));
+                    
+                    if(typeof db !== 'undefined') {
+                        db.ref('Isletmeler').set(firmalar);
+                    }
+
+                    loadCompaniesTable();
+                    if(typeof populateCompanyDatalist === 'function') populateCompanyDatalist();
+                    alert(`Başarıyla ${addedCount} adet firma sırasına göre yüklendi!`);
+                } catch(err) {
+                    alert("Excel dosyası okunurken hata oluştu: " + err.message);
+                }
+                event.target.value = "";
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function deleteSelectedCompanies() {
+            if(!isAdmin) { alert("Yalnızca Admin silebilir!"); return; }
+            let checkboxes = document.querySelectorAll('.company-checkbox:checked');
+            if(checkboxes.length === 0) { alert("Silinecek firma seçilmedi!"); return; }
             
-            // Tek bir noktadan güvenli Firebase kayıt
+            if(!confirm("Seçilen firmaları silmek istediğinize emin misiniz?")) return;
+
+            let indicesToDelete = Array.from(checkboxes).map(cb => parseInt(cb.value)).sort((a,b) => b - a);
+            let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
+
+            indicesToDelete.forEach(idx => {
+                list.splice(idx, 1);
+            });
+
+            localStorage.setItem('osb_firmalar', JSON.stringify(list));
             if(typeof db !== 'undefined') {
                 db.ref('Isletmeler').set(list);
             }
-            
-            alert("Firma kaydedildi / güncellendi.");
-        } else {
+
+            loadCompaniesTable();
+            if(typeof populateCompanyDatalist === 'function') populateCompanyDatalist();
+            alert("Seçilen firmalar silindi.");
+        }
+
+        function loadCompaniesTable(search = "") {
+            let tbody = document.getElementById('firma-list');
+            let pendingBox = document.getElementById('pending-companies-box');
+            let pendingListContainer = document.getElementById('pending-companies-list');
+            if(!tbody) return;
+
+            tbody.innerHTML = "";
+            let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
             let pendings = JSON.parse(localStorage.getItem('osb_pending_firmalar')) || [];
-            pendings.push({ ...rowObj, user: currentUser });
-            localStorage.setItem('osb_pending_firmalar', JSON.stringify(pendings));
-            alert("Firma kaydınız Admin onayına gönderildi.");
+
+            if(isAdmin && pendings.length > 0) {
+                if(pendingBox) pendingBox.style.display = 'block';
+                if(pendingListContainer) {
+                    pendingListContainer.innerHTML = "";
+                    pendings.forEach((p, pIdx) => {
+                        let div = document.createElement('div');
+                        div.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#1e293b; padding:8px 12px; border-radius:6px; font-size:12px;";
+                        div.innerHTML = `<span><b>${p.FirmaAdi}</b> - <i>${p.user}</i></span><button class="btn btn-success" style="padding:2px 6px; font-size:11px;" onclick="approvePendingCompany(${pIdx})">Onayla</button>`;
+                        pendingListContainer.appendChild(div);
+                    });
+                }
+            } else { if(pendingBox) pendingBox.style.display = 'none'; }
+
+            let searchVal = search.trim().toUpperCase();
+            let filteredWithIndices = [];
+            list.forEach((f, originalIndex) => {
+                let name = (f.FirmaAdi || f.name || "").toUpperCase();
+                let adres = (f.CaddeAdres || f.adres || "").toUpperCase();
+                if(!searchVal || name.includes(searchVal) || adres.includes(searchVal)) {
+                    filteredWithIndices.push({ f, originalIndex });
+                }
+            });
+
+            filteredWithIndices.forEach(({ f, originalIndex }) => {
+                let name = f.FirmaAdi || f.name;
+                let adres = f.CaddeAdres || f.adres;
+                let tel = f.Iletisim || f.tel;
+                let gaz = f.DogalgazVanaDurumu || f.gazVana;
+                let gps = f.GPS || f.gps;
+
+                let navBtn = gps && gps.includes(',') ? `<br><a href="https://www.google.com/maps/dir/?api=1&destination=${gps.replace(/\s+/g,'')}" target="_blank" class="btn btn-success" style="padding:2px 8px; font-size:11px; margin-top:4px;">🧭 Yol Tarifi</a>` : '';
+
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><input type="checkbox" class="company-checkbox" value="${originalIndex}"></td>
+                    <td><b>${name}</b></td>
+                    <td>${adres}</td>
+                    <td>${tel || '-'}<br><small style="color:var(--accent);">${gps || 'GPS Yok'}</small>${navBtn}</td>
+                    <td><span class="badge blinking-red-badge">🔥 DOĞALGAZ VAR: ${gaz}</span></td>
+                    <td>
+                        ${isAdmin ? `<button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="editCompany(${originalIndex})">Düzenle</button> <button class="btn btn-danger" style="padding:2px 6px; font-size:11px;" onclick="deleteCompany(${originalIndex})">Sil</button>` : '-'}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
         }
-        loadCompaniesTable();
-        if(typeof populateCompanyDatalist === 'function') populateCompanyDatalist();
-        toggleForm('firma-form');
-    }
 
-    function importCompaniesFromExcel(event) {
-        let file = event.target.files[0];
-        if(!file) return;
-        let reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                let data = new Uint8Array(e.target.result);
-                let workbook = XLSX.read(data, {type: 'array'});
-                let firstSheetName = workbook.SheetNames[0];
-                let worksheet = workbook.Sheets[firstSheetName];
-                
-                let rows = XLSX.utils.sheet_to_json(worksheet, {header: 1});
-                let firmalar = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
-                let addedCount = 0;
+        function editCompany(idx) {
+            let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
+            let item = list[idx];
+            document.getElementById('edit-firma-index').value = idx;
+            document.getElementById('f-name').value = item.FirmaAdi || item.name;
+            document.getElementById('f-adres').value = item.CaddeAdres || item.adres;
+            document.getElementById('f-tel').value = item.Iletisim || item.tel;
+            document.getElementById('f-gaz-vana').value = item.DogalgazVanaDurumu || item.gazVana;
+            document.getElementById('f-gps').value = item.GPS || item.gps;
+            toggleForm('firma-form');
+        }
 
-                for(let i = 1; i < rows.length; i++) {
-                    let row = rows[i];
-                    let fName = row[0] ? String(row[0]).trim() : '';
-
-                    if(fName !== "") {
-                        let fObj = {
-                            FirmaAdi: fName.toUpperCase(),
-                            CaddeAdres: row[1] ? String(row[1]).toUpperCase() : "",
-                            Iletisim: row[2] ? String(row[2]) : "",
-                            DogalgazVanaDurumu: row[3] ? String(row[3]).toUpperCase() : "YOK",
-                            GPS: row[4] ? String(row[4]) : ""
-                        };
-                        firmalar.unshift(fObj);
-                        addedCount++;
-                    }
-                }
-
-                localStorage.setItem('osb_firmalar', JSON.stringify(firmalar));
-                
-                // Excel bittikten sonra tek seferde Firebase'e gönder (Kilitlenmeyi önler)
-                if(typeof db !== 'undefined') {
-                    db.ref('Isletmeler').set(firmalar);
-                }
-
-                loadCompaniesTable();
-                if(typeof populateCompanyDatalist === 'function') populateCompanyDatalist();
-                alert(`Başarıyla ${addedCount} adet firma sırasına göre yüklendi!`);
-            } catch(err) {
-                alert("Excel dosyası okunurken hata oluştu: " + err.message);
-            }
-            event.target.value = "";
-        };
-        reader.readAsArrayBuffer(file);
-    }
-
-    function deleteSelectedCompanies() {
-        if(!isAdmin) { alert("Yalnızca Admin silebilir!"); return; }
-        let checkboxes = document.querySelectorAll('.company-checkbox:checked');
-        if(checkboxes.length === 0) { alert("Silinecek firma seçilmedi!"); return; }
-        
-        if(!confirm("Seçilen firmaları silmek istediğinize emin misiniz?")) return;
-
-        let indicesToDelete = Array.from(checkboxes).map(cb => parseInt(cb.value)).sort((a,b) => b - a);
-        let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
-
-        indicesToDelete.forEach(idx => {
+        function deleteCompany(idx) {
+            if(!isAdmin) return;
+            let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
             list.splice(idx, 1);
-        });
-
-        localStorage.setItem('osb_firmalar', JSON.stringify(list));
-        if(typeof db !== 'undefined') {
-            db.ref('Isletmeler').set(list);
+            localStorage.setItem('osb_firmalar', JSON.stringify(list));
+            if(typeof db !== 'undefined') {
+                db.ref('Isletmeler').set(list);
+            }
+            loadCompaniesTable();
+            if(typeof populateCompanyDatalist === 'function') populateCompanyDatalist();
         }
 
-        loadCompaniesTable();
-        if(typeof populateCompanyDatalist === 'function') populateCompanyDatalist();
-        alert("Seçilen firmalar silindi.");
-    }
-
-    function loadCompaniesTable(search = "") {
-        let tbody = document.getElementById('firma-list');
-        let pendingBox = document.getElementById('pending-companies-box');
-        let pendingListContainer = document.getElementById('pending-companies-list');
-        if(!tbody) return;
-
-        tbody.innerHTML = "";
-        let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
-        let pendings = JSON.parse(localStorage.getItem('osb_pending_firmalar')) || [];
-
-        if(isAdmin && pendings.length > 0) {
-            if(pendingBox) pendingBox.style.display = 'block';
-            if(pendingListContainer) {
-                pendingListContainer.innerHTML = "";
-                pendings.forEach((p, pIdx) => {
-                    let div = document.createElement('div');
-                    div.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#1e293b; padding:8px 12px; border-radius:6px; font-size:12px;";
-                    div.innerHTML = `<span><b>${p.FirmaAdi}</b> - <i>${p.user}</i></span><button class="btn btn-success" style="padding:2px 6px; font-size:11px;" onclick="approvePendingCompany(${pIdx})">Onayla</button>`;
-                    pendingListContainer.appendChild(div);
-                });
-            }
-        } else { if(pendingBox) pendingBox.style.display = 'none'; }
-
-        let searchVal = search.trim().toUpperCase();
-        let filteredWithIndices = [];
-        list.forEach((f, originalIndex) => {
-            let name = (f.FirmaAdi || f.name || "").toUpperCase();
-            let adres = (f.CaddeAdres || f.adres || "").toUpperCase();
-            if(!searchVal || name.includes(searchVal) || adres.includes(searchVal)) {
-                filteredWithIndices.push({ f, originalIndex });
-            }
-        });
-
-        filteredWithIndices.forEach(({ f, originalIndex }) => {
-            let name = f.FirmaAdi || f.name;
-            let adres = f.CaddeAdres || f.adres;
-            let tel = f.Iletisim || f.tel;
-            let gaz = f.DogalgazVanaDurumu || f.gazVana;
-            let gps = f.GPS || f.gps;
-
-            let navBtn = gps && gps.includes(',') ? `<br><a href="https://www.google.com/maps/dir/?api=1&destination=${gps.replace(/\s+/g,'')}" target="_blank" class="btn btn-success" style="padding:2px 8px; font-size:11px; margin-top:4px;">🧭 Yol Tarifi</a>` : '';
-
-            let tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><input type="checkbox" class="company-checkbox" value="${originalIndex}"></td>
-                <td><b>${name}</b></td>
-                <td>${adres}</td>
-                <td>${tel || '-'}<br><small style="color:var(--accent);">${gps || 'GPS Yok'}</small>${navBtn}</td>
-                <td><span class="badge blinking-red-badge">🔥 DOĞALGAZ VAR: ${gaz}</span></td>
-                <td>
-                    ${isAdmin ? `<button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="editCompany(${originalIndex})">Düzenle</button> <button class="btn btn-danger" style="padding:2px 6px; font-size:11px;" onclick="deleteCompany(${originalIndex})">Sil</button>` : '-'}
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
-
-    function editCompany(idx) {
-        let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
-        let item = list[idx];
-        document.getElementById('edit-firma-index').value = idx;
-        document.getElementById('f-name').value = item.FirmaAdi || item.name;
-        document.getElementById('f-adres').value = item.CaddeAdres || item.adres;
-        document.getElementById('f-tel').value = item.Iletisim || item.tel;
-        document.getElementById('f-gaz-vana').value = item.DogalgazVanaDurumu || item.gazVana;
-        document.getElementById('f-gps').value = item.GPS || item.gps;
-        toggleForm('firma-form');
-    }
-
-    function deleteCompany(idx) {
-        if(!isAdmin) return;
-        let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
-        list.splice(idx, 1);
-        localStorage.setItem('osb_firmalar', JSON.stringify(list));
-        if(typeof db !== 'undefined') {
-            db.ref('Isletmeler').set(list);
+        function toggleForm(id) {
+            let f = document.getElementById(id);
+            if(f) f.style.display = f.style.display === 'none' ? 'grid' : 'none';
         }
-        loadCompaniesTable();
-        if(typeof populateCompanyDatalist === 'function') populateCompanyDatalist();
-    }
-
-    function toggleForm(id) {
-        let f = document.getElementById(id);
-        if(f) f.style.display = f.style.display === 'none' ? 'grid' : 'none';
-    }
-</script>
+    </script>
+</body>
+</html>
