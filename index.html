@@ -705,28 +705,25 @@
         };
 
         // GOOGLE SHEETS VERİ ÇEKME - GELİŞTİRİLMİŞ HATA YÖNETİMİ
-       async function fetchAllDataFromSheets() {
-    try {
-        // Tarayıcının önbellekte (cache) takılı kalmasını önlemek için benzersiz zaman damgası ekliyoruz
-        let noCacheUrl = SCRIPT_URL + "?action=readAll&_cb=" + new Date().getTime() + Math.random();
-        
-        let res = await fetch(noCacheUrl, { cache: "no-store" });
-        if(!res.ok) throw new Error("Google Sheets sunucusu yanıt vermedi: Status " + res.status);
-        let data = await res.json();
-        
-        if(data.Personel && data.Personel.length > 0) localStorage.setItem('osb_personel', JSON.stringify(data.Personel));
-        if(data.OlayRaporlari && data.OlayRaporlari.length > 0) localStorage.setItem('osb_olaylar', JSON.stringify(data.OlayRaporlari));
-        if(data.AracArizalari && data.AracArizalari.length > 0) localStorage.setItem('osb_arac_arizalari', JSON.stringify(data.AracArizalari));
-        if(data.YSCKontrol && data.YSCKontrol.length > 0) localStorage.setItem('osb_ysc_listesi', JSON.stringify(data.YSCKontrol));
-        if(data.Hidrantlar && data.Hidrantlar.length > 0) localStorage.setItem('osb_hidrant_listesi', JSON.stringify(data.Hidrantlar));
-        if(data.Isletmeler && data.Isletmeler.length > 0) localStorage.setItem('osb_firmalar', JSON.stringify(data.Isletmeler));
-        if(data.Duyurular && data.Duyurular.length > 0) localStorage.setItem('osb_duyurular', JSON.stringify(data.Duyurular));
-        if(data.Formlar && data.Formlar.length > 0) localStorage.setItem('osb_formlar', JSON.stringify(data.Formlar));
-    } catch(err) {
-        console.error("Google Sheets Veri Çekme Hatası:", err);
-    }
-    loadAllModules();
-}
+        async function fetchAllDataFromSheets() {
+            try {
+                let res = await fetch(SCRIPT_URL + "?action=readAll");
+                if(!res.ok) throw new Error("Google Sheets sunucusu yanıt vermedi: Status " + res.status);
+                let data = await res.json();
+                
+                if(data.Personel && data.Personel.length > 0) localStorage.setItem('osb_personel', JSON.stringify(data.Personel));
+                if(data.OlayRaporlari && data.OlayRaporlari.length > 0) localStorage.setItem('osb_olaylar', JSON.stringify(data.OlayRaporlari));
+                if(data.AracArizalari && data.AracArizalari.length > 0) localStorage.setItem('osb_arac_arizalari', JSON.stringify(data.AracArizalari));
+                if(data.YSCKontrol && data.YSCKontrol.length > 0) localStorage.setItem('osb_ysc_listesi', JSON.stringify(data.YSCKontrol));
+                if(data.Hidrantlar && data.Hidrantlar.length > 0) localStorage.setItem('osb_hidrant_listesi', JSON.stringify(data.Hidrantlar));
+                if(data.Isletmeler && data.Isletmeler.length > 0) localStorage.setItem('osb_firmalar', JSON.stringify(data.Isletmeler));
+                if(data.Duyurular && data.Duyurular.length > 0) localStorage.setItem('osb_duyurular', JSON.stringify(data.Duyurular));
+                if(data.Formlar && data.Formlar.length > 0) localStorage.setItem('osb_formlar', JSON.stringify(data.Formlar));
+            } catch(err) {
+                console.error("Google Sheets Veri Çekme Hatası:", err);
+            }
+            loadAllModules();
+        }
 
         // GOOGLE SHEETS VERİ GÖNDERME - GELİŞTİRİLMİŞ İSTEK YAPISI
         async function sendDataToSheet(sheetName, rowData) {
