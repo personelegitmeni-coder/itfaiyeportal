@@ -141,7 +141,7 @@
         }
     </style>
 
-    <!-- GİRİŞ VE SİSTEM YÖNETİM SCRİPTLERİ (Doğru Konumda) -->
+    <!-- GİRİŞ VE SİSTEM YÖNETİM SCRİPTLERİ -->
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const forms = document.querySelectorAll('form');
@@ -708,13 +708,62 @@
                 </div>
             </section>
 
-            <!-- MODÜL 13: İŞLETMELER (Doğru Kapatılmış Script Bloğu) -->
+            <!-- MODÜL 13: İŞLETMELER -->
             <section id="mod13" class="module-section">
-                <!-- Modül 13 İçeriği veya Tablosu buraya gelebilir -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>🏢 Modül 13: İşletmeler & Doğalgaz Durumu</h2>
+                        <div>
+                            <input type="text" id="isletme-arama-input" placeholder="İşletme Ara..." style="display:inline-block; width:200px; padding:6px; font-size:12px;" oninput="loadCompaniesTable(this.value); forceUpper(this)">
+                            <button class="btn btn-secondary" onclick="window.print()">🖨️ Yazdır</button>
+                            <label class="btn btn-secondary" style="cursor:pointer; display:inline-flex; margin-bottom:0;">
+                                📥 Excel'den Yükle <input type="file" accept=".xlsx, .xls, .csv" onchange="importCompaniesFromExcel(event)" style="display:none;">
+                            </label>
+                            <button class="btn btn-danger admin-only" onclick="deleteSelectedCompanies()">🗑️ Seçilenleri Sil</button>
+                            <button class="btn btn-success" onclick="toggleForm('firma-form')">+ Yeni İşletme Ekle</button>
+                        </div>
+                    </div>
+
+                    <div class="admin-only" id="pending-companies-box" style="background:#111827; padding:12px; border-radius:6px; margin-bottom:15px; border:1px dashed var(--warning); display:none;">
+                        <h3 style="color:var(--warning); font-size:13px; margin-bottom:8px;">⏳ Personeller Tarafından Eklenen Onay Bekleyen İşletmeler</h3>
+                        <div id="pending-companies-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+                    </div>
+
+                    <div id="firma-form" style="display:none;" class="form-grid">
+                        <input type="hidden" id="edit-firma-index" value="-1">
+                        <div class="form-group"><label>Firma Adı:</label><input type="text" id="f-name" placeholder="Firma Adı Yazın..." oninput="forceUpper(this)"></div>
+                        <div class="form-group"><label>Cadde / Adres:</label><input type="text" id="f-adres" placeholder="4. Cadde No: 12" oninput="forceUpper(this)"></div>
+                        <div class="form-group"><label>İletişim / Tel:</label><input type="text" id="f-tel" placeholder="0322..."></div>
+                        <div class="form-group"><label>Doğalgaz Vana Durumu:</label><select id="f-gaz-vana"><option>VAR</option><option>YOK</option></select></div>
+                        <div class="form-group">
+                            <label>GPS Konumu:</label>
+                            <div style="display:flex; gap:5px;">
+                                <input type="text" id="f-gps" placeholder="36.9584, 35.4182">
+                                <button type="button" class="btn btn-secondary" onclick="getCurrentGPS('f-gps')" style="padding:4px 10px; font-size:11px;">📍 Konumu Bul</button>
+                            </div>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;"><button class="btn" onclick="saveCompanyRecord()">İşletmeyi Kaydet / Güncelle</button></div>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width:30px;"><input type="checkbox" id="select-all-companies" onclick="toggleSelectAllCompanies(this)"></th>
+                                <th>Firma Adı</th>
+                                <th>Adres</th>
+                                <th>İletişim & GPS</th>
+                                <th>Doğalgaz Vana Durumu</th>
+                                <th>İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody id="firma-list"></tbody>
+                    </table>
+                </div>
             </section>
         </main>
     </div>
 
+    <!-- MODÜL 13 VE TÜM İŞLEVSEL FONKSİYONLARIN SCRIPT BLOĞU -->
     <script>
         // --- MODÜL 13: İŞLETMELER (Kilitlenme Yapmayan Saf Sürüm) ---
 
@@ -729,7 +778,7 @@
 
             let rowObj = { FirmaAdi: name, CaddeAdres: adres, Iletisim: tel, DogalgazVanaDurumu: gazVana, GPS: gps };
 
-            if(isAdmin) {
+            if(window.isAdmin) {
                 let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
                 if(editIdx >= 0) {
                     list[editIdx] = rowObj;
@@ -746,7 +795,7 @@
                 alert("Firma kaydedildi / güncellendi.");
             } else {
                 let pendings = JSON.parse(localStorage.getItem('osb_pending_firmalar')) || [];
-                pendings.push({ ...rowObj, user: currentUser });
+                pendings.push({ ...rowObj, user: window.currentUser });
                 localStorage.setItem('osb_pending_firmalar', JSON.stringify(pendings));
                 alert("Firma kaydınız Admin onayına gönderildi.");
             }
@@ -805,7 +854,7 @@
         }
 
         function deleteSelectedCompanies() {
-            if(!isAdmin) { alert("Yalnızca Admin silebilir!"); return; }
+            if(!window.isAdmin) { alert("Yalnızca Admin silebilir!"); return; }
             let checkboxes = document.querySelectorAll('.company-checkbox:checked');
             if(checkboxes.length === 0) { alert("Silinecek firma seçilmedi!"); return; }
             
@@ -838,7 +887,7 @@
             let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
             let pendings = JSON.parse(localStorage.getItem('osb_pending_firmalar')) || [];
 
-            if(isAdmin && pendings.length > 0) {
+            if(window.isAdmin && pendings.length > 0) {
                 if(pendingBox) pendingBox.style.display = 'block';
                 if(pendingListContainer) {
                     pendingListContainer.innerHTML = "";
@@ -878,7 +927,7 @@
                     <td>${tel || '-'}<br><small style="color:var(--accent);">${gps || 'GPS Yok'}</small>${navBtn}</td>
                     <td><span class="badge blinking-red-badge">🔥 DOĞALGAZ VAR: ${gaz}</span></td>
                     <td>
-                        ${isAdmin ? `<button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="editCompany(${originalIndex})">Düzenle</button> <button class="btn btn-danger" style="padding:2px 6px; font-size:11px;" onclick="deleteCompany(${originalIndex})">Sil</button>` : '-'}
+                        ${window.isAdmin ? `<button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="editCompany(${originalIndex})">Düzenle</button> <button class="btn btn-danger" style="padding:2px 6px; font-size:11px;" onclick="deleteCompany(${originalIndex})">Sil</button>` : '-'}
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -898,7 +947,7 @@
         }
 
         function deleteCompany(idx) {
-            if(!isAdmin) return;
+            if(!window.isAdmin) return;
             let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
             list.splice(idx, 1);
             localStorage.setItem('osb_firmalar', JSON.stringify(list));
@@ -912,6 +961,25 @@
         function toggleForm(id) {
             let f = document.getElementById(id);
             if(f) f.style.display = f.style.display === 'none' ? 'grid' : 'none';
+        }
+
+        function showModule(modId, element) {
+            document.querySelectorAll('.module-section').forEach(sec => sec.classList.remove('active'));
+            let target = document.getElementById(modId);
+            if(target) target.classList.add('active');
+
+            document.querySelectorAll('nav .nav-item').forEach(nav => nav.classList.remove('active'));
+            if(element) element.classList.add('active');
+        }
+
+        function logout() {
+            localStorage.removeItem('osb_is_admin');
+            localStorage.removeItem('osb_current_user');
+            window.location.reload();
+        }
+
+        function forceUpper(el) {
+            el.value = el.value.toUpperCase();
         }
     </script>
 </body>
