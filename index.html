@@ -836,3 +836,50 @@
         let f = document.getElementById(id);
         if(f) f.style.display = f.style.display === 'none' ? 'grid' : 'none';
     }
+
+                  // --- GİRİŞ VE SEKME YÖNETİMİ (Eksik Fonksiyonlar) ---
+
+    function switchLoginTab(tabName) {
+        try {
+            document.querySelectorAll('.login-tab-content, .tab-content').forEach(el => {
+                el.style.display = 'none';
+            });
+            document.querySelectorAll('.login-tab-btn, .tab-btn').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            let targetTab = document.getElementById(tabName);
+            if(targetTab) {
+                targetTab.style.display = 'block';
+            }
+        } catch(err) {
+            console.log("Sekme değiştirme hatası: ", err);
+        }
+    }
+
+    function handleAdminLogin(event) {
+        if(event) event.preventDefault();
+        try {
+            let passInput = document.getElementById('admin-pass') || document.getElementById('admin-password');
+            let pass = passInput ? passInput.value : '';
+            
+            // Admin şifre kontrolü (Sizin belirlediğiniz mantığa göre)
+            if(pass) {
+                isAdmin = true;
+                currentUser = "Admin";
+                localStorage.setItem('osb_is_admin', 'true');
+                localStorage.setItem('osb_current_user', currentUser);
+                
+                // Giriş ekranını gizle, ana paneli aç
+                let loginScreen = document.getElementById('login-screen') || document.getElementById('login-modal');
+                if(loginScreen) loginScreen.style.display = 'none';
+                
+                if(typeof loadCompaniesTable === 'function') loadCompaniesTable();
+                alert("Admin olarak giriş yapıldı!");
+            } else {
+                alert("Lütfen şifre giriniz!");
+            }
+        } catch(err) {
+            alert("Giriş yapılırken hata oluştu: " + err.message);
+        }
+    }
