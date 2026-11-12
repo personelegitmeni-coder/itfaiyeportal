@@ -6,6 +6,7 @@
     <title>Adana OSB İtfaiye Portalı - Google Sheets Canlı Senkronize</title>
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <!-- SheetJS -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
@@ -120,8 +121,6 @@
         }
     </style>
 
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <!-- Firebase SDK'ları -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
@@ -189,11 +188,11 @@
     <header>
         <div class="logo-area">
             <h1>👨‍🚒 ADANA OSB İTFAİYE MÜDÜRLÜĞÜ</h1>
-            <p>Google Sheets Canlı Senkronize Kurumsal Portal</p>
+            <p>Firebase Canlı Senkronize Kurumsal Portal</p>
         </div>
         <div class="header-widget">
             <span id="live-clock">📅 Yükleniyor...</span> | 
-            <span id="live-weather">🌤️ Adana OSB: 24°C (Açık)</span>
+            <span id="live-weather">🌤️ Adana OSB</span>
         </div>
         <div class="user-info">
             <span class="user-badge" id="current-user-display">Giriş Yapılmadı</span>
@@ -203,7 +202,7 @@
 
     <div class="announcement-banner">
         <span class="badge-new">CANLI BAĞLANTI AKTİF</span>
-        <span>☁️ Firebase ve Google Sheets Entegrasyonu Aktif.</span>
+        <span>☁️ Firebase bağlantı durumu sistem tarafından kontrol edilir.</span>
     </div>
 
     <div class="main-wrapper">
@@ -214,7 +213,7 @@
             <div class="nav-item" onclick="showModule('mod2', this)"><span>🔥 Olay Raporları & Performans</span><span class="mod-no">M2</span></div>
             <div class="nav-item" onclick="showModule('mod3', this)"><span>🚛 Araç Arızaları</span><span class="mod-no">M3</span></div>
             <div class="nav-item" onclick="showModule('mod4', this)"><span>🧯 Akıllı YSC Kontrol</span><span class="mod-no">M4</span></div>
-            <div class="nav-item" onclick="showModule('mod5', this)" id="nav-mod5"><span>📍 Hidrant Kodu & GPS</span><span class="mod-no">M5</span></div>
+            <div class="nav-item" onclick="showModule('mod5', this)"><span>📍 Hidrant Kodu & GPS</span><span class="mod-no">M5</span></div>
             <div class="nav-item" onclick="showModule('mod6', this)"><span>🔑 Geçici Yetkilendirme</span><span class="mod-no">M6</span></div>
             <div class="nav-item" onclick="showModule('mod8', this)"><span>📚 Eğitim Dokümanları</span><span class="mod-no">M8</span></div>
             <div class="nav-item" onclick="showModule('mod9', this)"><span>📢 Duyuru Paneli</span><span class="mod-no">M9</span></div>
@@ -245,8 +244,7 @@
                         <div class="form-group"><label>Kan Grubu:</label><select id="p-kan"><option>0 RH+</option><option>0 RH-</option><option>A RH+</option><option>A RH-</option><option>B RH+</option><option>B RH-</option><option>AB RH+</option><option>AB RH-</option></select></div>
                         <div class="form-group"><label>İşe Giriş Tarihi:</label><input type="date" id="p-giris"></div>
                         <div class="form-group"><label>Yıllık Toplam İzin Hakkı (Gün):</label><input type="number" id="p-toplam-izin" value="30"></div>
-                        <div class="form-group"><label>Kullanılan İzin Günleri:</label><input type="number" id="p-kullanilan-izin" placeholder="5" oninput="calculateKalanIzin()"></div>
-                        <div class="form-group"><label>Kalan İzin (Otomatik):</label><input type="text" id="p-kalan-izin" readonly style="background:#111827; color:var(--success); font-weight:bold;" placeholder="25"></div>
+                        <div class="form-group"><label>Kullanılan İzin Günleri:</label><input type="number" id="p-kullanilan-izin" placeholder="5"></div>
                         <div class="form-group"><label>Ayakkabı No:</label><input type="text" id="p-ayakkabi" placeholder="42"></div>
                         <div class="form-group"><label>Tişört Bedeni:</label><input type="text" id="p-tisort" placeholder="L"></div>
                         <div class="form-group" style="grid-column: 1 / -1;"><button class="btn" onclick="addPersonnel()">Personeli Kaydet</button></div>
@@ -273,6 +271,9 @@
                     <div class="card-header">
                         <h2>🤖 Modül AI: Google Gemini Altyapılı Asistan & Sohbet</h2>
                     </div>
+                    <p style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">
+                        Google Gemini AI altyapısıyla entegre yangın mevzuatı, acil durum kılavuzları ve operasyonel asistanınız.
+                    </p>
                     <div class="chat-box" id="aiChatContainer">
                         <div class="chat-msg ai">
                             <div class="chat-meta"><span>Gemini Asistan AI</span></div>
@@ -293,13 +294,8 @@
                         <h2>🔥 Modül 2: Olay Raporları & Personel Performans Puanlama</h2>
                         <button class="btn btn-success admin-only" onclick="toggleForm('olay-form-box')">+ Yeni Olay Raporu</button>
                     </div>
-                    <div id="olay-form-box" style="display:none;" class="form-grid">
-                        <div class="form-group"><label>Olay Türü:</label><select id="olay-tur"><option>Fabrika yangını</option><option>Hane yangını</option><option>Araç yangını</option><option>Kurtarma</option></select></div>
-                        <div class="form-group"><label>Firma / Adres:</label><input type="text" id="olay-adres" placeholder="Firma veya Adres" oninput="forceUpper(this)"></div>
-                        <div class="form-group" style="grid-column: 1 / -1;"><button class="btn" onclick="addOlayRaporu()">Raporu Kaydet</button></div>
-                    </div>
                     <table>
-                        <thead><tr><th>Kayıt & Saat</th><th>Giren</th><th>Firma & Adres</th><th>Tür</th><th>İşlem</th></tr></thead>
+                        <thead><tr><th>Kayıt & Saat</th><th>Giren</th><th>Firma & Adres</th><th>Tür & Puan</th><th>Özet</th><th>İşlem</th></tr></thead>
                         <tbody id="olay-list"></tbody>
                     </table>
                 </div>
@@ -312,11 +308,6 @@
                         <h2>🚛 Modül 3: Araç Arızaları & Fotoğraf Yükleme</h2>
                         <button class="btn btn-success" onclick="toggleForm('ariza-form-box')">+ Arıza Bildir</button>
                     </div>
-                    <div id="ariza-form-box" style="display:none;" class="form-grid">
-                        <div class="form-group"><label>Araç Plakası:</label><input type="text" id="ariza-plaka" placeholder="01 ITB 01" oninput="forceUpper(this)"></div>
-                        <div class="form-group"><label>Arıza Açıklaması:</label><input type="text" id="ariza-detay" placeholder="Arıza detayı" oninput="forceUpper(this)"></div>
-                        <div class="form-group" style="grid-column: 1 / -1;"><button class="btn" onclick="submitVehicleAriza()">Arıza Kaydını Gönder</button></div>
-                    </div>
                     <div id="arac-ariza-container" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:15px; margin-top:15px;"></div>
                 </div>
             </section>
@@ -328,13 +319,8 @@
                         <h2>🧯 Modül 4: Akıllı YSC Kontrol Otomasyonu</h2>
                         <button class="btn btn-success" onclick="toggleForm('ysc-form-box')">+ Yeni YSC Ekle</button>
                     </div>
-                    <div id="ysc-form-box" style="display:none;" class="form-grid">
-                        <div class="form-group"><label>YSC Kod:</label><input type="text" id="ysc-no" placeholder="YSC-01" oninput="forceUpper(this)"></div>
-                        <div class="form-group"><label>Adres:</label><input type="text" id="ysc-adres" placeholder="Fabrika İçi" oninput="forceUpper(this)"></div>
-                        <div class="form-group" style="grid-column: 1 / -1;"><button class="btn" onclick="saveYSCRecord()">YSC Kaydet</button></div>
-                    </div>
                     <table>
-                        <thead><tr><th>Kod</th><th>Adres</th><th>Durum</th><th>İşlem</th></tr></thead>
+                        <thead><tr><th>Kod</th><th>Tip / Kg</th><th>Adres & GPS</th><th>Durum</th><th>Ekleyen</th><th>İşlem</th></tr></thead>
                         <tbody id="ysc-list"></tbody>
                     </table>
                 </div>
@@ -346,19 +332,6 @@
                     <div class="card-header">
                         <h2>📍 Modül 5: Yangın Hidrantları & Harita Pinleri</h2>
                         <button class="btn btn-success" onclick="toggleForm('h-form')">+ Yeni Hidrant Ekle</button>
-                    </div>
-                    <div id="h-form" style="display:none;" class="form-grid">
-                        <div class="form-group"><label>Hidrant Kodu:</label><input type="text" id="h-kod" placeholder="H1" oninput="forceUpper(this)"></div>
-                        <div class="form-group"><label>Adres:</label><input type="text" id="h-adres" placeholder="3. Cadde" oninput="forceUpper(this)"></div>
-                        <div class="form-group"><label>Durum:</label><select id="h-durum"><option>Sağlam / Aktif</option><option>Arızalı / Kapalı</option><option>Bakımda</option></select></div>
-                        <div class="form-group">
-                            <label>GPS Koordinatı:</label>
-                            <div style="display:flex; gap:5px;">
-                                <input type="text" id="h-gps" placeholder="36.9584, 35.4182">
-                                <button type="button" class="btn btn-secondary" onclick="getCurrentGPS('h-gps')" style="padding:4px 10px; font-size:11px;">📍 Konumu Bul</button>
-                            </div>
-                        </div>
-                        <div class="form-group" style="grid-column: 1 / -1;"><button class="btn" onclick="saveHydrant()">Hidrant Kaydet</button></div>
                     </div>
                     <div id="map" class="map-box"></div>
                     <table>
@@ -388,7 +361,7 @@
                         <h2>📚 Modül 8: Eğitim Dokümanları</h2>
                     </div>
                     <table>
-                        <thead><tr><th>Doküman Adı</th><th>Kategori</th><th>Tarih</th><th>İşlem</th></tr></thead>
+                        <thead><tr><th>Doküman Adı</th><th>Kategori</th><th>Tarih</th><th>Dosya</th><th>İşlem</th></tr></thead>
                         <tbody id="dokuman-list"></tbody>
                     </table>
                 </div>
@@ -411,7 +384,7 @@
                         <h2>📅 Modül 10: Eğitim Planlama</h2>
                     </div>
                     <table>
-                        <thead><tr><th>Konu</th><th>Eğitmen</th><th>Tarih & Saat</th><th>İşlem</th></tr></thead>
+                        <thead><tr><th>Konu</th><th>Eğitmen</th><th>Tarih & Saat</th><th>Ekip</th><th>İşlem</th></tr></thead>
                         <tbody id="egitim-plan-list"></tbody>
                     </table>
                 </div>
@@ -424,7 +397,7 @@
                         <h2>📄 Modül 11: Formlar & Dosya Yükleme</h2>
                     </div>
                     <table>
-                        <thead><tr><th>Form Adı</th><th>Açıklama</th><th>Yükleyen</th><th>İşlem</th></tr></thead>
+                        <thead><tr><th>Form Adı</th><th>Açıklama</th><th>Yükleyen</th><th>Tarih</th><th>İşlem</th></tr></thead>
                         <tbody id="formlar-list"></tbody>
                     </table>
                 </div>
@@ -490,261 +463,301 @@
         </main>
     </div>
 
-    <!-- SİSTEM VE MODÜL SCRİPTLERİ -->
+
+    <!-- PORTAL UYGULAMA KODU -->
     <script>
-        window.isAdmin = true;
-        window.currentUser = "Admin";
-        let mapInstance = null;
-        let mapMarkers = [];
+    (() => {
+      "use strict";
 
-        function switchLoginTab(tabName, element) {
-            document.querySelectorAll('.login-form').forEach(f => { f.style.display = 'none'; f.classList.remove('active'); });
-            document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
-            if(tabName === 'admin') {
-                let frm = document.getElementById('admin-login-form');
-                if(frm) { frm.style.display = 'flex'; frm.classList.add('active'); }
-            } else {
-                let frm = document.getElementById('user-login-form');
-                if(frm) { frm.style.display = 'flex'; frm.classList.add('active'); }
-            }
-            if(element) element.classList.add('active');
-        }
+      const MODULES = {
+        olay: { path:"OlayRaporlari", form:"olay-form-box", title:"Olay Raporu", fields:[
+          ["Tarih","date"],["Saat","time"],["Firma / Adres","text"],["Olay Türü","select","Yangın|Trafik Kazası|Kurtarma|Su Baskını|Diğer"],["Görevli Personel","text"],["Özet","textarea"],["Performans Puanı","number"]
+        ], target:"olay-list", headers:["Tarih / Saat","Giren","Firma & Adres","Tür & Puan","Özet"] },
+        ariza: { path:"AracArizalari", form:"ariza-form-box", title:"Araç Arızası", fields:[
+          ["Araç Plakası","text"],["Arıza Sıra No","text"],["Arıza Detayı","textarea"],["Açıklama","textarea"],["Bildirim Tarihi","date"],["Durum","select","Açık|Parça Bekliyor|Onarımda|Giderildi"]
+        ], target:"arac-ariza-container", cards:true },
+        ysc: { path:"YSC", form:"ysc-form-box", title:"YSC Kaydı", fields:[
+          ["Kod","text"],["Tip","select","KKT|Köpüklü|CO2|Sulu|Diğer"],["Kapasite (kg/L)","text"],["Adres","text"],["GPS (Enlem, Boylam)","text"],["Durum","select","Sağlam|Kontrol Gerekli|Kullanıldı|Eksik"]
+        ], target:"ysc-list", headers:["Kod","Tip / Kg","Adres & GPS","Durum","Ekleyen"] },
+        hidrant: { path:"Hidrantlar", form:"h-form", title:"Hidrant Kaydı", fields:[
+          ["Hidrant Kodu","text"],["Adres","text"],["Durum","select","Aktif|Arızalı|Kontrol Gerekli"],["GPS (Enlem, Boylam)","text"]
+        ], target:"h-list", headers:["Hidrant Kodu","Adres","Durum","GPS"] },
+        yetki: { path:"GeciciYetkiler", form:"yetki-form", title:"Geçici Yetkilendirme", fields:[
+          ["Personel TC","text"],["Personel Adı","text"],["Yetki / Açıklama","text"],["Başlangıç","date"],["Bitiş","date"],["Durum","select","Aktif|Pasif"]
+        ], target:"yetki-list", headers:["Personel","Süre / Yetki","Başlangıç","Durum"] },
+        dokuman: { path:"EgitimDokumanlari", form:"dokuman-form", title:"Eğitim Dokümanı", fields:[
+          ["Doküman Adı","text"],["Kategori","text"],["Dosya URL","url"],["Tarih","date"]
+        ], target:"dokuman-list", headers:["Doküman Adı","Kategori","Tarih","Dosya"] },
+        duyuru: { path:"Duyurular", form:"duyuru-form", title:"Duyuru", fields:[
+          ["Başlık","text"],["Duyuru Metni","textarea"],["Yayın Tarihi","date"],["Önem","select","Normal|Önemli|Acil"]
+        ], target:"duyurular-container", cards:true },
+        egitim: { path:"EgitimPlanlari", form:"egitim-form", title:"Eğitim Planı", fields:[
+          ["Konu","text"],["Eğitmen","text"],["Tarih","date"],["Saat","time"],["Ekip","select","Tüm Ekipler|A Ekibi|B Ekibi|C Ekibi|D Ekibi"],["Açıklama","textarea"]
+        ], target:"egitim-plan-list", headers:["Konu","Eğitmen","Tarih & Saat","Ekip"] },
+        dosya: { path:"FormlarDosyalar", form:"dosya-form", title:"Form / Dosya", fields:[
+          ["Form Adı","text"],["Açıklama","textarea"],["Dosya URL","url"],["Tarih","date"]
+        ], target:"formlar-list", headers:["Form Adı","Açıklama","Yükleyen","Tarih"] }
+      };
 
-        function handleLogin(e, adminStatus) {
-            e.preventDefault();
-            window.isAdmin = adminStatus;
-            window.currentUser = adminStatus ? "Admin" : (document.getElementById('personel-tc').value || "Personel");
-            localStorage.setItem('osb_is_admin', adminStatus ? 'true' : 'false');
-            localStorage.setItem('osb_current_user', window.currentUser);
-            
-            if(adminStatus) document.body.classList.add('is-admin');
-            else document.body.classList.remove('is-admin');
+      const state = { data:{}, map:null, markers:[], dbReady:false };
+      const $ = id => document.getElementById(id);
+      const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+      const today = () => new Date().toISOString().slice(0,10);
+      const isAdmin = () => window.isAdmin === true;
 
-            let badge = document.getElementById('current-user-display');
-            if(badge) badge.innerText = window.currentUser + (adminStatus ? " (ADMİN)" : " (PERSONEL)");
+      function notify(message, error=false) {
+        let box=$("portal-notice");
+        if(!box){ box=document.createElement("div"); box.id="portal-notice"; box.style.cssText="position:fixed;right:18px;bottom:18px;z-index:10000;padding:12px 16px;border-radius:8px;background:#1e293b;border:1px solid #475569;color:#fff;max-width:360px;box-shadow:0 5px 18px #0008"; document.body.appendChild(box); }
+        box.textContent=message; box.style.borderColor=error?"#ef4444":"#22c55e"; box.style.display="block";
+        clearTimeout(box._timer); box._timer=setTimeout(()=>box.style.display="none",4500);
+      }
+      function setBusy(form, busy){ const b=form?.querySelector('[type="submit"]'); if(b){b.disabled=busy;b.textContent=busy?"KAYDEDİLİYOR...":"KAYDET";} }
 
-            let overlay = document.getElementById('login-overlay');
-            if(overlay) overlay.style.display = 'none';
+      function currentUserName(){ return window.currentUser || "Bilinmeyen"; }
+      function normalizeGPS(value){
+        const nums=String(value||"").split(/[;, ]+/).map(Number);
+        return nums.length>=2 && Number.isFinite(nums[0]) && Number.isFinite(nums[1]) && Math.abs(nums[0])<=90 && Math.abs(nums[1])<=180 ? [nums[0],nums[1]] : null;
+      }
 
-            if(typeof loadCompaniesTable === 'function') loadCompaniesTable();
-            if(typeof loadHydrantsTable === 'function') loadHydrantsTable();
-        }
+      function localRead(path){ try{return JSON.parse(localStorage.getItem("osb_"+path)||"[]")}catch{return []} }
+      function localWrite(path, rows){ localStorage.setItem("osb_"+path,JSON.stringify(rows)); }
 
-        function showModule(modId, element) {
-            document.querySelectorAll('.module-section').forEach(sec => { sec.style.display = 'none'; sec.classList.remove('active'); });
-            let target = document.getElementById(modId);
-            if(target) { target.style.display = 'block'; target.classList.add('active'); }
-            document.querySelectorAll('nav .nav-item').forEach(nav => nav.classList.remove('active'));
-            if(element) element.classList.add('active');
-
-            // Eğer Hidrant harita modülü açıldıysa haritayı tetikle
-            if(modId === 'mod5') {
-                setTimeout(() => {
-                    initMap();
-                }, 200);
-            }
-        }
-
-        function toggleForm(id) {
-            let f = document.getElementById(id);
-            if(f) f.style.display = f.style.display === 'none' ? 'grid' : 'none';
-        }
-
-        function forceUpper(el) {
-            if(el && el.value) el.value = el.value.toUpperCase();
-        }
-
-        function logout() {
-            localStorage.removeItem('osb_is_admin');
-            localStorage.removeItem('osb_current_user');
-            window.location.reload();
-        }
-
-        function getCurrentGPS(targetId) {
-            if(navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(position => {
-                    let lat = position.coords.latitude.toFixed(4);
-                    let lon = position.coords.longitude.toFixed(4);
-                    let input = document.getElementById(targetId);
-                    if(input) input.value = `${lat}, ${lon}`;
-                }, () => { alert("Konum alınamadı."); });
-            } else {
-                alert("Tarayıcınız konum servislerini desteklemiyor.");
-            }
-        }
-
-        // --- HİDRANT & HARİTA FONKSİYONLARI ---
-        function initMap() {
-            let mapContainer = document.getElementById('map');
-            if(!mapContainer) return;
-            
-            if(!mapInstance) {
-                // Adana OSB Merkez Koordinatları
-                mapInstance = L.map('map').setView([36.9600, 35.4200], 14);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 19,
-                    attribution: 'Adana OSB İtfaiye Portalı'
-                }).addTo(mapInstance);
-            } else {
-                mapInstance.invalidateSize();
-            }
-            loadHydrantsTable();
-        }
-
-        function saveHydrant() {
-            let kod = document.getElementById('h-kod').value.toUpperCase();
-            let adres = document.getElementById('h-adres').value.toUpperCase();
-            let durum = document.getElementById('h-durum').value;
-            let gps = document.getElementById('h-gps').value;
-            if(!kod) return;
-
-            let hList = JSON.parse(localStorage.getItem('osb_hidrantlar')) || [];
-            hList.unshift({ kod, adres, durum, gps });
-            localStorage.setItem('osb_hidrantlar', JSON.stringify(hList));
-
-            if(typeof db !== 'undefined') {
-                db.ref('Hidrantlar').set(hList);
-            }
-
-            alert("Hidrant başarıyla kaydedildi!");
-            loadHydrantsTable();
-            toggleForm('h-form');
-        }
-
-        function loadHydrantsTable() {
-            let tbody = document.getElementById('h-list');
-            if(!tbody) return;
-            tbody.innerHTML = "";
-            let hList = JSON.parse(localStorage.getItem('osb_hidrantlar')) || [];
-
-            // Harita üzerindeki eski pinleri temizle
-            if(mapInstance && mapMarkers.length > 0) {
-                mapMarkers.forEach(m => mapInstance.removeLayer(m));
-                mapMarkers = [];
-            }
-
-            hList.forEach((h, idx) => {
-                let tr = document.createElement('tr');
-                let badgeClass = h.durum.includes('Arızalı') ? 'bg-red' : (h.durum.includes('Bakım') ? 'bg-orange' : 'bg-green');
-                
-                tr.innerHTML = `
-                    <td><b>${h.kod}</b></td>
-                    <td>${h.adres}</td>
-                    <td><span class="badge ${badgeClass}">${h.durum}</span></td>
-                    <td>${h.gps || '-'}</td>
-                    <td><button class="btn btn-danger" style="padding:2px 6px; font-size:11px;" onclick="deleteHydrant(${idx})">Sil</button></td>
-                `;
-                tbody.appendChild(tr);
-
-                // Haritaya pin ekle
-                if(mapInstance && h.gps && h.gps.includes(',')) {
-                    let parts = h.gps.split(',');
-                    let lat = parseFloat(parts[0]);
-                    let lon = parseFloat(parts[1]);
-                    if(!isNaN(lat) && !isNaN(lon)) {
-                        let marker = L.marker([lat, lon]).addTo(mapInstance)
-                            .bindPopup(`<b>${h.kod}</b><br>${h.adres}<br>Durum: ${h.durum}`);
-                        mapMarkers.push(marker);
-                    }
-                }
-            });
-        }
-
-        function deleteHydrant(idx) {
-            let hList = JSON.parse(localStorage.getItem('osb_hidrantlar')) || [];
-            hList.splice(idx, 1);
-            localStorage.setItem('osb_hidrantlar', JSON.stringify(hList));
-            if(typeof db !== 'undefined') {
-                db.ref('Hidrantlar').set(hList);
-            }
-            loadHydrantsTable();
-        }
-
-        // --- İŞLETMELER FONKSİYONLARI ---
-        function saveCompanyRecord() {
-            const name = document.getElementById('f-name').value.toUpperCase();
-            const adres = document.getElementById('f-adres').value.toUpperCase();
-            const tel = document.getElementById('f-tel').value;
-            const gazVana = document.getElementById('f-gaz-vana').value.toUpperCase();
-            const gps = document.getElementById('f-gps').value;
-            if(!name) return;
-
-            let rowObj = { FirmaAdi: name, CaddeAdres: adres, Iletisim: tel, DogalgazVanaDurumu: gazVana, GPS: gps };
-            let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
-            list.unshift(rowObj);
-            localStorage.setItem('osb_firmalar', JSON.stringify(list));
-            
-            if(typeof db !== 'undefined') {
-                db.ref('Isletmeler').set(list);
-            }
-            
-            alert("İşletme kaydedildi.");
-            loadCompaniesTable();
-            toggleForm('firma-form');
-        }
-
-        function loadCompaniesTable(search = "") {
-            let tbody = document.getElementById('firma-list');
-            if(!tbody) return;
-            tbody.innerHTML = "";
-            let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
-            
-            list.forEach((f, idx) => {
-                let name = f.FirmaAdi || f.name || "";
-                let adres = f.CaddeAdres || f.adres || "";
-                let tel = f.Iletisim || f.tel || "-";
-                let gaz = f.DogalgazVanaDurumu || f.gazVana || "YOK";
-                let gps = f.GPS || f.gps || "";
-
-                let tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><input type="checkbox" class="company-checkbox" value="${idx}"></td>
-                    <td><b>${name}</b></td>
-                    <td>${adres}</td>
-                    <td>${tel}<br><small>${gps}</small></td>
-                    <td><span class="badge bg-red">🔥 DOĞALGAZ: ${gaz}</span></td>
-                    <td><button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="deleteCompany(${idx})">Sil</button></td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function deleteCompany(idx) {
-            let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
-            list.splice(idx, 1);
-            localStorage.setItem('osb_firmalar', JSON.stringify(list));
-            if(typeof db !== 'undefined') {
-                db.ref('Isletmeler').set(list);
-            }
-            loadCompaniesTable();
-        }
-
-        // Basit ekleme fonksiyonları (Diğer modüller için yedek)
-        function addPersonnel() { alert("Personel kaydedildi."); }
-        function addOlayRaporu() { alert("Olay raporu kaydedildi."); toggleForm('olay-form-box'); }
-        function submitVehicleAriza() { alert("Arıza bildirildi."); toggleForm('ariza-form-box'); }
-        function saveYSCRecord() { alert("YSC kaydedildi."); toggleForm('ysc-form-box'); }
-
-        document.addEventListener("DOMContentLoaded", function() {
-            loadCompaniesTable();
-            loadHydrantsDataFromFirebase();
+      async function saveRecord(path, record, id){
+        if(!isAdmin()){ notify("Bu işlem için yönetici yetkisi gereklidir.",true); return false; }
+        record.guncellemeTarihi=new Date().toISOString();
+        record.ekleyen=record.ekleyen||currentUserName();
+        try{
+          if(typeof db!=="undefined" && db){
+            const ref=db.ref(path);
+            if(id) await ref.child(id).update(record);
+            else await ref.push(record);
+          } else {
+            let rows=localRead(path);
+            if(id){ const i=rows.findIndex(x=>x._id===id); if(i>=0) rows[i]={...rows[i],...record}; else rows.push({...record,_id:id}); }
+            else rows.unshift({...record,_id:"local_"+Date.now()});
+            localWrite(path,rows);
+          }
+          return true;
+        }catch(err){ console.error("Firebase kayıt hatası:",err); notify("Kayıt yapılamadı. Firebase bağlantısını ve Database Rules ayarlarını kontrol edin.",true); return false; }
+      }
+      async function deleteRecord(path,id){
+        if(!isAdmin()){notify("Silme yetkiniz yok.",true);return;}
+        if(!confirm("Bu kayıt silinsin mi?")) return;
+        try{
+          if(typeof db!=="undefined" && db) await db.ref(path+"/"+id).remove();
+          else localWrite(path,localRead(path).filter(x=>x._id!==id));
+          notify("Kayıt silindi.");
+        }catch(e){console.error(e);notify("Silme işlemi başarısız. Firebase kurallarını kontrol edin.",true);}
+      }
+      function entries(path){
+        const value=state.data[path];
+        if(value && !Array.isArray(value)) return Object.entries(value).map(([id,v])=>({...v,_id:id}));
+        return Array.isArray(value)?value:localRead(path);
+      }
+      function watchData(){
+        Object.values(MODULES).forEach(m=>{
+          if(typeof db!=="undefined" && db){
+            db.ref(m.path).on("value",snap=>{state.data[m.path]=snap.val()||{}; renderModule(m);},err=>{console.error(err);notify("Firebase okuma izni yok: "+m.path,true);});
+          }else{state.data[m.path]=localRead(m.path);renderModule(m);}
         });
+        if(typeof db!=="undefined" && db){
+          db.ref("Personel").on("value",s=>{state.data.Personel=s.val()||{};renderPersonnel();},e=>notify("Personel verileri okunamadı: Firebase izinlerini kontrol edin.",true));
+          db.ref("Isletmeler").on("value",s=>{state.data.Isletmeler=s.val()||{};localWrite("firmalar",Object.entries(s.val()||{}).map(([id,v])=>({...v,_id:id})));loadCompaniesTable();},e=>notify("İşletme verileri okunamadı.",true));
+          db.ref("CanliSohbet").limitToLast(100).on("value",s=>renderLiveChat(s.val()||{}),e=>console.error(e));
+        }else{renderPersonnel();loadCompaniesTable();}
+      }
 
-        function loadHydrantsDataFromFirebase() {
-            if(typeof db !== 'undefined') {
-                db.ref('Hidrantlar').once('value', (snapshot) => {
-                    if(snapshot.exists()) {
-                        localStorage.setItem('osb_hidrantlar', JSON.stringify(snapshot.val()));
-                    }
-                });
-                db.ref('Isletmeler').once('value', (snapshot) => {
-                    if(snapshot.exists()) {
-                        localStorage.setItem('osb_firmalar', JSON.stringify(snapshot.val()));
-                        loadCompaniesTable();
-                    }
-                });
-            }
+      function addDynamicForms(){
+        const addButtons={dokuman:["mod8","+ Doküman Ekle"],duyuru:["mod9","+ Duyuru Ekle"],egitim:["mod10","+ Eğitim Ekle"],dosya:["mod11","+ Form / Dosya Ekle"]};
+        Object.entries(addButtons).forEach(([key,info])=>{
+          const section=$(info[0]),header=section?.querySelector(".card-header");
+          if(header&&!header.querySelector(`[data-add-module="${key}"]`)){
+            const b=document.createElement("button");b.className="btn btn-success";b.textContent=info[1];b.dataset.addModule=key;b.onclick=()=>toggleForm(MODULES[key].form);header.appendChild(b);
+          }
+        });
+        Object.entries(MODULES).forEach(([key,m])=>{
+          if($(m.form)) return;
+          const section=$(key==="olay"?"mod2":key==="ariza"?"mod3":key==="ysc"?"mod4":key==="hidrant"?"mod5":key==="yetki"?"mod6":key==="dokuman"?"mod8":key==="duyuru"?"mod9":key==="egitim"?"mod10":"mod11");
+          const card=section?.querySelector(".card"); if(!card)return;
+          const form=document.createElement("form"); form.id=m.form; form.className="form-grid"; form.style.display="none"; form.style.marginTop="15px";
+          form.innerHTML=m.fields.map((f,i)=>{
+            const id=m.form+"-f"+i, label=esc(f[0]); let control="";
+            if(f[1]==="textarea") control=`<textarea id="${id}" rows="3"></textarea>`;
+            else if(f[1]==="select") control=`<select id="${id}">${f[2].split("|").map(x=>`<option>${esc(x)}</option>`).join("")}</select>`;
+            else control=`<input id="${id}" type="${f[1]}" ${f[1]==="number"?'step="1"':''}>`;
+            return `<div class="form-group"><label for="${id}">${label}:</label>${control}</div>`;
+          }).join("")+`<div class="form-group" style="grid-column:1/-1;display:flex;gap:8px"><button class="btn" type="submit">KAYDET</button><button class="btn btn-secondary" type="button" onclick="toggleForm('${m.form}')">KAPAT</button></div>`;
+          card.insertBefore(form,card.children[1]||null);
+          form.addEventListener("submit",e=>submitDynamicForm(e,key));
+        });
+      }
+      async function submitDynamicForm(e,key){
+        e.preventDefault(); const m=MODULES[key], form=e.currentTarget; const record={};
+        m.fields.forEach((f,i)=>{const v=$(m.form+"-f"+i)?.value?.trim()||"";record[f[0]]=f[1]==="number"?(v===""?0:Number(v)):v;});
+        if(!Object.values(record).some(v=>String(v).trim())){notify("Lütfen kayıt bilgilerini girin.",true);return;}
+        record.ekleyen=currentUserName(); setBusy(form,true);
+        const ok=await saveRecord(m.path,record,form.dataset.editId||null);setBusy(form,false);
+        if(ok){form.reset();delete form.dataset.editId;form.style.display="none";notify("Kayıt başarıyla kaydedildi.");}
+      }
+      function renderModule(m){
+        const rows=entries(m.path), target=$(m.target); if(!target)return;
+        if(m.cards){
+          target.innerHTML=rows.map(r=>`<div class="card" style="margin:8px 0;padding:14px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b>${esc(r[m.fields[0][0]]||m.title)}</b><span class="badge bg-orange">${esc(r["Durum"]||r["Önem"]||"KAYIT")}</span></div><div style="margin-top:8px;font-size:13px;color:#cbd5e1">${m.fields.slice(1).map(f=>`<div><b>${esc(f[0])}:</b> ${esc(r[f[0]]||"-")}</div>`).join("")}<small>${esc(r.ekleyen||"")} · ${esc(r.guncellemeTarihi||"")}</small></div>${isAdmin()?`<div style="margin-top:10px"><button class="btn btn-danger" onclick="portalDelete('${m.path}','${esc(r._id)}')">Sil</button></div>`:""}</div>`).join("")||'<tr><td>Kayıt bulunamadı.</td></tr>';
+        }else{
+          target.innerHTML=rows.map(r=>`<tr>${m.headers.map(h=>{
+            const map={"Tarih / Saat":(r["Tarih"]||"")+" "+(r["Saat"]||""),"Giren":r.ekleyen,"Firma & Adres":r["Firma / Adres"],"Tür & Puan":(r["Olay Türü"]||"")+" / "+(r["Performans Puanı"]??"-"),"Özet":r["Özet"],"Tip / Kg":(r["Tip"]||"")+" / "+(r["Kapasite (kg/L)"]||""),"Adres & GPS":(r["Adres"]||"")+" "+(r["GPS (Enlem, Boylam)"]||""),"Ekleyen":r.ekleyen,"Süre / Yetki":r["Yetki / Açıklama"]||((r["Başlangıç"]||"")+" - "+(r["Bitiş"]||"")),"Başlangıç":r["Başlangıç"],"Doküman Adı":r["Doküman Adı"],"Kategori":r["Kategori"],"Tarih":r["Tarih"],"Dosya":r["Dosya URL"]?`<a href="${esc(r["Dosya URL"])}" target="_blank" rel="noopener">AÇ</a>`:"-","Konu":r["Konu"],"Eğitmen":r["Eğitmen"],"Tarih & Saat":(r["Tarih"]||"")+" "+(r["Saat"]||""),"Ekip":r["Ekip"],"Açıklama":r["Açıklama"],"Personel":r["Personel Adı"]||r["Personel TC"],"Durum":r["Durum"],"Hidrant Kodu":r["Hidrant Kodu"],"Adres":r["Adres"],"GPS":r["GPS (Enlem, Boylam)"]};
+            return `<td>${map[h]!==undefined?map[h]===null?"-":(String(map[h]).startsWith("<a ")?map[h]:esc(map[h]||"-")):esc(r[h]||"-")}</td>`;
+          }).join("")}<td>${isAdmin()?`<button class="btn btn-secondary" style="padding:3px 7px" onclick="portalEdit('${m.path}','${esc(r._id)}')">Düzenle</button> <button class="btn btn-danger" style="padding:3px 7px" onclick="portalDelete('${m.path}','${esc(r._id)}')">Sil</button>`:"-"}</td></tr>`).join("")||`<tr><td colspan="${m.headers.length+1}">Henüz kayıt bulunmuyor.</td></tr>`;
         }
+        if(m.path==="Hidrantlar") refreshMap(rows);
+      }
+
+      window.portalDelete=(path,id)=>deleteRecord(path,id);
+      window.portalEdit=function(path,id){
+        if(!isAdmin()){notify("Düzenleme yetkisi için yönetici girişi gereklidir.",true);return;}
+        const m=Object.values(MODULES).find(x=>x.path===path);if(!m)return;
+        const row=entries(path).find(x=>String(x._id)===String(id));if(!row)return;
+        const form=$(m.form);if(!form)return;
+        m.fields.forEach((f,i)=>{const el=$(m.form+"-f"+i);if(el)el.value=row[f[0]]??"";});
+        form.dataset.editId=id;form.style.display="grid";form.scrollIntoView({behavior:"smooth",block:"center"});
+      };
+      window.toggleForm=function(id){const f=$(id);if(!f)return;f.style.display=f.style.display==="none"?"grid":"none";};
+      window.showModule=function(id,el){
+        document.querySelectorAll(".module-section").forEach(s=>{s.style.display="none";s.classList.remove("active")});
+        const target=$(id);if(target){target.style.display="block";target.classList.add("active")}
+        document.querySelectorAll("nav .nav-item").forEach(n=>n.classList.remove("active"));if(el)el.classList.add("active");
+        if(id==="mod5")setTimeout(()=>state.map?.invalidateSize(),150);
+      };
+      window.forceUpper=el=>{if(el&&el.value)el.value=el.value.toLocaleUpperCase("tr-TR")};
+      window.switchLoginTab=function(tab,el){
+        document.querySelectorAll(".login-form").forEach(f=>{f.style.display="none";f.classList.remove("active")});
+        document.querySelectorAll(".login-tab").forEach(t=>t.classList.remove("active"));
+        const f=$(tab==="admin"?"admin-login-form":"user-login-form");if(f){f.style.display="flex";f.classList.add("active")}el?.classList.add("active");
+      };
+      window.handleLogin=function(e,admin){
+        e.preventDefault();
+        const tc=admin?$("admin-user").value.trim():$("personel-tc").value.trim();
+        if(!/^\d{11}$/.test(tc)){notify("TC Kimlik No 11 haneli olmalıdır.",true);return;}
+        // Bu ekran yalnızca arayüz rol seçimi yapar. Gerçek kimlik doğrulaması Firebase Authentication ile kurulmalıdır.
+        if(admin && !$("admin-pass").value){notify("Admin şifresini girin.",true);return;}
+        if(!admin && !$("personel-pass").value){notify("Personel şifresini girin.",true);return;}
+        window.isAdmin=admin;window.currentUser=admin?"Admin":tc;
+        document.body.classList.toggle("is-admin",admin);
+        $("current-user-display").innerText=window.currentUser+(admin?" (ADMİN)":" (PERSONEL)");
+        $("login-overlay").style.display="none";
+        localStorage.setItem("osb_is_admin",admin?"true":"false");localStorage.setItem("osb_current_user",window.currentUser);
+        renderPersonnel();Object.values(MODULES).forEach(renderModule);loadCompaniesTable();
+      };
+      window.logout=function(){localStorage.removeItem("osb_is_admin");localStorage.removeItem("osb_current_user");window.isAdmin=false;window.currentUser="";location.reload();};
+
+      window.addPersonnel=async function(){
+        if(!isAdmin()){notify("Personel eklemek için yönetici girişi gereklidir.",true);return;}
+        const tc=$("p-tc").value.trim(),name=$("p-name").value.trim();
+        if(!/^\d{11}$/.test(tc)||!name){notify("Geçerli 11 haneli TC ve ad soyad girin.",true);return;}
+        const record={tc,adSoyad:name.toLocaleUpperCase("tr-TR"),gorev:$("p-role").value,vardiya:$("p-shift").value,kanGrubu:$("p-kan").value,iseGiris:$("p-giris").value,toplamIzin:Number($("p-toplam-izin").value||0),kullanilanIzin:Number($("p-kullanilan-izin").value||0),ayakkabi:$("p-ayakkabi").value,tisort:$("p-tisort").value,ekleyen:currentUserName()};
+        try{
+          if(typeof db!=="undefined"&&db) await db.ref("Personel/"+tc).set(record);
+          else{let rows=localRead("Personel");rows=rows.filter(x=>x.tc!==tc);rows.push(record);localWrite("Personel",rows);}
+          $("p-form").querySelectorAll("input").forEach(i=>{if(i.id!=="p-toplam-izin")i.value=""});notify("Personel kaydı kaydedildi.");
+        }catch(e){console.error(e);notify("Personel kaydedilemedi. Firebase izinlerini kontrol edin.",true);}
+      };
+      function renderPersonnel(){
+        const body=$("p-list");if(!body)return;
+        let val=state.data.Personel||{},rows=Array.isArray(val)?val:Object.entries(val).map(([id,v])=>({...v,tc:v.tc||id}));
+        body.innerHTML=rows.map(p=>`<tr><td>${esc(p.tc)}<br><b>${esc(p.adSoyad||p.name||"")}</b></td><td>${esc(p.gorev||"-")} / ${esc(p.vardiya||"-")}</td><td>AYAKKABI: ${esc(p.ayakkabi||"-")} · TİŞÖRT: ${esc(p.tisort||"-")}</td><td>${Math.max(0,Number(p.toplamIzin||0)-Number(p.kullanilanIzin||0))} GÜN KALDI (${Number(p.kullanilanIzin||0)}/${Number(p.toplamIzin||0)})</td><td>${isAdmin()?`<button class="btn btn-danger" style="padding:3px 7px" onclick="deletePersonnel('${esc(p.tc)}')">Sil</button>`:"-"}</td></tr>`).join("")||'<tr><td colspan="5">Henüz personel kaydı bulunmuyor.</td></tr>';
+      }
+      window.deletePersonnel=async tc=>{if(!isAdmin()||!confirm("Personel kaydı silinsin mi?"))return;try{if(typeof db!=="undefined"&&db)await db.ref("Personel/"+tc).remove();else localWrite("Personel",localRead("Personel").filter(p=>p.tc!==tc));notify("Personel silindi.");}catch(e){notify("Personel silinemedi.",true)}};
+
+      window.saveCompanyRecord=async function(){
+        if(!isAdmin()){notify("İşletme kaydetmek için yönetici girişi gereklidir.",true);return;}
+        const name=$("f-name").value.trim(),gps=$("f-gps").value.trim();if(!name){notify("Firma adı zorunludur.",true);return;}
+        if(gps&&!normalizeGPS(gps)){notify("GPS biçimi hatalı. Örnek: 36.9584, 35.4182",true);return;}
+        const rec={FirmaAdi:name.toLocaleUpperCase("tr-TR"),CaddeAdres:$("f-adres").value.toLocaleUpperCase("tr-TR"),Iletisim:$("f-tel").value,DogalgazVanaDurumu:$("f-gaz-vana").value,GPS:gps,ekleyen:currentUserName()};
+        const id=$("edit-firma-index").value;
+        try{
+          if(typeof db!=="undefined"&&db){if(id&&id!=="-1")await db.ref("Isletmeler/"+id).update(rec);else await db.ref("Isletmeler").push(rec);}
+          else{let rows=localRead("firmalar");if(id!=="-1"&&id!=="")rows[Number(id)]=rec;else rows.unshift(rec);localWrite("firmalar",rows);}
+          $("edit-firma-index").value="-1";["f-name","f-adres","f-tel","f-gps"].forEach(x=>$(x).value="");$("firma-form").style.display="none";notify("İşletme kaydedildi.");
+        }catch(e){console.error(e);notify("İşletme kaydı başarısız. Firebase izinlerini kontrol edin.",true);}
+      };
+      window.loadCompaniesTable=function(search=""){
+        const body=$("firma-list");if(!body)return;
+        let raw=state.data.Isletmeler||localRead("firmalar"),rows=Array.isArray(raw)?raw:Object.entries(raw).map(([id,v])=>({...v,_id:id}));
+        const q=String(search||"").toLocaleLowerCase("tr-TR");
+        body.innerHTML=rows.map((f,i)=>({f,i})).filter(({f})=>[f.FirmaAdi,f.CaddeAdres,f.Iletisim].join(" ").toLocaleLowerCase("tr-TR").includes(q)).map(({f,i})=>{
+          const id=f._id||String(i);
+          return `<tr><td><input type="checkbox" class="company-checkbox" value="${esc(id)}"></td><td><b>${esc(f.FirmaAdi||"")}</b></td><td>${esc(f.CaddeAdres||"")}</td><td>${esc(f.Iletisim||"-")}<br><small>${esc(f.GPS||"")}</small></td><td><span class="badge ${f.DogalgazVanaDurumu==="VAR"?"bg-green":"bg-red"}">DOĞALGAZ: ${esc(f.DogalgazVanaDurumu||"YOK")}</span></td><td>${isAdmin()?`<button class="btn btn-secondary" style="padding:2px 6px" onclick="editCompany('${esc(id)}')">Düzenle</button> <button class="btn btn-danger" style="padding:2px 6px" onclick="deleteCompany('${esc(id)}')">Sil</button>`:"-"}</td></tr>`;
+        }).join("")||'<tr><td colspan="6">İşletme kaydı bulunamadı.</td></tr>';
+      };
+      window.editCompany=function(id){
+        if(!isAdmin())return;
+        const raw=state.data.Isletmeler||localRead("firmalar"),f=Array.isArray(raw)?raw[Number(id)]:raw[id];if(!f)return;
+        $("f-name").value=f.FirmaAdi||"";$("f-adres").value=f.CaddeAdres||"";$("f-tel").value=f.Iletisim||"";$("f-gaz-vana").value=f.DogalgazVanaDurumu||"YOK";$("f-gps").value=f.GPS||"";$("edit-firma-index").value=id;$("firma-form").style.display="grid";
+      };
+      window.deleteCompany=async id=>{if(!isAdmin()||!confirm("İşletme silinsin mi?"))return;try{if(typeof db!=="undefined"&&db)await db.ref("Isletmeler/"+id).remove();else localWrite("firmalar",localRead("firmalar").filter((_,i)=>i!==Number(id)));notify("İşletme silindi.");}catch(e){notify("İşletme silinemedi.",true)}};
+      window.deleteSelectedCompanies=async()=>{const ids=[...document.querySelectorAll(".company-checkbox:checked")].map(x=>x.value);if(!ids.length){notify("Önce silinecek işletmeleri seçin.",true);return;}if(!confirm(ids.length+" işletme silinsin mi?"))return;try{for(const id of ids){if(typeof db!=="undefined"&&db)await db.ref("Isletmeler/"+id).remove();}if(typeof db==="undefined"||!db)localWrite("firmalar",localRead("firmalar").filter((_,i)=>!ids.includes(String(i))));notify("Seçilen işletmeler silindi.");}catch(e){notify("Toplu silme başarısız.",true)}};
+      $("select-all-companies")?.addEventListener("change",e=>document.querySelectorAll(".company-checkbox").forEach(c=>c.checked=e.target.checked));
+
+      function refreshMap(rows){
+        const mapEl=$("map");if(!mapEl||!window.L)return;
+        if(!state.map){state.map=L.map("map").setView([36.96,35.42],13);L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"}).addTo(state.map);}
+        state.markers.forEach(m=>m.remove());state.markers=[];
+        rows.forEach(r=>{const point=normalizeGPS(r["GPS (Enlem, Boylam)"]||r.GPS);if(!point)return;const marker=L.marker(point).addTo(state.map).bindPopup(`<b>${esc(r["Hidrant Kodu"]||r.FirmaAdi||"Nokta")}</b><br>${esc(r.Adres||r.CaddeAdres||"")}<br>${esc(r.Durum||r.DogalgazVanaDurumu||"")}`);state.markers.push(marker);});
+        if(state.markers.length)state.map.fitBounds(L.featureGroup(state.markers).getBounds().pad(.15));
+      }
+      window.getCurrentGPS=function(id){
+        if(!navigator.geolocation){notify("Tarayıcı konum desteği sunmuyor.",true);return;}
+        navigator.geolocation.getCurrentPosition(pos=>{$(id).value=pos.coords.latitude.toFixed(6)+", "+pos.coords.longitude.toFixed(6);},()=>notify("Konum alınamadı. Siteyi HTTPS üzerinden açın ve konum izni verin.",true),{enableHighAccuracy:true,timeout:10000});
+      };
+
+      window.importCompaniesFromExcel=function(e){
+        if(!isAdmin()){notify("Excel yüklemek için yönetici girişi gereklidir.",true);e.target.value="";return;}
+        const file=e.target.files?.[0];if(!file)return;
+        const reader=new FileReader();reader.onload=async ev=>{
+          try{const wb=XLSX.read(ev.target.result,{type:"array"}),data=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:""});
+            for(const row of data){const rec={FirmaAdi:row.FirmaAdi||row["Firma Adı"]||row["FİRMA ADI"]||"",CaddeAdres:row.CaddeAdres||row["Adres"]||"",Iletisim:row.Iletisim||row["Telefon"]||"",DogalgazVanaDurumu:row.DogalgazVanaDurumu||row["Doğalgaz Vana Durumu"]||"YOK",GPS:row.GPS||""};if(rec.FirmaAdi){if(typeof db!=="undefined"&&db)await db.ref("Isletmeler").push(rec);else{const a=localRead("firmalar");a.push(rec);localWrite("firmalar",a);}}}
+            notify(data.length+" satır içe aktarıldı.");
+          }catch(err){console.error(err);notify("Excel dosyası okunamadı.",true);}e.target.value="";
+        };reader.readAsArrayBuffer(file);
+      };
+
+      function renderLiveChat(data){
+        const box=$("liveChatContainer");if(!box)return;
+        const rows=Object.entries(data||{}).map(([id,v])=>({...v,_id:id})).sort((a,b)=>(a.timestamp||0)-(b.timestamp||0));
+        box.innerHTML=rows.map(m=>`<div class="chat-msg ${m.user===currentUserName()?"me":""}"><div class="chat-meta"><b>${esc(m.user||"Personel")}</b><span>${esc(m.time||"")}</span></div>${esc(m.message||"")}</div>`).join("")||"Henüz mesaj yok.";
+        box.scrollTop=box.scrollHeight;
+      }
+      window.sendLiveMessage=async function(message){
+        const value=String(message||"").trim();if(!value)return;
+        try{if(typeof db!=="undefined"&&db)await db.ref("CanliSohbet").push({user:currentUserName(),message:value,time:new Date().toLocaleString("tr-TR"),timestamp:Date.now()});else notify("Canlı sohbet için Firebase bağlantısı gerekli.",true);}
+        catch(e){notify("Mesaj gönderilemedi.",true);}
+      };
+      // Sohbet ekranına giriş alanı ekle; mevcut tasarım sınıflarını kullanır.
+      function addChatComposer(){
+        const box=$("liveChatContainer");if(!box||$("live-chat-composer"))return;
+        const wrap=document.createElement("div");wrap.id="live-chat-composer";wrap.style.cssText="display:flex;gap:8px;margin-top:8px";
+        wrap.innerHTML='<input id="live-chat-input" placeholder="Mesajınızı yazın..."><button class="btn" type="button" id="live-chat-send">Gönder</button>';
+        box.after(wrap);$("live-chat-send").onclick=()=>{sendLiveMessage($("live-chat-input").value);$("live-chat-input").value="";};
+        $("live-chat-input").addEventListener("keydown",e=>{if(e.key==="Enter")$("live-chat-send").click()});
+      }
+      window.sendAIChatMessage=function(){
+        const input=$("aiChatInput"),value=input?.value?.trim();if(!value)return;
+        const box=$("aiChatContainer"),msg=document.createElement("div");msg.className="chat-msg me";msg.textContent=value;box.appendChild(msg);
+        const reply=document.createElement("div");reply.className="chat-msg ai";reply.textContent="Gemini API bağlantısı bu dosyada tanımlı değil. Güvenli kullanım için API anahtarını istemci koduna koymadan sunucu taraflı bir servis üzerinden bağlayın.";box.appendChild(reply);input.value="";box.scrollTop=box.scrollHeight;
+      };
+
+      function clock(){const el=$("live-clock");if(el)el.textContent="📅 "+new Date().toLocaleString("tr-TR");}
+      document.addEventListener("DOMContentLoaded",()=>{
+        window.isAdmin=false;window.currentUser="";
+        $("login-overlay").style.display="flex";
+        addDynamicForms();addChatComposer();clock();setInterval(clock,1000);
+        // Login yapılmadan veri değişikliği yetkisi verilmez.
+        document.body.classList.remove("is-admin");
+        watchData();
+        loadCompaniesTable();
+      });
+    })();
     </script>
+
 </body>
 </html>
