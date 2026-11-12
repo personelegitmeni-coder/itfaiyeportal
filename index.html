@@ -1,65 +1,58 @@
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // 1. Admin Giriş Formu Dinleyicisi
+    // Sayfa yüklendiğinde butonlara tıklama özelliği ver
+    window.addEventListener('load', function() {
+        // Admin Giriş Butonu veya Formu
+        const adminBtn = document.querySelector('#admin-login-form button[type="submit"]') || document.getElementById('admin-login-btn') || document.querySelector('#admin-login-form input[type="submit"]');
         const adminForm = document.getElementById('admin-login-form');
+        
         if (adminForm) {
-            adminForm.addEventListener('submit', function(event) {
-                event.preventDefault();
-                let passInput = document.getElementById('admin-pass') || document.getElementById('admin-password');
-                let pass = passInput ? passInput.value : '';
-                
-                if(pass) {
-                    window.isAdmin = true;
-                    window.currentUser = "Admin";
-                    localStorage.setItem('osb_is_admin', 'true');
-                    localStorage.setItem('osb_current_user', "Admin");
-                    
-                    // Giriş ekranını gizle, paneli aç
-                    hideLoginAndShowApp();
-                    
-                    if(typeof loadCompaniesTable === 'function') loadCompaniesTable();
-                } else {
-                    alert("Lütfen şifre giriniz!");
-                }
-            });
+            adminForm.addEventListener('submit', function(e) { e.preventDefault(); doAdminLogin(); });
         }
 
-        // 2. Kullanıcı/Personel Giriş Formu Dinleyicisi
+        // Kullanıcı Giriş Butonu veya Formu
         const userForm = document.getElementById('user-login-form');
         if (userForm) {
-            userForm.addEventListener('submit', function(event) {
-                event.preventDefault();
-                window.isAdmin = false;
-                window.currentUser = "Personel";
-                localStorage.setItem('osb_is_admin', 'false');
-                localStorage.setItem('osb_current_user', "Personel");
-                
-                // Giriş ekranını gizle, paneli aç
-                hideLoginAndShowApp();
-                
-                if(typeof loadCompaniesTable === 'function') loadCompaniesTable();
-            });
+            userForm.addEventListener('submit', function(e) { e.preventDefault(); doUserLogin(); });
         }
     });
 
-    // Ortak Ekran Geçiş Fonksiyonu (Tüm olası ID ve class'ları kapsar)
-    function hideLoginAndShowApp() {
-        // Giriş ekranlarını gizle
-        let loginScreen = document.getElementById('login-screen') || document.getElementById('login-modal');
-        if(loginScreen) loginScreen.style.display = 'none';
-
-        // Ana uygulama panelini görünür yap (Genişletilmiş ID ve Class desteği)
-        let mainApp = document.getElementById('app') || document.getElementById('main-container') || document.getElementById('dashboard') || document.getElementById('main-panel') || document.getElementById('icerik');
-        if(mainApp) {
-            mainApp.style.display = 'block';
+    function doAdminLogin() {
+        let passInput = document.getElementById('admin-pass') || document.getElementById('admin-password');
+        let pass = passInput ? passInput.value : '';
+        
+        if(pass) {
+            window.isAdmin = true;
+            window.currentUser = "Admin";
+            localStorage.setItem('osb_is_admin', 'true');
+            localStorage.setItem('osb_current_user', "Admin");
+            
+            hideLoginAndShowApp();
+            if(typeof loadCompaniesTable === 'function') loadCompaniesTable();
         } else {
-            // Hiçbiri bulunamazsa sayfadaki tüm ana uygulama yapılarını görünür yap
-            document.querySelectorAll('.app-container, .main-content, #main-page, .container').forEach(el => {
-                if(!el.id.includes('login')) {
-                    el.style.display = 'block';
-                }
-            });
+            alert("Lütfen şifre giriniz!");
         }
+    }
+
+    function doUserLogin() {
+        window.isAdmin = false;
+        window.currentUser = "Personel";
+        localStorage.setItem('osb_is_admin', 'false');
+        localStorage.setItem('osb_current_user', "Personel");
+        
+        hideLoginAndShowApp();
+        if(typeof loadCompaniesTable === 'function') loadCompaniesTable();
+    }
+
+    // Ortak Ekran Geçiş Fonksiyonu
+    function hideLoginAndShowApp() {
+        // Tüm olası giriş ekranı seçicilerini gizle
+        document.querySelectorAll('#login-screen, #login-modal, .login-container, .auth-screen').forEach(el => {
+            el.style.display = 'none';
+        });
+
+        // Tüm olası ana panel seçicilerini görünür yap
+        document.querySelectorAll('#app, #main-container, #dashboard, #main-panel, .app-container, .main-content').forEach(el => {
+            el.style.display = 'block';
+        });
     }
 
     function switchLoginTab(tabName) {
@@ -70,13 +63,27 @@
             document.querySelectorAll('.login-tab-btn, .tab-btn').forEach(el => {
                 el.classList.remove('active');
             });
-            // Hata veren kısım düzeltildi:
             let targetTab = document.getElementById(tabName);
             if(targetTab) targetTab.style.display = 'block';
         } catch(err) {
             console.log("Sekme hatası: ", err);
         }
     }
+</script>
+
+<!-- Firebase SDK'ları -->
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    projectId: "itfaiyeportal",
+    databaseURL: "https://itfaiyeportal-default-rtdb.europe-west1.firebasedatabase.app"
+  };
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  const db = firebase.database();
 </script>
 
 <!-- Firebase SDK'ları -->
