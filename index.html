@@ -144,7 +144,7 @@
 </head>
 
 <script>
-// Sayfa yüklendiği an oturum yoksa kilidi bas
+// Sayfa açıldığında oturum yoksa kilidi bas
 document.addEventListener("DOMContentLoaded", () => {
     if (localStorage.getItem("osb_logged_in") !== "true") {
         const overlay = document.getElementById("login-overlay");
@@ -152,77 +152,70 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// En üst düzey form yakalama ve kesin engelleme mekanizması
-window.addEventListener("submit", function(e) {
-    const form = e.target;
+// HTML'in doğrudan çağırdığı fonksiyonu doğrudan ele geçiriyoruz!
+window.handleLogin = function(e, admin) {
+    if (e && e.preventDefault) e.preventDefault();
     
-    if (form.id === "user-login-form" || form.id === "admin-login-form") {
-        e.preventDefault();
-        e.stopImmediatePropagation(); // Diğer tüm çakışan fonksiyonları iptal et!
+    const tcInput = admin ? 
+        document.getElementById("admin-user").value.trim() : 
+        document.getElementById("personel-tc").value.trim();
         
-        const isAdmin = (form.id === "admin-login-form");
-        const tcInput = isAdmin ? 
-            document.getElementById("admin-user").value.trim() : 
-            document.getElementById("personel-tc").value.trim();
-            
-        const passInput = isAdmin ? 
-            document.getElementById("admin-pass").value.trim() : 
-            (document.getElementById("personel-pass") ? document.getElementById("personel-pass").value.trim() : "");
+    const passInput = admin ? 
+        document.getElementById("admin-pass").value.trim() : 
+        (document.getElementById("personel-pass") ? document.getElementById("personel-pass").value.trim() : "");
 
-        if (!/^\d{11}$/.test(tcInput)) {
-            alert("❌ HATA: TC Kimlik Numarası eksiksiz 11 haneli olmalıdır!");
+    if (!/^\d{11}$/.test(tcInput)) {
+        alert("❌ HATA: TC Kimlik Numarası eksiksiz 11 haneli olmalıdır!");
+        return false;
+    }
+
+    if (admin) {
+        if (passInput !== "MRTORTC" && passInput !== "123456") {
+            alert("❌ HATA: Admin şifresi yanlış!");
             return false;
         }
-
-        if (isAdmin) {
-            if (passInput !== "MRTORTC" && passInput !== "123456") {
-                alert("❌ HATA: Admin şifresi yanlış!");
-                return false;
-            }
-            window.isAdmin = true;
-            window.currentUser = "ADMİN (" + tcInput + ")";
-        } else {
-            // PERSONEL DOĞRULAMA KONTROLÜ
-            let isAuthorized = false;
-            let personelName = tcInput;
-            
-            // localStorage'daki personelleri tara
-            try {
-                let rawData = localStorage.getItem("osb_Personel") || localStorage.getItem("personelListesi");
-                if (rawData) {
-                    let parsed = JSON.parse(rawData);
-                    let rows = Array.isArray(parsed) ? parsed : Object.entries(parsed).map(([id, v]) => ({ ...v, tc: v.tc || v.TC || id }));
-                    
-                    let found = rows.find(p => String(p.tc || p.TC || p.tcKimlik || "").trim() === tcInput);
-                    if (found) {
-                        isAuthorized = true;
-                        personelName = found.ad || found.adSoyad || found.isim || tcInput;
-                    }
+        window.isAdmin = true;
+        window.currentUser = "ADMİN (" + tcInput + ")";
+    } else {
+        // PERSONEL DOĞRULAMA KONTROLÜ
+        let isAuthorized = false;
+        let personelName = tcInput;
+        
+        try {
+            let rawData = localStorage.getItem("osb_Personel") || localStorage.getItem("personelListesi");
+            if (rawData) {
+                let parsed = JSON.parse(rawData);
+                let rows = Array.isArray(parsed) ? parsed : Object.entries(parsed).map(([id, v]) => ({ ...v, tc: v.tc || v.TC || id }));
+                
+                let found = rows.find(p => String(p.tc || p.TC || p.tcKimlik || "").trim() === tcInput);
+                if (found) {
+                    isAuthorized = true;
+                    personelName = found.ad || found.adSoyad || found.isim || tcInput;
                 }
-            } catch (err) {}
-
-            // KESİN ENGEL: Eğer listede yoksa içeri girmesi MATEMATİKSEL OLARAK İMKANSIZ!
-            if (!isAuthorized) {
-                alert("🛑 GİRİŞ KESİNLİKLE REDDEDİLDİ!\n\nBu TC Kimlik Numarası Modül 1 personel listesinde bulunmuyor!");
-                return false; 
             }
+        } catch (err) {}
 
-            window.isAdmin = false;
-            window.currentUser = personelName;
+        // KESİN ENGEL: Listede yoksa içeri girmesi MATEMATİKSEL OLARAK İMKANSIZ!
+        if (!isAuthorized) {
+            alert("🛑 GİRİŞ KESİNLİKLE REDDEDİLDİ!\n\nBu TC Kimlik Numarası Modül 1 personel listesinde bulunmuyor!");
+            return false; 
         }
 
-        // Başarılı giriş bayrakları
-        localStorage.setItem("osb_logged_in", "true");
-        localStorage.setItem("osb_is_admin", window.isAdmin ? "true" : "false");
-        localStorage.setItem("osb_current_user", window.currentUser);
-        
-        // Kilidi kaldır ve sayfayı yenile
-        const overlay = document.getElementById("login-overlay");
-        if (overlay) overlay.style.display = "none";
-        
-        location.reload();
+        window.isAdmin = false;
+        window.currentUser = personelName;
     }
-}, true); // Capturing aşamasında yakala ki başka fonksiyonlar araya giremesin!
+
+    // Başarılı giriş bayrakları
+    localStorage.setItem("osb_logged_in", "true");
+    localStorage.setItem("osb_is_admin", window.isAdmin ? "true" : "false");
+    localStorage.setItem("osb_current_user", window.currentUser);
+    
+    const overlay = document.getElementById("login-overlay");
+    if (overlay) overlay.style.display = "none";
+    
+    location.reload();
+    return false;
+};
 </script>
  
 <body>
