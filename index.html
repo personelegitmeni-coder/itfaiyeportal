@@ -148,24 +148,26 @@ document.addEventListener("DOMContentLoaded", () => {
     const isLoggedIn = localStorage.getItem("osb_logged_in") === "true";
     const overlay = document.getElementById("login-overlay");
     
+    // Oturum açılmamışsa giriş ekranını kesinlikle göster ve arkayı kilitle
     if (!isLoggedIn && overlay) {
         overlay.style.display = "flex";
     }
 });
 
+// KESİN GİRİŞ VE YETKİ KONTROLÜ
 window.handleLogin = function(e, admin) {
     e.preventDefault();
     
     const tcInput = admin ? document.getElementById("admin-user").value.trim() : document.getElementById("personel-tc").value.trim();
-    const passInput = admin ? document.getElementById("admin-pass").value.trim() : document.getElementById("personel-pass").value.trim();
+    const passInput = admin ? document.getElementById("admin-pass").value.trim() : (document.getElementById("personel-pass") ? document.getElementById("personel-pass").value.trim() : "");
     
     if (!/^\d{11}$/.test(tcInput)) {
-        alert("TC Kimlik Numarası 11 haneli olmalıdır!");
+        alert("❌ HATA: TC Kimlik Numarası eksiksiz 11 haneli olmalıdır!");
         return;
     }
 
     if (admin) {
-        // Admin giriş kontrolü (Şifre korumalı)
+        // Admin Şifre Kontrolü
         if (passInput !== "MRTORTC" && passInput !== "123456") {
             alert("❌ HATA: Admin şifresi yanlış!");
             return;
@@ -173,36 +175,40 @@ window.handleLogin = function(e, admin) {
         window.isAdmin = true;
         window.currentUser = "ADMİN (" + tcInput + ")";
     } else {
-        // PERSONEL KÜNYE / TC KONTROLÜ
-        let personelData = localStorage.getItem("osb_Personel");
-        let rows = [];
+        // PERSONEL KÜNYE / TC KONTROLÜ (Çoklu Kaynak Taraması)
+        let isAuthorized = false;
+        let personelName = tcInput;
 
-        try {
-            let parsed = JSON.parse(personelData || "[]");
-            rows = Array.isArray(parsed) ? parsed : Object.entries(parsed).map(([id, v]) => ({ ...v, tc: v.tc || id }));
-        } catch (err) {
-            rows = [];
+        // 1. Kaynak: localStorage içindeki osb_Personel veya alternatif olası anahtarlar
+        const possibleKeys = ["osb_Personel", "personelListesi", "itfaiye_personel", "Modul1"];
+        for (let key of possibleKeys) {
+            let data = localStorage.getItem(key);
+            if (data) {
+                try {
+                    let parsed = JSON.parse(data);
+                    let rows = Array.isArray(parsed) ? parsed : Object.entries(parsed).map(([id, v]) => ({ ...v, tc: v.tc || v.TC || id }));
+                    
+                    let found = rows.find(p => String(p.tc || p.TC || p.tcKimlik || "").trim() === tcInput);
+                    if (found) {
+                        isAuthorized = true;
+                        personelName = found.ad || found.adSoyad || found.isim || tcInput;
+                        break;
+                    }
+                } catch (err) {}
+            }
         }
 
-        // Eğer Modül 1 henüz boşsa ve hiç personel girilmediyse, dışarıdan gelen rastgele TC'yi ASLA sokma!
-        if (rows.length === 0) {
-            alert("❌ HATA: Modül 1'de kayıtlı hiç personel künyesi bulunamadı! Önce Admin olarak girip Modül 1'e personel kaydı eklemelisiniz.");
-            return;
-        }
-
-        // Modül 1 veritabanında bu TC var mı diye titizlikle arıyoruz
-        const matchedPersonnel = rows.find(p => String(p.tc || p.TC || "").trim() === tcInput);
-
-        if (!matchedPersonnel) {
-            alert("❌ ERİŞİM REDDEDİLDİ: Bu TC Kimlik Numarası Modül 1 personel listesinde kayıtlı değil!");
-            return; // KESİNLİKLE İÇERİ ALMAZ!
+        // Eğer hiçbir listede bulamadıysa, SİSTEMİ KESİNLİKLE KAPAT VE İÇERİ SOKMA!
+        if (!isAuthorized) {
+            alert("🛑 ERİŞİM KESİNLİKLE REDDEDİLDİ!\n\nBu TC Kimlik Numarası sistemde (Modül 1 kayıtlarında) bulunamadı. Yetkisiz giriş yapamazsınız!");
+            return; 
         }
 
         window.isAdmin = false;
-        window.currentUser = (matchedPersonnel.ad || matchedPersonnel.adSoyad || tcInput);
+        window.currentUser = personelName;
     }
 
-    // Başarılı giriş
+    // Başarılı giriş durumu
     localStorage.setItem("osb_logged_in", "true");
     localStorage.setItem("osb_is_admin", window.isAdmin ? "true" : "false");
     localStorage.setItem("osb_current_user", window.currentUser);
@@ -217,6 +223,8 @@ window.handleLogin = function(e, admin) {
     if(overlay) {
         overlay.style.display = "none";
     }
+    
+    location.reload(); // Sayfayı yenileyerek tam yetkiyle başlat
 };
 
 window.logout = function() {
