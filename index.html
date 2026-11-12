@@ -152,7 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// HTML'in doğrudan çağırdığı fonksiyonu doğrudan ele geçiriyoruz!
+// Kesin yakalayan ve esnek tarama yapan handleLogin fonksiyonu
 window.handleLogin = function(e, admin) {
     if (e && e.preventDefault) e.preventDefault();
     
@@ -177,7 +177,7 @@ window.handleLogin = function(e, admin) {
         window.isAdmin = true;
         window.currentUser = "ADMİN (" + tcInput + ")";
     } else {
-        // PERSONEL DOĞRULAMA KONTROLÜ
+        // PERSONEL DOĞRULAMA (ESNEK TARAMA)
         let isAuthorized = false;
         let personelName = tcInput;
         
@@ -185,19 +185,32 @@ window.handleLogin = function(e, admin) {
             let rawData = localStorage.getItem("osb_Personel") || localStorage.getItem("personelListesi");
             if (rawData) {
                 let parsed = JSON.parse(rawData);
-                let rows = Array.isArray(parsed) ? parsed : Object.entries(parsed).map(([id, v]) => ({ ...v, tc: v.tc || v.TC || id }));
                 
-                let found = rows.find(p => String(p.tc || p.TC || p.tcKimlik || "").trim() === tcInput);
+                // Veri ister Array, ister Object (Key-Value) olsun hepsini listeye çeviriyoruz
+                let rows = Array.isArray(parsed) ? parsed : Object.entries(parsed).map(([key, val]) => {
+                    if (typeof val === 'object' && val !== null) {
+                        return { ...val, _key: key };
+                    }
+                    return { tc: key, ad: val };
+                });
+                
+                // Her bir kaydın içindeki bütün alanları tarayıp girilen TC ile eşleşen var mı diye bakıyoruz
+                let found = rows.find(p => {
+                    return Object.values(p).some(val => String(val || "").trim() === tcInput);
+                });
+
                 if (found) {
                     isAuthorized = true;
-                    personelName = found.ad || found.adSoyad || found.isim || tcInput;
+                    personelName = found.ad || found.adSoyad || found.isim || found.adi || found.personelAd || tcInput;
                 }
             }
-        } catch (err) {}
+        } catch (err) {
+            console.error(err);
+        }
 
-        // KESİN ENGEL: Listede yoksa içeri girmesi MATEMATİKSEL OLARAK İMKANSIZ!
+        // Listede kesinlikle yoksa içeri girilmez
         if (!isAuthorized) {
-            alert("🛑 GİRİŞ KESİNLİKLE REDDEDİLDİ!\n\nBu TC Kimlik Numarası Modül 1 personel listesinde bulunmuyor!");
+            alert("🛑 GİRİŞ REDDEDİLDİ!\n\nBu TC Kimlik Numarası Modül 1 personel listesinde bulunmuyor!");
             return false; 
         }
 
