@@ -1,11 +1,13 @@
 <script>
-    // Sayfadaki form veya butonlara basıldığında otomatik çalışan evrensel dinleyici
+    // Tarayıcı yüklenir yüklenmez tüm formların otomatik GET isteği atmasını engelle
     document.addEventListener("DOMContentLoaded", function() {
         const forms = document.querySelectorAll('form');
         forms.forEach(form => {
             form.addEventListener('submit', function(e) {
-                e.preventDefault();
+                e.preventDefault(); // Sayfanın yenilenmesini ve URL'ye şifre yazılmasını kesin olarak engelle
+                e.stopPropagation();
                 girisIsleminiBaslat();
+                return false;
             });
         });
 
@@ -15,6 +17,7 @@
             if (btnText.includes('giriş') || btnText.includes('login') || (btn.id && btn.id.includes('login'))) {
                 btn.addEventListener('click', function(e) {
                     e.preventDefault();
+                    e.stopPropagation();
                     girisIsleminiBaslat();
                 });
             }
