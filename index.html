@@ -837,9 +837,9 @@
         if(f) f.style.display = f.style.display === 'none' ? 'grid' : 'none';
     }
 
-                  // --- GİRİŞ VE SEKME YÖNETİMİ (Eksik Fonksiyonlar) ---
+                  // --- GLOBAL GİRİŞ VE SEKME YÖNETİMİ ---
 
-    function switchLoginTab(tabName) {
+    window.switchLoginTab = function(tabName) {
         try {
             document.querySelectorAll('.login-tab-content, .tab-content').forEach(el => {
                 el.style.display = 'none';
@@ -855,22 +855,20 @@
         } catch(err) {
             console.log("Sekme değiştirme hatası: ", err);
         }
-    }
+    };
 
-    function handleAdminLogin(event) {
+    window.handleAdminLogin = function(event) {
         if(event) event.preventDefault();
         try {
             let passInput = document.getElementById('admin-pass') || document.getElementById('admin-password');
             let pass = passInput ? passInput.value : '';
             
-            // Admin şifre kontrolü (Sizin belirlediğiniz mantığa göre)
             if(pass) {
                 isAdmin = true;
                 currentUser = "Admin";
                 localStorage.setItem('osb_is_admin', 'true');
                 localStorage.setItem('osb_current_user', currentUser);
                 
-                // Giriş ekranını gizle, ana paneli aç
                 let loginScreen = document.getElementById('login-screen') || document.getElementById('login-modal');
                 if(loginScreen) loginScreen.style.display = 'none';
                 
@@ -882,4 +880,5 @@
         } catch(err) {
             alert("Giriş yapılırken hata oluştu: " + err.message);
         }
-    }
+    };
+                 
