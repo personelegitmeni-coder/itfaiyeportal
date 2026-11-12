@@ -153,6 +153,84 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 </head>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    // Sayfa açıldığında oturum kontrolü
+    const isLoggedIn = localStorage.getItem("osb_logged_in") === "true";
+    const overlay = document.getElementById("login-overlay");
+    
+    if (!isLoggedIn && overlay) {
+        overlay.style.display = "flex";
+    }
+});
+
+// GİRİŞ KONTROLÜ VE KÜNYE (TC) DOĞRULAMASI
+window.handleLogin = function(e, admin) {
+    e.preventDefault();
+    
+    const tcInput = admin ? document.getElementById("admin-user").value.trim() : document.getElementById("personel-tc").value.trim();
+    
+    if (!/^\d{11}$/.test(tcInput)) {
+        alert("TC Kimlik Numarası 11 haneli olmalıdır!");
+        return;
+    }
+
+    if (admin) {
+        // Admin giriş kontrolü (Örn: Sabit admin TC'leri veya şifre kontrolü ekleyebilirsiniz)
+        window.isAdmin = true;
+        window.currentUser = "ADMIN (" + tcInput + ")";
+    } else {
+        // PERSONEL KÜNYE / TC KONTROLÜ (Modül 1 Veritabanı Taraması)
+        let personelData = localStorage.getItem("osb_Personel");
+        let rows = [];
+
+        try {
+            let parsed = JSON.parse(personelData || "[]");
+            // Array veya Object yapısına göre satırları düzenle
+            rows = Array.isArray(parsed) ? parsed : Object.entries(parsed).map(([id, v]) => ({ ...v, tc: v.tc || id }));
+        } catch (err) {
+            rows = [];
+        }
+
+        // Modül 1 veritabanında bu TC var mı diye bakıyoruz
+        const matchedPersonnel = rows.find(p => String(p.tc || p.TC || "").trim() === tcInput);
+
+        if (!matchedPersonnel) {
+            alert("❌ HATA: Bu TC Kimlik Numarasına ait Modül 1'de kayıtlı personel künyesi bulunamadı! Yetkisiz giriş engellendi.");
+            return; // KESİNLİKLE İÇERİ ALMAZ!
+        }
+
+        window.isAdmin = false;
+        window.currentUser = (matchedPersonnel.ad || matchedPersonnel.adSoyad || tcInput);
+    }
+
+    // Başarılı giriş: Oturumu kilitle ve içeri al
+    localStorage.setItem("osb_logged_in", "true");
+    localStorage.setItem("osb_is_admin", window.isAdmin ? "true" : "false");
+    localStorage.setItem("osb_current_user", window.currentUser);
+
+    document.body.classList.toggle("is-admin", window.isAdmin);
+    const displayElement = document.getElementById("current-user-display");
+    if(displayElement) {
+        displayElement.innerText = window.currentUser + (window.isAdmin ? " (ADMİN)" : " (PERSONEL)");
+    }
+    
+    const overlay = document.getElementById("login-overlay");
+    if(overlay) {
+        overlay.style.display = "none";
+    }
+};
+
+// Çıkış Yapma Fonksiyonu
+window.logout = function() {
+    localStorage.removeItem("osb_logged_in");
+    localStorage.removeItem("osb_is_admin");
+    localStorage.removeItem("osb_current_user");
+    location.reload(); // Sayfayı yenile ve kilit ekranına dön
+};
+</script>
+    
 <body>
 
     <!-- GİRİŞ OVERLAY -->
