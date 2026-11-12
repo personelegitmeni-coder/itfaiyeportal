@@ -901,11 +901,15 @@
             });
         }
 
-        function deletePersonnel(idx) {
+       function deletePersonnel(idx) {
             if(!isAdmin) return;
             let list = JSON.parse(localStorage.getItem('osb_personel')) || [];
             list.splice(idx, 1);
             localStorage.setItem('osb_personel', JSON.stringify(list));
+            
+            // Firebase veritabanını da güncelliyoruz ki diğer telefonlar da anında silsin
+            db.ref('Personel').set(list);
+
             loadPersonnelTable();
             renderPersonnelButtons();
             loadYetkiPersonelCheckboxes();
