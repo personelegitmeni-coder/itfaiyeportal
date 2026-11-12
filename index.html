@@ -1,3 +1,18 @@
+<!-- Firebase SDK'ları -->
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+<script>
+  // Firebase Bağlantı Ayarları (Sizin URL'niz ile yapılandırıldı)
+  const firebaseConfig = {
+    databaseURL: "https://itfaiyeportal-default-rtdb.europe-west1.firebasedatabase.app"
+  };
+
+  // Firebase Başlatma
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+</script>
+
 <!DOCTYPE html>
 <html lang="tr">
 <head>
