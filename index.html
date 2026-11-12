@@ -637,1110 +637,7 @@
                 </div>
             </section>
 
-            <!-- MODÜL 13: İŞLETMELER & DOĞALGAZ -->
-            <section id="mod13" class="module-section">
-                <div class="card">
-                    <div class="card-header">
-                        <h2>🏢 Modül 13: İşletmeler, Adresler, Yol Tarifi, Excel'den Yükle & Yanıp Sönen Doğalgaz Uyarısı</h2>
-                        <div>
-                            <input type="text" id="firma-arama-input" placeholder="Firma Ara..." style="display:inline-block; width:200px; padding:6px; font-size:12px;" oninput="searchCompanies(); forceUpper(this)">
-                            <button class="btn btn-secondary" onclick="window.print()">🖨️ Yazdır</button>
-                            <button class="btn btn-danger admin-only" onclick="deleteSelectedCompanies()">🗑️ Seçilenleri Sil</button>
-                            <label class="btn btn-success" style="cursor:pointer; margin-bottom:0; display:inline-flex; align-items:center;">
-                                📁 Excel'den Firma Yükle <input type="file" id="excel-firma-file" accept=".xlsx, .xls, .csv" style="display:none;" onchange="importCompaniesFromExcel(event)">
-                            </label>
-                            <button class="btn btn-success" onclick="toggleForm('firma-form')">+ Yeni Firma Ekle</button>
-                        </div>
-                    </div>
-
-                    <div class="admin-only" id="pending-companies-box" style="background:#111827; padding:12px; border-radius:6px; margin-bottom:15px; border:1px dashed var(--warning); display:none;">
-                        <h3 style="color:var(--warning); font-size:13px; margin-bottom:8px;">⏳ Onay Bekleyen Yeni Firmalar (Personel Talepleri)</h3>
-                        <div id="pending-companies-list" style="display:flex; flex-direction:column; gap:8px;"></div>
-                    </div>
-
-                    <div id="firma-form" style="display:none;" class="form-grid">
-                        <input type="hidden" id="edit-firma-index" value="-1">
-                        <div class="form-group"><label>Firma Adı:</label><input type="text" id="f-name" placeholder="KASTAMONU ENTEGRE A.Ş." oninput="forceUpper(this)"></div>
-                        <div class="form-group"><label>Adres:</label><input type="text" id="f-adres" placeholder="1. CADDE NO: 12" oninput="forceUpper(this)"></div>
-                        <div class="form-group"><label>İletişim:</label><input type="text" id="f-tel" placeholder="0322 111 22 33"></div>
-                        <div class="form-group"><label>Doğalgaz Durumu / Vana Konumu:</label><input type="text" id="f-gaz-vana" placeholder="GİRİŞ NİZAMİYE SAĞI (VAR)" oninput="forceUpper(this)"></div>
-                        <div class="form-group">
-                            <label>GPS Konumu:</label>
-                            <div style="display:flex; gap:5px;">
-                                <input type="text" id="f-gps" placeholder="36.9584, 35.4182">
-                                <button type="button" class="btn btn-secondary" onclick="getCurrentGPS('f-gps')" style="padding:4px 10px; font-size:11px;">📍 Konumu Bul</button>
-                            </div>
-                        </div>
-                        <div class="form-group" style="grid-column: 1 / -1;"><button class="btn" id="firma-save-btn" onclick="saveCompanyRecord()">Firmayı Kaydet / Güncelle</button></div>
-                    </div>
-
-                    <table>
-                        <thead>
-                            <tr>
-                                <th style="width:30px;"><input type="checkbox" id="select-all-companies" onclick="toggleSelectAllCompanies(this)"></th>
-                                <th>Firma Adı</th>
-                                <th>Cadde / Adres</th>
-                                <th>İletişim & GPS / Yol Tarifi</th>
-                                <th>Doğalgaz Durumu (Yanıp Sönen Uyarı)</th>
-                                <th>İşlem</th>
-                            </tr>
-                        </thead>
-                        <tbody id="firma-list"></tbody>
-                    </table>
-                </div>
-            </section>
-        </main>
-    </div>
-
-    <!-- YIL SONU RAPORU & GRAFİK MODAL -->
-    <div id="year-end-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.95); z-index:10000; overflow-y:auto; padding:20px;">
-        <div style="background:var(--card-bg); border:2px solid var(--accent); border-radius:12px; max-width:900px; margin:30px auto; padding:25px; position:relative;">
-            <button onclick="document.getElementById('year-end-modal').style.display='none'" style="position:absolute; top:15px; right:15px; background:var(--danger); color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:bold;">✕ Kapat</button>
-            <h2 style="color:var(--accent); margin-bottom:15px; font-size:18px;">📊 YIL SONU TÜM PERSONEL PERFORMANS & OLAY GRAFİK RAPORU</h2>
-            <div id="year-end-content"></div>
-        </div>
-    </div>
-
-    <!-- SCRIPT ALTYAPISI -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyKm6UqSwry7IBlpNJNPciMXzcWzMjQxteDyT-1iTPAA8Rdv1Bi3rjC-YYE5NxMf_nQ/exec";
-
-        let currentUser = null;
-        let currentTC = null;
-        let isAdmin = false;
-        let selectedPersonnelList = [];
-        let map = null;
-        let mapMarkers = [];
-
-        window.onload = async function() {
-            await fetchAllDataFromSheets();
-            generateNextYSCCode();
-            generateNextHydrantCode();
-            initMap();
-            cleanExpiredChatMessages();
-            setInterval(fetchAllDataFromSheets, 10000);
-        };
-
-        // GOOGLE SHEETS VERİ ÇEKME - GELİŞTİRİLMİŞ HATA YÖNETİMİ
-       async function fetchAllDataFromSheets() {
-    try {
-        // Tarayıcının önbellekte (cache) takılı kalmasını önlemek için benzersiz zaman damgası ekliyoruz
-        let noCacheUrl = SCRIPT_URL + "?action=readAll&_cb=" + new Date().getTime() + Math.random();
-        
-        let res = await fetch(noCacheUrl, { cache: "no-store" });
-        if(!res.ok) throw new Error("Google Sheets sunucusu yanıt vermedi: Status " + res.status);
-        let data = await res.json();
-        
-        if(data.Personel && data.Personel.length > 0) localStorage.setItem('osb_personel', JSON.stringify(data.Personel));
-        if(data.OlayRaporlari && data.OlayRaporlari.length > 0) localStorage.setItem('osb_olaylar', JSON.stringify(data.OlayRaporlari));
-        if(data.AracArizalari && data.AracArizalari.length > 0) localStorage.setItem('osb_arac_arizalari', JSON.stringify(data.AracArizalari));
-        if(data.YSCKontrol && data.YSCKontrol.length > 0) localStorage.setItem('osb_ysc_listesi', JSON.stringify(data.YSCKontrol));
-        if(data.Hidrantlar && data.Hidrantlar.length > 0) localStorage.setItem('osb_hidrant_listesi', JSON.stringify(data.Hidrantlar));
-        if(data.Isletmeler && data.Isletmeler.length > 0) localStorage.setItem('osb_firmalar', JSON.stringify(data.Isletmeler));
-        if(data.Duyurular && data.Duyurular.length > 0) localStorage.setItem('osb_duyurular', JSON.stringify(data.Duyurular));
-        if(data.Formlar && data.Formlar.length > 0) localStorage.setItem('osb_formlar', JSON.stringify(data.Formlar));
-    } catch(err) {
-        console.error("Google Sheets Veri Çekme Hatası:", err);
-    }
-    loadAllModules();
-}
-
-        // GOOGLE SHEETS VERİ GÖNDERME - GELİŞTİRİLMİŞ İSTEK YAPISI
-        async function sendDataToSheet(sheetName, rowData) {
-            try {
-                await fetch(SCRIPT_URL, {
-                    method: "POST",
-                    mode: "no-cors",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ action: "appendRow", sheetName: sheetName, data: rowData })
-                });
-            } catch(err) {
-                console.error("Sheets kayıt hatası:", err);
-            }
-        }
-
-        function forceUpper(el) { el.value = el.value.toUpperCase(); }
-
-        function updateClockAndWeather() {
-            const now = new Date();
-            document.getElementById('live-clock').innerText = "📅 " + now.toLocaleString('tr-TR');
-        }
-        setInterval(updateClockAndWeather, 1000);
-        updateClockAndWeather();
-
-        function switchLoginTab(tab) {
-            document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.login-form').forEach(f => f.classList.remove('active'));
-            if (tab === 'admin') {
-                document.querySelectorAll('.login-tab')[0].classList.add('active');
-                document.getElementById('admin-login-form').classList.add('active');
-            } else {
-                document.querySelectorAll('.login-tab')[1].classList.add('active');
-                document.getElementById('user-login-form').classList.add('active');
-            }
-        }
-
-        function handleAdminLogin() {
-            const user = document.getElementById('admin-user').value.trim();
-            const pass = document.getElementById('admin-pass').value.trim();
-            if (user === "12544424006" && pass === "394397") {
-                isAdmin = true;
-                currentTC = user;
-                currentUser = "MURAT ORTAÇ (ADMIN)";
-                document.getElementById('login-overlay').style.display = 'none';
-                document.getElementById('current-user-display').innerText = currentUser;
-                document.body.classList.add('is-admin');
-                alert("Hoş geldiniz Sayın Vardiya Amiri Murat Ortaç.");
-                loadAllModules();
-            } else { alert("Hatalı Admin Bilgisi!"); }
-        }
-
-        function handleUserLogin() {
-            const tc = document.getElementById('personel-tc').value.trim();
-            if (tc.length === 11) {
-                isAdmin = false;
-                currentTC = tc;
-                currentUser = `PERSONEL (${tc})`;
-                document.getElementById('login-overlay').style.display = 'none';
-                document.getElementById('current-user-display').innerText = currentUser;
-                document.body.classList.remove('is-admin');
-                alert("Giriş Başarılı!");
-                loadAllModules();
-            } else { alert("Lütfen 11 haneli TC giriniz!"); }
-        }
-
-        function logout() { location.reload(); }
-
-        function loadAllModules() {
-            loadPersonnelTable();
-            loadOlaylarTable();
-            loadVehicleModules();
-            loadYSCTable();
-            renderPersonnelButtons();
-            loadHydrantTable();
-            loadTempAuthTable();
-            loadDocsTable();
-            loadAnnouncements();
-            loadTrainingsTable();
-            loadFormsTable();
-            loadLiveChat();
-            loadCompaniesTable();
-            loadYetkiPersonelCheckboxes();
-            populateCompanyDatalist();
-        }
-
-        function getCurrentGPS(targetId) {
-            if(navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    let lat = position.coords.latitude.toFixed(4);
-                    let lon = position.coords.longitude.toFixed(4);
-                    document.getElementById(targetId).value = `${lat}, ${lon}`;
-                    alert("Konum başarıyla alındı!");
-                }, function(error) {
-                    alert("Konum alınamadı.");
-                });
-            } else {
-                alert("Tarayıcınız konum desteklemiyor.");
-            }
-        }
-
-        // --- MODÜL 1: PERSONEL ---
-        function calculateKalanIzin() {
-            let toplam = parseFloat(document.getElementById('p-toplam-izin').value) || 30;
-            let kullanilan = parseFloat(document.getElementById('p-kullanilan-izin').value) || 0;
-            let kalan = toplam - kullanilan;
-            document.getElementById('p-kalan-izin').value = kalan >= 0 ? kalan : 0;
-        }
-
-        function addPersonnel() {
-            if(!isAdmin) { alert("Yalnızca Admin ekleyebilir!"); return; }
-            const tc = document.getElementById('p-tc').value.trim();
-            const name = document.getElementById('p-name').value.toUpperCase();
-            const role = document.getElementById('p-role').value.toUpperCase();
-            const shift = document.getElementById('p-shift').value;
-            const kan = document.getElementById('p-kan').value;
-            const giris = document.getElementById('p-giris').value;
-            const toplamIzin = document.getElementById('p-toplam-izin').value || "30";
-            const kullanilan = document.getElementById('p-kullanilan-izin').value || "0";
-            const kalan = document.getElementById('p-kalan-izin').value || "30";
-            const ayakkabi = document.getElementById('p-ayakkabi').value;
-            const tisort = document.getElementById('p-tisort').value;
-            const pantolon = document.getElementById('p-pantolon').value.toUpperCase();
-            const ceket = document.getElementById('p-ceket').value.toUpperCase();
-            const nomex = document.getElementById('p-nomex').value.toUpperCase();
-
-            if(!tc || !name) { alert("TC ve Ad Soyad zorunludur!"); return; }
-
-            let list = JSON.parse(localStorage.getItem('osb_personel')) || [];
-            let newObj = { TC: tc, AdSoyad: name, Gorev: role, Vardiya: shift, KanGrubu: kan, IseGiris: giris, ToplamIzin: toplamIzin, KullanilanIzin: kullanilan, KalanIzin: kalan, Ayakkabi: ayakkabi, Tisort: tisort, Pantolon: pantolon, Ceket: ceket, Nomex: nomex };
-            list.unshift(newObj);
-            localStorage.setItem('osb_personel', JSON.stringify(list));
-            sendDataToSheet("Personel", newObj);
-            loadPersonnelTable();
-            renderPersonnelButtons();
-            loadYetkiPersonelCheckboxes();
-            toggleForm('p-form');
-            alert("Personel kaydedildi!");
-        }
-
-        function loadPersonnelTable() {
-            let tbody = document.getElementById('p-list');
-            if(!tbody) return;
-            tbody.innerHTML = "";
-            let list = JSON.parse(localStorage.getItem('osb_personel')) || [];
-
-            list.forEach((p, idx) => {
-                if(!isAdmin && p.TC !== currentTC) return;
-                let tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><b>${p.TC || p.tc}</b><br>${p.AdSoyad || p.name}</td>
-                    <td>${p.Gorev || p.role} (${p.Vardiya || p.shift})</td>
-                    <td><small>Ayk: ${p.Ayakkabi || '-'} | T: ${p.Tisort || '-'}</small><br><small style="color:var(--accent);">Pant: ${p.Pantolon || '-'} | Cek: ${p.Ceket || '-'} | Nomex: ${p.Nomex || '-'}</small></td>
-                    <td>Toplam: ${p.ToplamIzin || '30'} Gün<br>Kullanılan: <span class="badge bg-orange">${p.KullanilanIzin || '0'} Gün</span><br>Kalan: <span class="badge bg-green">${p.KalanIzin || '30'} Gün</span></td>
-                    <td class="admin-only"><button class="btn btn-danger" style="padding:2px 6px; font-size:11px;" onclick="deletePersonnel(${idx})">Sil</button></td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-       function deletePersonnel(idx) {
-            if(!isAdmin) return;
-            let list = JSON.parse(localStorage.getItem('osb_personel')) || [];
-            list.splice(idx, 1);
-            localStorage.setItem('osb_personel', JSON.stringify(list));
-            
-            // Firebase veritabanını da güncelliyoruz ki diğer telefonlar da anında silsin
-            db.ref('Personel').set(list);
-
-            loadPersonnelTable();
-            renderPersonnelButtons();
-            loadYetkiPersonelCheckboxes();
-        }
-
-        // --- MODÜL AI ---
-        function sendAIChatMessage() {
-            let input = document.getElementById('aiChatInput');
-            let text = input.value.trim();
-            if(!text) return;
-            let container = document.getElementById('aiChatContainer');
-            let timeStr = new Date().toLocaleTimeString('tr-TR');
-
-            container.innerHTML += `<div class="chat-msg me"><div class="chat-meta"><span>${currentUser} - ${timeStr}</span></div><span>${text}</span></div>`;
-            input.value = "";
-
-            setTimeout(() => {
-                let aiResponse = "Gemini AI Yanıtı: İlgili yönetmelik ve tatbikat standartları gereğince operasyonel süreç başarıyla değerlendirilmiştir.";
-                container.innerHTML += `<div class="chat-msg ai"><div class="chat-meta"><span>Gemini Asistan AI</span></div><span>${aiResponse}</span></div>`;
-                container.scrollTop = container.scrollHeight;
-            }, 800);
-            container.scrollTop = container.scrollHeight;
-        }
-
-        // --- MODÜL 2: OLAY RAPORLARI & PERFORMANS PUANLAMA & YIL SONU RAPORU ---
-        function populateCompanyDatalist() {
-            let datalist = document.getElementById('firma-onerileri');
-            if(!datalist) return;
-            datalist.innerHTML = "";
-            let firmalar = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
-            firmalar.forEach(f => {
-                let opt = document.createElement('option');
-                opt.value = f.FirmaAdi || f.name;
-                datalist.appendChild(opt);
-            });
-        }
-
-        function renderPersonnelButtons() {
-            let container = document.getElementById('personel-button-container');
-            if(!container) return;
-            container.innerHTML = "";
-            
-            let pList = JSON.parse(localStorage.getItem('osb_personel')) || [];
-
-            if(pList.length === 0) {
-                container.innerHTML = `<span style="font-size:12px; color:var(--text-muted);">Henüz Modül 1'e kayıtlı personel bulunmamaktadır.</span>`;
-                return;
-            }
-
-            pList.forEach(p => {
-                let name = (p.AdSoyad || p.name || "").toUpperCase();
-                if(!name) return;
-
-                let btn = document.createElement('button');
-                btn.type = "button";
-                btn.className = "personel-btn";
-                if(selectedPersonnelList.includes(name)) btn.classList.add('selected');
-                btn.innerText = "✓ " + name;
-                btn.onclick = function() {
-                    if(selectedPersonnelList.includes(name)) {
-                        selectedPersonnelList = selectedPersonnelList.filter(item => item !== name);
-                        btn.classList.remove('selected');
-                    } else {
-                        selectedPersonnelList.push(name);
-                        btn.classList.add('selected');
-                    }
-                };
-                container.appendChild(btn);
-            });
-        }
-
-        function clearSelectedPersonnel() {
-            selectedPersonnelList = [];
-            renderPersonnelButtons();
-        }
-
-        function autoFillCompanyAddress(firmaAdi) {
-            let firmalar = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
-            let matched = firmalar.find(f => (f.FirmaAdi || f.name || "").toUpperCase() === firmaAdi.toUpperCase());
-            if(matched) {
-                document.getElementById('olay-konum').value = matched.CaddeAdres || matched.adres || "";
-            }
-        }
-
-        function addOlayRaporu() {
-            const tur = document.getElementById('olay-tur').value;
-            const firma = document.getElementById('olay-firma-input').value.toUpperCase();
-            const adres = document.getElementById('olay-konum').value.toUpperCase();
-            const cikisSaat = document.getElementById('olay-cikis-saat').value;
-            const donusSaat = document.getElementById('olay-donus-saat').value;
-            const puan = parseFloat(document.getElementById('olay-performans-puan').value) || 100;
-            const ozet = document.getElementById('olay-ozet').value.toUpperCase();
-            const fotoInput = document.getElementById('olay-foto');
-            let fotoName = fotoInput.files.length > 0 ? fotoInput.files[0].name : "YOK";
-            const tarihSaat = new Date().toLocaleString('tr-TR');
-            const giren = currentUser || "BİLİNMEYEN";
-            const personeller = selectedPersonnelList.join(', ') || 'EKİP SEÇİLMEDİ';
-            const editIdx = parseInt(document.getElementById('edit-olay-index').value);
-
-            if(!firma) { alert("Firma adı giriniz!"); return; }
-
-            let rowObj = { KayitTarihi: tarihSaat, GirenPersonel: giren, Firma: firma, Adres: adres, OlayTuru: tur, CikisSaati: cikisSaat, DonusSaati: donusSaat, PerformansPuani: puan, Gorevliler: personeller, Ozet: ozet, Foto: fotoName };
-
-            let olaylar = JSON.parse(localStorage.getItem('osb_olaylar')) || [];
-            if(editIdx >= 0) {
-                olaylar[editIdx] = rowObj;
-                document.getElementById('edit-olay-index').value = "-1";
-                localStorage.setItem('osb_olaylar', JSON.stringify(olaylar));
-                alert("Olay raporu güncellendi!");
-            } else {
-                if(isAdmin) {
-                    olaylar.unshift(rowObj);
-                    localStorage.setItem('osb_olaylar', JSON.stringify(olaylar));
-                    sendDataToSheet("OlayRaporlari", rowObj);
-                    alert("Olay raporu kaydedildi!");
-                } else {
-                    let pendings = JSON.parse(localStorage.getItem('osb_pending_olaylar')) || [];
-                    pendings.push({ ...rowObj, user: currentUser });
-                    localStorage.setItem('osb_pending_olaylar', JSON.stringify(pendings));
-                    alert("Raporunuz Admin onayına gönderildi.");
-                }
-            }
-            selectedPersonnelList = [];
-            renderPersonnelButtons();
-            loadOlaylarTable();
-            toggleForm('olay-form-box');
-        }
-
-        function loadOlaylarTable() {
-            let tbody = document.getElementById('olay-list');
-            let pendingBox = document.getElementById('pending-olaylar-box');
-            let pendingListContainer = document.getElementById('pending-olaylar-list');
-            if(!tbody) return;
-
-            tbody.innerHTML = "";
-            let olaylar = JSON.parse(localStorage.getItem('osb_olaylar')) || [];
-            let pendings = JSON.parse(localStorage.getItem('osb_pending_olaylar')) || [];
-
-            if(isAdmin && pendings.length > 0) {
-                if(pendingBox) pendingBox.style.display = 'block';
-                if(pendingListContainer) {
-                    pendingListContainer.innerHTML = "";
-                    pendings.forEach((p, pIdx) => {
-                        let div = document.createElement('div');
-                        div.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#1e293b; padding:8px 12px; border-radius:6px; font-size:12px;";
-                        div.innerHTML = `<span><b>${p.Firma}</b> (${p.OlayTuru}) - <i>${p.user}</i></span><button class="btn btn-success" style="padding:2px 6px; font-size:11px;" onclick="approvePendingOlay(${pIdx})">Onayla</button>`;
-                        pendingListContainer.appendChild(div);
-                    });
-                }
-            } else { if(pendingBox) pendingBox.style.display = 'none'; }
-
-            olaylar.forEach((item, index) => {
-                let tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><span class="badge bg-orange">${item.KayitTarihi || item.tarihSaat}</span><br><small style="color:var(--accent);">Çıkış: ${item.CikisSaati || '-'}</small></td>
-                    <td>${item.GirenPersonel || item.giren}</td>
-                    <td><b>${item.Firma || item.firma}</b><br>${item.Adres || item.adres}</td>
-                    <td><span class="badge bg-green">${item.OlayTuru || item.tur}</span><br><small style="color:var(--warning);">Puan: ${item.PerformansPuani || '100'} / 100</small></td>
-                    <td>${item.Ozet || item.ozet}<br><small style="color:var(--accent);">Ekip: ${item.Gorevliler || item.personeller}</small></td>
-                    <td>
-                        ${isAdmin ? `<button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="editOlay(${index})">Düzenle</button> <button class="btn btn-danger" style="padding:2px 6px; font-size:11px;" onclick="deleteOlay(${index})">Sil</button>` : '-'}
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function editOlay(idx) {
-            if(!isAdmin) return;
-            let olaylar = JSON.parse(localStorage.getItem('osb_olaylar')) || [];
-            let item = olaylar[idx];
-            document.getElementById('edit-olay-index').value = idx;
-            document.getElementById('olay-tur').value = item.OlayTuru || item.tur;
-            document.getElementById('olay-firma-input').value = item.Firma || item.firma;
-            document.getElementById('olay-konum').value = item.Adres || item.adres;
-            document.getElementById('olay-cikis-saat').value = item.CikisSaati || '';
-            document.getElementById('olay-donus-saat').value = item.DonusSaati || '';
-            document.getElementById('olay-performans-puan').value = item.PerformansPuani || 100;
-            document.getElementById('olay-ozet').value = item.Ozet || item.ozet;
-            
-            selectedPersonnelList = item.Gorevliler ? item.Gorevliler.split(', ') : [];
-            renderPersonnelButtons();
-            toggleForm('olay-form-box');
-        }
-
-        function approvePendingOlay(pIdx) {
-            if(!isAdmin) return;
-            let pendings = JSON.parse(localStorage.getItem('osb_pending_olaylar')) || [];
-            let item = pendings[pIdx];
-            let olaylar = JSON.parse(localStorage.getItem('osb_olaylar')) || [];
-            olaylar.unshift(item);
-            pendings.splice(pIdx, 1);
-            localStorage.setItem('osb_olaylar', JSON.stringify(olaylar));
-            localStorage.setItem('osb_pending_olaylar', JSON.stringify(pendings));
-            sendDataToSheet("OlayRaporlari", item);
-            loadOlaylarTable();
-            alert("Onaylandı!");
-        }
-
-        function deleteOlay(idx) {
-            if(!isAdmin) return;
-            let olaylar = JSON.parse(localStorage.getItem('osb_olaylar')) || [];
-            olaylar.splice(idx, 1);
-            localStorage.setItem('osb_olaylar', JSON.stringify(olaylar));
-            loadOlaylarTable();
-        }
-
-        // --- YIL SONU PERSONEL DEĞERLENDİRME & GRAFİK RAPORU ---
-        function openYearEndReportModal() {
-            let modal = document.getElementById('year-end-modal');
-            let content = document.getElementById('year-end-content');
-            modal.style.display = 'block';
-
-            let olaylar = JSON.parse(localStorage.getItem('osb_olaylar')) || [];
-            let pList = JSON.parse(localStorage.getItem('osb_personel')) || [];
-
-            let html = `<p style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">Tüm personellerin katıldığı olay türleri, sayıları ve 100 üzerinden ortalama performans puanları:</p>`;
-            html += `<table style="width:100%; border-collapse:collapse; font-size:12px;"><thead><tr><th>Personel Adı</th><th>Toplam Katıldığı Olay</th><th>Ortalama Puan (100)</th><th>Olay Türü Dağılımı & Grafik</th></tr></thead><tbody>`;
-
-            pList.forEach(p => {
-                let pName = p.AdSoyad || p.name;
-                let katildigiOlaylar = olaylar.filter(o => (o.Gorevliler || "").includes(pName));
-                let toplamOlay = katildigiOlaylar.length;
-                let toplamPuan = katildigiOlaylar.reduce((acc, curr) => acc + (parseFloat(curr.PerformansPuani) || 100), 0);
-                let ortPuan = toplamOlay > 0 ? (toplamPuan / toplamOlay).toFixed(1) : "100.0";
-
-                let turSayilari = {};
-                katildigiOlaylar.forEach(o => {
-                    let tur = o.OlayTuru || o.tur || "DİĞER";
-                    turSayilari[tur] = (turSayilari[tur] || 0) + 1;
-                });
-
-                let grafikHTML = `<div style="display:flex; flex-direction:column; gap:3px; margin-top:5px;">`;
-                for(let tur in turSayilari) {
-                    let sayi = turSayilari[tur];
-                    let barWidth = Math.min(sayi * 20, 100);
-                    grafikHTML += `<div style="font-size:11px; display:flex; align-items:center; gap:5px;"><span>${tur}: <b>${sayi}</b></span><div style="background:var(--primary); height:8px; width:${barWidth}px; border-radius:3px;"></div></div>`;
-                }
-                grafikHTML += `</div>`;
-
-                html += `<tr><td><b>${pName}</b></td><td><span class="badge bg-orange">${toplamOlay} Olay</span></td><td><span class="badge bg-green">${ortPuan} / 100</span></td><td>${grafikHTML}</td></tr>`;
-            });
-
-            html += `</tbody></table>`;
-            content.innerHTML = html;
-        }
-
-        // --- MODÜL 3: ARAÇ ARIZALARI ---
-        function addNewVehicleMaster() {
-            if(!isAdmin) return;
-            const plaka = document.getElementById('yeni-plaka').value.toUpperCase();
-            const tip = document.getElementById('yeni-tip').value.toUpperCase();
-            if(!plaka) return;
-            let araclar = JSON.parse(localStorage.getItem('osb_arac_listesi')) || [];
-            araclar.push({plaka, tip});
-            localStorage.setItem('osb_arac_listesi', JSON.stringify(araclar));
-            loadVehicleModules();
-            alert("Araç eklendi.");
-        }
-
-        function loadVehicleModules() {
-            let sel = document.getElementById('ariza-plaka-select');
-            if(sel) {
-                sel.innerHTML = "";
-                let araclar = JSON.parse(localStorage.getItem('osb_arac_listesi')) || [{plaka: "01 BIC 466", tip: "ARAZÖZ"}];
-                araclar.forEach(a => {
-                    let opt = document.createElement('option');
-                    opt.value = a.plaka;
-                    opt.text = `${a.plaka} - ${a.tip}`;
-                    sel.appendChild(opt);
-                });
-            }
-
-            let container = document.getElementById('arac-ariza-container');
-            if(!container) return;
-            container.innerHTML = "";
-            let arizalar = JSON.parse(localStorage.getItem('osb_arac_arizalari')) || [];
-            document.getElementById('arizali-arac-sayi').innerText = arizalar.filter(a => a.Durum !== 'YAPILDI').length;
-
-            arizalar.forEach((ariza, idx) => {
-                let div = document.createElement('div');
-                div.style.cssText = 'background:#0f172a; border:1px solid var(--border-color); border-radius:8px; padding:15px;';
-                div.innerHTML = `
-                    <h3 style="color:var(--primary); font-size:15px;">🚛 ${ariza.Plaka || ariza.plaka}</h3>
-                    <p style="font-size:12px; color:var(--text-muted);"><strong>Durum:</strong> <span class="badge bg-red">${ariza.Durum || ariza.durum}</span></p>
-                    <p style="font-size:12px; color:var(--text-muted);"><strong>Açıklama:</strong> ${ariza.ArizaAciklamasi || ariza.detay}</p>
-                    <p style="font-size:12px; color:var(--text-muted);"><strong>Fotoğraf:</strong> ${ariza.Foto || 'YOK'}</p>
-                    <p style="font-size:12px; color:var(--text-muted);"><strong>Bildiren:</strong> ${ariza.Bildiren || ariza.giren}</p>
-                    <button class="btn btn-danger admin-only" style="padding:2px 6px; font-size:11px; margin-top:8px;" onclick="deleteAriza(${idx})">Sil</button>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        function submitVehicleAriza() {
-            const plaka = document.getElementById('ariza-plaka-select').value;
-            const durum = document.getElementById('ariza-durum').value;
-            const detay = document.getElementById('ariza-detay').value.toUpperCase();
-            const fotoInput = document.getElementById('ariza-foto');
-            let fotoName = fotoInput.files.length > 0 ? fotoInput.files[0].name : "YOK";
-            const arizaTarih = document.getElementById('ariza-tarih').value;
-            const onarimTarih = document.getElementById('onarim-tarih').value;
-            const giren = currentUser;
-
-            if(!detay) { alert("Açıklama yazınız!"); return; }
-            let rowObj = { Plaka: plaka, AracTipi: "ARAZÖZ", Durum: durum, ArizaAciklamasi: detay, Foto: fotoName, Bildiren: giren, ArizaTarihi: arizaTarih, OnarimTarihi: onarimTarih, OnayDurumu: "BEKLİYOR" };
-
-            let arizalar = JSON.parse(localStorage.getItem('osb_arac_arizalari')) || [];
-            arizalar.unshift(rowObj);
-            localStorage.setItem('osb_arac_arizalari', JSON.stringify(arizalar));
-            sendDataToSheet("AracArizalari", rowObj);
-            loadVehicleModules();
-            alert("Arıza kaydı gönderildi.");
-        }
-
-        function deleteAriza(idx) {
-            if(!isAdmin) return;
-            let arizalar = JSON.parse(localStorage.getItem('osb_arac_arizalari')) || [];
-            arizalar.splice(idx, 1);
-            localStorage.setItem('osb_arac_arizalari', JSON.stringify(arizalar));
-            loadVehicleModules();
-        }
-
-        // --- MODÜL 4: YSC KONTROL ---
-        function generateNextYSCCode() {
-            let list = JSON.parse(localStorage.getItem('osb_ysc_listesi')) || [];
-            let el = document.getElementById('ysc-no');
-            if(el && !el.value) el.value = "YSC" + (list.length + 1);
-        }
-
-        function saveYSCRecord() {
-            const code = document.getElementById('ysc-no').value.toUpperCase();
-            const tip = document.getElementById('ysc-tip').value;
-            const kg = document.getElementById('ysc-kg').value.toUpperCase();
-            const durum = document.getElementById('ysc-aktif-pasif').value;
-            const adres = document.getElementById('ysc-adres').value.toUpperCase();
-            const gps = document.getElementById('ysc-gps').value;
-            const ilkBakim = document.getElementById('ysc-ilk-bakim').value;
-            const sonBakim = document.getElementById('ysc-son-bakim').value;
-            const giren = currentUser;
-
-            let rowObj = { YSCCod: code, Tip: tip, Kg: kg, Durum: durum, Adres: adres, GPS: gps, IlkBakim: ilkBakim, SonBakim: sonBakim, Ekleyen: giren };
-            let list = JSON.parse(localStorage.getItem('osb_ysc_listesi')) || [];
-            list.unshift(rowObj);
-            localStorage.setItem('osb_ysc_listesi', JSON.stringify(list));
-            sendDataToSheet("YSCKontrol", rowObj);
-            loadYSCTable();
-            alert("YSC kaydedildi!");
-        }
-
-        function filterYSCList(filterType) { loadYSCTable(filterType); }
-
-        function loadYSCTable(filterType = "Tümü") {
-            let tbody = document.getElementById('ysc-list');
-            if(!tbody) return;
-            tbody.innerHTML = "";
-            let list = JSON.parse(localStorage.getItem('osb_ysc_listesi')) || [];
-            let filtered = filterType === "Tümü" ? list : list.filter(y => (y.Durum || y.durum) === filterType);
-
-            filtered.forEach((y, idx) => {
-                let statusVal = y.Durum || y.durum;
-                let badgeHTML = statusVal === 'Tarihi Geçmiş' ? `<span class="badge blinking-red-badge">⚠️ TARİHİ GEÇMİŞ</span>` : `<span class="badge bg-green">${statusVal}</span>`;
-
-                let tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><b>${y.YSCCod || y.code}</b></td>
-                    <td>${y.Tip || y.tip} / ${y.Kg || y.kg}</td>
-                    <td>${y.Adres || y.adres}<br><small style="color:var(--accent);">${y.GPS || y.gps}</small></td>
-                    <td>${badgeHTML}</td>
-                    <td>${y.Ekleyen || y.giren}</td>
-                    <td class="admin-only"><button class="btn btn-danger" style="padding:2px 6px; font-size:11px;" onclick="deleteYSC(${idx})">Sil</button></td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function deleteYSC(idx) {
-            if(!isAdmin) return;
-            let list = JSON.parse(localStorage.getItem('osb_ysc_listesi')) || [];
-            list.splice(idx, 1);
-            localStorage.setItem('osb_ysc_listesi', JSON.stringify(list));
-            loadYSCTable();
-        }
-
-        // --- MODÜL 5: HİDRANTLAR & RENKLİ PİNLER & HARİTA ---
-        function initMap() {
-            if(map) return;
-            map = L.map('map').setView([36.9584, 35.4182], 14);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-            updateMapMarkers();
-        }
-
-        function generateNextHydrantCode() {
-            let list = JSON.parse(localStorage.getItem('osb_hidrant_listesi')) || [];
-            let el = document.getElementById('h-kod');
-            if(el && !el.value) el.value = "H" + (list.length + 1);
-        }
-
-        function saveHydrant() {
-            const kod = document.getElementById('h-kod').value.toUpperCase();
-            const adres = document.getElementById('h-adres').value.toUpperCase();
-            const durum = document.getElementById('h-durum').value;
-            const gps = document.getElementById('h-gps').value;
-            const arizaNot = document.getElementById('h-ariza-not').value.toUpperCase();
-            const fotoInput = document.getElementById('h-foto');
-            let fotoName = fotoInput.files.length > 0 ? fotoInput.files[0].name : "YOK";
-            if(!kod) return;
-
-            let rowObj = { HidrantKodu: kod, Adres: adres, Durum: durum, GPSKoordinati: gps, ArizaNotu: arizaNot, Foto: fotoName };
-            let list = JSON.parse(localStorage.getItem('osb_hidrant_listesi')) || [];
-            list.unshift(rowObj);
-            localStorage.setItem('osb_hidrant_listesi', JSON.stringify(list));
-            sendDataToSheet("Hidrantlar", rowObj);
-            loadHydrantTable();
-            updateMapMarkers();
-            alert("Hidrant kaydedildi!");
-        }
-
-        function searchHydrant() {
-            let val = document.getElementById('h-arama-input').value.toUpperCase();
-            loadHydrantTable(val);
-        }
-
-        function loadHydrantTable(search = "") {
-            let tbody = document.getElementById('h-list');
-            if(!tbody) return;
-            tbody.innerHTML = "";
-            let list = JSON.parse(localStorage.getItem('osb_hidrant_listesi')) || [];
-            let filtered = search ? list.filter(h => (h.HidrantKodu || h.kod).includes(search)) : list;
-
-            filtered.forEach((h, idx) => {
-                let gps = h.GPSKoordinati || h.gps || "";
-                let durum = h.Durum || h.durum || "Sağlam / Aktif";
-                let navBtn = gps && gps.includes(',') ? `<br><a href="https://www.google.com/maps/dir/?api=1&destination=${gps.replace(/\s+/g,'')}" target="_blank" class="btn btn-success" style="padding:2px 8px; font-size:11px; margin-top:4px;">🧭 Yol Tarifi / Navigasyon</a>` : '';
-
-                let badgeClass = "bg-green";
-                if(durum.includes('Arızalı')) badgeClass = "bg-red";
-                else if(durum.includes('Bakımda')) badgeClass = "bg-orange";
-                else if(durum.includes('Pasif')) badgeClass = "";
-
-                let tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><b>${h.HidrantKodu || h.kod}</b></td>
-                    <td>${h.Adres || h.adres}<br><small style="color:var(--warning);">Not: ${h.ArizaNotu || h.arizaNot || 'YOK'}</small></td>
-                    <td><span class="badge ${badgeClass}" ${durum.includes('Pasif') ? 'style="background:#64748b; color:white;"' : ''}>${durum}</span><br><small>📷 ${h.Foto || 'YOK'}</small></td>
-                    <td><small style="color:var(--accent);">${gps}</small>${navBtn}</td>
-                    <td class="admin-only"><button class="btn btn-danger" style="padding:2px 6px; font-size:11px;" onclick="deleteHydrant(${idx})">Sil</button></td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function updateMapMarkers() {
-            if(!map) return;
-            mapMarkers.forEach(m => map.removeLayer(m));
-            mapMarkers = [];
-            let list = JSON.parse(localStorage.getItem('osb_hidrant_listesi')) || [];
-            list.forEach(h => {
-                let gpsStr = h.GPSKoordinati || h.gps || "";
-                let durum = h.Durum || h.durum || "Sağlam / Aktif";
-                
-                let colorHex = "#22c55e"; // Yeşil (Sağlam)
-                if(durum.includes('Arızalı')) colorHex = "#ef4444"; // Kırmızı
-                else if(durum.includes('Bakımda')) colorHex = "#f97316"; // Turuncu
-                else if(durum.includes('Pasif')) colorHex = "#64748b"; // Gri
-
-                if(gpsStr.includes(',')) {
-                    let parts = gpsStr.split(',');
-                    let lat = parseFloat(parts[0].trim());
-                    let lon = parseFloat(parts[1].trim());
-                    if(!isNaN(lat) && !isNaN(lon)) {
-                        let customIcon = L.divIcon({
-                            className: 'custom-pin',
-                            html: `<div style="background-color:${colorHex}; width:16px; height:16px; border-radius:50%; border:2px solid white; box-shadow:0 0 5px rgba(0,0,0,0.5);"></div>`,
-                            iconSize: [16, 16]
-                        });
-                        let marker = L.marker([lat, lon], {icon: customIcon}).addTo(map).bindPopup(`<b>HİDRANT: ${h.HidrantKodu || h.kod}</b><br>Durum: ${durum}<br>${h.Adres || h.adres}<br><a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}" target="_blank">Yol Tarifi Al</a>`);
-                        mapMarkers.push(marker);
-                    }
-                }
-            });
-        }
-
-        function deleteHydrant(idx) {
-            if(!isAdmin) return;
-            let list = JSON.parse(localStorage.getItem('osb_hidrant_listesi')) || [];
-            list.splice(idx, 1);
-            localStorage.setItem('osb_hidrant_listesi', JSON.stringify(list));
-            loadHydrantTable();
-            updateMapMarkers();
-        }
-
-        // --- MODÜL 6: GEÇİCİ YETKİ ---
-        function loadYetkiPersonelCheckboxes() {
-            let container = document.getElementById('yetki-personel-checkboxes');
-            if(!container) return;
-            container.innerHTML = "";
-            let pList = JSON.parse(localStorage.getItem('osb_personel')) || [];
-            pList.forEach(p => {
-                let lbl = document.createElement('label');
-                lbl.style.cssText = "display:flex; align-items:center; gap:8px; font-size:12px; cursor:pointer; background:#1e293b; padding:6px; border-radius:4px;";
-                lbl.innerHTML = `<input type="checkbox" class="yetki-p-checkbox" value="${p.AdSoyad || p.name}"> <b>${p.AdSoyad || p.name}</b>`;
-                container.appendChild(lbl);
-            });
-        }
-
-        function grantTemporaryAdmin() {
-            if(!isAdmin) return;
-            let checked = document.querySelectorAll('.yetki-p-checkbox:checked');
-            if(checked.length === 0) { alert("Personel seçiniz!"); return; }
-            let list = JSON.parse(localStorage.getItem('osb_gecici_yetkiler')) || [];
-            checked.forEach(chk => {
-                list.unshift({ personel: chk.value, sure: document.getElementById('yetki-sure').value + " Saat", baslangic: new Date().toLocaleTimeString('tr-TR') });
-            });
-            localStorage.setItem('osb_gecici_yetkiler', JSON.stringify(list));
-            loadTempAuthTable();
-            alert("Yetki verildi.");
-        }
-
-        function loadTempAuthTable() {
-            let tbody = document.getElementById('yetki-list');
-            if(!tbody) return;
-            tbody.innerHTML = "";
-            let list = JSON.parse(localStorage.getItem('osb_gecici_yetkiler')) || [];
-            list.forEach((y, idx) => {
-                let tr = document.createElement('tr');
-                tr.innerHTML = `<td><b>${y.personel}</b></td><td>${y.sure}</td><td>${y.baslangic}</td><td><span class="badge bg-green">AKTİF</span></td><td class="admin-only"><button class="btn btn-danger" style="padding:2px 6px; font-size:11px;" onclick="revokeAuth(${idx})">İptal</button></td>`;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function revokeAuth(idx) {
-            if(!isAdmin) return;
-            let list = JSON.parse(localStorage.getItem('osb_gecici_yetkiler')) || [];
-            list.splice(idx, 1);
-            localStorage.setItem('osb_gecici_yetkiler', JSON.stringify(list));
-            loadTempAuthTable();
-        }
-
-        // --- MODÜL 8: DOKÜMANLAR ---
-        function saveDocumentRecord() {
-            if(!isAdmin) return;
-            const title = document.getElementById('doc-title').value.toUpperCase();
-            const cat = document.getElementById('doc-cat').value;
-            const fileInput = document.getElementById('doc-file');
-            let fileName = fileInput.files.length > 0 ? fileInput.files[0].name : "DOSYA.PDF";
-            if(!title) return;
-            let rowObj = { Baslik: title, Kategori: cat, Tarih: new Date().toLocaleDateString('tr-TR'), Dosya: fileName };
-            let list = JSON.parse(localStorage.getItem('osb_dokumanlar')) || [];
-            list.unshift(rowObj);
-            localStorage.setItem('osb_dokumanlar', JSON.stringify(list));
-            loadDocsTable();
-            alert("Doküman yüklendi!");
-        }
-
-        function loadDocsTable() {
-            let tbody = document.getElementById('dokuman-list');
-            if(!tbody) return;
-            tbody.innerHTML = "";
-            let list = JSON.parse(localStorage.getItem('osb_dokumanlar')) || [];
-            list.forEach((d, idx) => {
-                let tr = document.createElement('tr');
-                tr.innerHTML = `<td><b>${d.Baslik || d.title}</b></td><td><span class="badge bg-orange">${d.Kategori || d.cat}</span></td><td>${d.Tarih || d.dateStr}</td><td>📄 ${d.Dosya || 'İndir'}</td><td class="admin-only"><button class="btn btn-danger" style="padding:2px 6px; font-size:11px;" onclick="deleteDoc(${idx})">Sil</button></td>`;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function deleteDoc(idx) {
-            if(!isAdmin) return;
-            let list = JSON.parse(localStorage.getItem('osb_dokumanlar')) || [];
-            list.splice(idx, 1);
-            localStorage.setItem('osb_dokumanlar', JSON.stringify(list));
-            loadDocsTable();
-        }
-
-        // --- MODÜL 9: DUYURULAR ---
-        function saveAnnouncement() {
-            if(!isAdmin) return;
-            const baslik = document.getElementById('duyuru-baslik').value.toUpperCase();
-            const icerik = document.getElementById('duyuru-icerik').value.toUpperCase();
-            const tarih = document.getElementById('duyuru-tarih').value || new Date().toLocaleDateString('tr-TR');
-            const fileInput = document.getElementById('duyuru-gorsel');
-            let gorselName = fileInput.files.length > 0 ? fileInput.files[0].name : "YOK";
-            let editIdx = parseInt(document.getElementById('edit-duyuru-index').value);
-
-            if(!baslik) return;
-            let rowObj = { Baslik: baslik, Icerik: icerik, Tarih: tarih, Gorsel: gorselName };
-            let list = JSON.parse(localStorage.getItem('osb_duyurular')) || [];
-
-            if(editIdx >= 0) {
-                list[editIdx] = rowObj;
-                document.getElementById('edit-duyuru-index').value = "-1";
-            } else {
-                list.unshift(rowObj);
-                sendDataToSheet("Duyurular", rowObj);
-            }
-            localStorage.setItem('osb_duyurular', JSON.stringify(list));
-            loadAnnouncements();
-            toggleForm('duyuru-form');
-            alert("Duyuru kaydedildi!");
-        }
-
-        function loadAnnouncements() {
-            let container = document.getElementById('duyurular-container');
-            if(!container) return;
-            container.innerHTML = "";
-            let list = JSON.parse(localStorage.getItem('osb_duyurular')) || [];
-            list.forEach((d, idx) => {
-                let div = document.createElement('div');
-                div.style.cssText = "background:#0f172a; border:1px solid var(--border-color); border-radius:8px; padding:15px;";
-                div.innerHTML = `
-                    <h3 style="color:var(--primary); font-size:14px;">📢 ${d.Baslik || d.baslik} <span style="font-size:11px; color:var(--text-muted); float:right;">📅 ${d.Tarih || d.tarih}</span></h3>
-                    <p style="font-size:13px; color:#cbd5e1; margin-top:5px;">${d.Icerik || d.icerik}</p>
-                    <p style="font-size:11px; color:var(--accent); margin-top:5px;">🖼️ Görsel/Dosya: ${d.Gorsel || 'YOK'}</p>
-                    ${isAdmin ? `<div style="margin-top:8px; display:flex; gap:5px;"><button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="editAnnouncement(${idx})">Düzenle</button><button class="btn btn-danger" style="padding:2px 6px; font-size:11px;" onclick="deleteAnnouncement(${idx})">Sil</button></div>` : ''}
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        function editAnnouncement(idx) {
-            let list = JSON.parse(localStorage.getItem('osb_duyurular')) || [];
-            let item = list[idx];
-            document.getElementById('edit-duyuru-index').value = idx;
-            document.getElementById('duyuru-baslik').value = item.Baslik || item.baslik;
-            document.getElementById('duyuru-icerik').value = item.Icerik || item.icerik;
-            document.getElementById('duyuru-tarih').value = item.Tarih || item.tarih;
-            toggleForm('duyuru-form');
-        }
-
-        function deleteAnnouncement(idx) {
-            if(!isAdmin) return;
-            let list = JSON.parse(localStorage.getItem('osb_duyurular')) || [];
-            list.splice(idx, 1);
-            localStorage.setItem('osb_duyurular', JSON.stringify(list));
-            loadAnnouncements();
-        }
-
-        // --- MODÜL 10: EĞİTİM ---
-        function saveTrainingPlan() {
-            if(!isAdmin) return;
-            const konu = document.getElementById('egt-konu').value.toUpperCase();
-            const egitmen = document.getElementById('egt-egitmen').value.toUpperCase();
-            const tarih = document.getElementById('egt-tarih').value;
-            const vardiya = document.getElementById('egt-vardiya').value;
-            if(!konu) return;
-            let list = JSON.parse(localStorage.getItem('osb_egitim_planlari')) || [];
-            list.unshift({ konu, egitmen, tarih, vardiya });
-            localStorage.setItem('osb_egitim_planlari', JSON.stringify(list));
-            loadTrainingsTable();
-            alert("Eğitim planlandı!");
-        }
-
-        function loadTrainingsTable() {
-            let tbody = document.getElementById('egitim-plan-list');
-            if(!tbody) return;
-            tbody.innerHTML = "";
-            let list = JSON.parse(localStorage.getItem('osb_egitim_planlari')) || [];
-            list.forEach((t, idx) => {
-                let tr = document.createElement('tr');
-                tr.innerHTML = `<td><b>${t.konu}</b></td><td>${t.egitmen}</td><td><span class="badge bg-orange">${t.tarih}</span></td><td>${t.vardiya}</td><td class="admin-only"><button class="btn btn-danger" style="padding:2px 6px; font-size:11px;" onclick="deleteTraining(${idx})">Sil</button></td>`;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function deleteTraining(idx) {
-            if(!isAdmin) return;
-            let list = JSON.parse(localStorage.getItem('osb_egitim_planlari')) || [];
-            list.splice(idx, 1);
-            localStorage.setItem('osb_egitim_planlari', JSON.stringify(list));
-            loadTrainingsTable();
-        }
-
-        // --- MODÜL 11: FORMLAR ---
-        function checkFormUploadPermission() {
-            let gecici = JSON.parse(localStorage.getItem('osb_gecici_yetkiler')) || [];
-            let hasAuth = gecici.some(y => currentUser && y.personel.includes(currentUser.split(' ')[0]));
-            if(!isAdmin && !hasAuth) { alert("⚠️ Yetkiniz Yok!"); return; }
-            toggleForm('form-yukle-box');
-        }
-
-        function saveUploadedForm() {
-            const name = document.getElementById('form-dosya-adi').value.toUpperCase();
-            const aciklama = document.getElementById('form-aciklama').value.toUpperCase();
-            const fileInput = document.getElementById('form-dosya-sec');
-            let fileName = fileInput.files.length > 0 ? fileInput.files[0].name : "DOSYA.PDF";
-            if(!name) return;
-            let rowObj = { FormAdi: name, Aciklama: aciklama, Dosya: fileName, Yukleyen: currentUser, Tarih: new Date().toLocaleDateString('tr-TR') };
-            let list = JSON.parse(localStorage.getItem('osb_formlar')) || [];
-            list.unshift(rowObj);
-            localStorage.setItem('osb_formlar', JSON.stringify(list));
-            sendDataToSheet("Formlar", rowObj);
-            loadFormsTable();
-            alert("Form yüklendi!");
-        }
-
-        function loadFormsTable() {
-            let tbody = document.getElementById('formlar-list');
-            if(!tbody) return;
-            tbody.innerHTML = "";
-            let list = JSON.parse(localStorage.getItem('osb_formlar')) || [];
-            list.forEach((f, idx) => {
-                let tr = document.createElement('tr');
-                tr.innerHTML = `<td><b>${f.FormAdi || f.name}</b></td><td>${f.Aciklama || f.aciklama}</td><td>${f.Yukleyen || f.giren}</td><td>${f.Tarih || f.dateStr}</td><td>📥 ${f.Dosya || 'İndir'}</td><td class="admin-only"><button class="btn btn-danger" style="padding:2px 6px; font-size:11px;" onclick="deleteForm(${idx})">Sil</button></td>`;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function deleteForm(idx) {
-            if(!isAdmin) return;
-            let list = JSON.parse(localStorage.getItem('osb_formlar')) || [];
-            list.splice(idx, 1);
-            localStorage.setItem('osb_formlar', JSON.stringify(list));
-            loadFormsTable();
-        }
-
-        // --- MODÜL 12: CANLI SOHBET ---
-        function addEmojiToChat(emoji) {
-            let input = document.getElementById('liveChatInput');
-            input.value += emoji;
-            input.focus();
-        }
-
-        function cleanExpiredChatMessages() {
-            let list = JSON.parse(localStorage.getItem('osb_live_chat')) || [];
-            let now = new Date().getTime();
-            let valid = list.filter(m => (now - (m.timestamp || now)) < 24 * 60 * 60 * 1000);
-            if(valid.length !== list.length) localStorage.setItem('osb_live_chat', JSON.stringify(valid));
-        }
-
-        function sendLiveChatMessage() {
-            let input = document.getElementById('liveChatInput');
-            let text = input.value.trim().toUpperCase();
-            let editIdx = parseInt(document.getElementById('edit-chat-index').value);
-            if(!text) return;
-            let list = JSON.parse(localStorage.getItem('osb_live_chat')) || [];
-            let now = new Date();
-
-            if(editIdx >= 0) {
-                list[editIdx].text = text + " (DÜZENLENDİ)";
-                document.getElementById('edit-chat-index').value = "-1";
-            } else {
-                list.push({ user: currentUser, text, timeStr: now.toLocaleTimeString('tr-TR'), timestamp: now.getTime() });
-            }
-            localStorage.setItem('osb_live_chat', JSON.stringify(list));
-            input.value = "";
-            loadLiveChat();
-        }
-
-        function loadLiveChat() {
-            cleanExpiredChatMessages();
-            let container = document.getElementById('liveChatContainer');
-            if(!container) return;
-            let list = JSON.parse(localStorage.getItem('osb_live_chat')) || [];
-            let now = new Date().getTime();
-
-            container.innerHTML = "";
-            list.forEach((msg, idx) => {
-                let isMe = msg.user === currentUser;
-                let canEdit = isMe && (now - (msg.timestamp || now) < 10 * 60 * 1000);
-                let div = document.createElement('div');
-                div.className = `chat-msg ${isMe ? 'me' : ''}`;
-                div.innerHTML = `<div class="chat-meta"><span>${msg.user}</span><span>${msg.timeStr} ${canEdit ? `<button class="btn btn-secondary" style="padding:1px 4px; font-size:9px;" onclick="editLiveChatMsg(${idx})">Düzenle</button>` : ''}</span></div><span>${msg.text}</span>`;
-                container.appendChild(div);
-            });
-            container.scrollTop = container.scrollHeight;
-        }
-
-        function editLiveChatMsg(idx) {
-            let list = JSON.parse(localStorage.getItem('osb_live_chat')) || [];
-            document.getElementById('edit-chat-index').value = idx;
-            document.getElementById('liveChatInput').value = list[idx].text.replace(" (DÜZENLENDİ)", "");
-            document.getElementById('liveChatInput').focus();
-        }
-
-       // --- MODÜL 13: İŞLETMELER ---
-        function saveCompanyRecord() {
-            const name = document.getElementById('f-name').value.toUpperCase();
-            const adres = document.getElementById('f-adres').value.toUpperCase();
-            const tel = document.getElementById('f-tel').value;
-            const gazVana = document.getElementById('f-gaz-vana').value.toUpperCase();
-            const gps = document.getElementById('f-gps').value;
-            const editIdx = parseInt(document.getElementById('edit-firma-index').value);
-            if(!name) return;
-
-            let rowObj = { FirmaAdi: name, CaddeAdres: adres, Iletisim: tel, DogalgazVanaDurumu: gazVana, GPS: gps };
-
-            if(isAdmin) {
-                let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
-                if(editIdx >= 0) {
-                    list[editIdx] = rowObj;
-                    document.getElementById('edit-firma-index').value = "-1";
-                } else {
-                    list.unshift(rowObj);
-                    sendDataToSheet("Isletmeler", rowObj);
-                }
-                localStorage.setItem('osb_firmalar', JSON.stringify(list));
-                
-                // Firebase veritabanına senkronize ediliyor
-                db.ref('Isletmeler').set(list);
-
-                alert("Firma kaydedildi / güncellendi.");
-            } else {
-                let pendings = JSON.parse(localStorage.getItem('osb_pending_firmalar')) || [];
-                pendings.push({ ...rowObj, user: currentUser });
-                localStorage.setItem('osb_pending_firmalar', JSON.stringify(pendings));
-                alert("Firma kaydınız Admin onayına gönderildi.");
-            }
-            loadCompaniesTable();
-            populateCompanyDatalist();
-            toggleForm('firma-form');
-        }
-
-      // --- MODÜL 13: İŞLETMELER ---
-
-    // Firebase'den Isletmeler tablosunu canlı dinle (Silinenlerin geri gelmesini %100 engeller)
-    db.ref('Isletmeler').on('value', (snapshot) => {
-        let data = snapshot.val();
-        if (data) {
-            let list = Array.isArray(data) ? data : Object.values(data);
-            localStorage.setItem('osb_firmalar', JSON.stringify(list));
-            loadCompaniesTable();
-            if(typeof populateCompanyDatalist === 'function') populateCompanyDatalist();
-        } else {
-            localStorage.setItem('osb_firmalar', JSON.stringify([]));
-            loadCompaniesTable();
-        }
-    });
+           // --- MODÜL 13: İŞLETMELER ---
 
     function saveCompanyRecord() {
         const name = document.getElementById('f-name').value.toUpperCase();
@@ -1760,7 +657,6 @@
                 document.getElementById('edit-firma-index').value = "-1";
             } else {
                 list.unshift(rowObj);
-                sendDataToSheet("Isletmeler", rowObj);
             }
             localStorage.setItem('osb_firmalar', JSON.stringify(list));
             db.ref('Isletmeler').set(list); // Firebase senkronizasyonu
@@ -1776,204 +672,190 @@
         toggleForm('firma-form');
     }
 
-   function importCompaniesFromExcel(event) {
-            let file = event.target.files[0];
-            if(!file) return;
-            let reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    let data = new Uint8Array(e.target.result);
-                    let workbook = XLSX.read(data, {type: 'array'});
-                    let firstSheetName = workbook.SheetNames[0];
-                    let worksheet = workbook.Sheets[firstSheetName];
-                    
-                    // Sütun başlıklarını otomatik tanıyan güvenli JSON dönüşümü
-                    let rows = XLSX.utils.sheet_to_json(worksheet);
-                    
-                    let firmalar = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
-                    let addedCount = 0;
+    function importCompaniesFromExcel(event) {
+        let file = event.target.files[0];
+        if(!file) return;
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                let data = new Uint8Array(e.target.result);
+                let workbook = XLSX.read(data, {type: 'array'});
+                let firstSheetName = workbook.SheetNames[0];
+                let worksheet = workbook.Sheets[firstSheetName];
+                
+                // Sütun sırasına göre hatasız okuma (1.Sütun: Firma, 2.Sütun: Adres, 3.Sütun: İletişim, 4.Sütun: Vana, 5.Sütun: GPS)
+                let rows = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+                let firmalar = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
+                let addedCount = 0;
 
-                    rows.forEach(row => {
-                        // Sizin belirttiğiniz sütun adları ile eşleştirme yapıyoruz (undefined hatasını önler)
-                        let fName = row['Firmaadi'] || row['Firma Adı'] || row['Firma'] || '';
-                        if(fName) {
-                            let fObj = {
-                                FirmaAdi: String(fName).toUpperCase(),
-                                CaddeAdres: String(row['Cadde Adres'] || row['Adres'] || "").toUpperCase(),
-                                Iletisim: String(row['Iletisim'] || row['Telefon'] || ""),
-                                DogalgazVanaDurumu: String(row['DogalgazVana'] || row['DogalgazVanaDurumu'] || "YOK").toUpperCase(),
-                                GPS: String(row['GPS'] || "")
-                            };
-                            firmalar.unshift(fObj);
-                            sendDataToSheet("Isletmeler", fObj);
-                            addedCount++;
-                        }
-                    });
+                for(let i = 1; i < rows.length; i++) {
+                    let row = rows[i];
+                    let fName = row[0] ? String(row[0]).trim() : '';
 
-                    localStorage.setItem('osb_firmalar', JSON.stringify(firmalar));
-                    
-                    // Firebase veritabanına toplu aktarım senkronizasyonu
-                    db.ref('Isletmeler').set(firmalar);
-
-                    loadCompaniesTable();
-                    populateCompanyDatalist();
-                    alert(`Başarıyla ${addedCount} adet firma Excel'den yüklendi ve Firebase ile senkronize edildi!`);
-                } catch(err) {
-                    alert("Excel dosyası okunurken hata oluştu: " + err.message);
+                    if(fName !== "") {
+                        let fObj = {
+                            FirmaAdi: fName.toUpperCase(),
+                            CaddeAdres: row[1] ? String(row[1]).toUpperCase() : "",
+                            Iletisim: row[2] ? String(row[2]) : "",
+                            DogalgazVanaDurumu: row[3] ? String(row[3]).toUpperCase() : "YOK",
+                            GPS: row[4] ? String(row[4]) : ""
+                        };
+                        firmalar.unshift(fObj);
+                        addedCount++;
+                    }
                 }
-                event.target.value = "";
-            };
-            reader.readAsArrayBuffer(file);
-        }
 
-        function toggleSelectAllCompanies(source) {
-            let checkboxes = document.querySelectorAll('.company-checkbox');
-            checkboxes.forEach(cb => cb.checked = source.checked);
-        }
+                localStorage.setItem('osb_firmalar', JSON.stringify(firmalar));
+                db.ref('Isletmeler').set(firmalar); // Firebase'e gönder
 
-        function deleteSelectedCompanies() {
-            if(!isAdmin) { alert("Yalnızca Admin silebilir!"); return; }
-            let checkboxes = document.querySelectorAll('.company-checkbox:checked');
-            if(checkboxes.length === 0) { alert("Silinecek firma seçilmedi!"); return; }
-            
-            if(!confirm("Seçilen firmaları silmek istediğinize emin misiniz?")) return;
+                loadCompaniesTable();
+                if(typeof populateCompanyDatalist === 'function') populateCompanyDatalist();
+                alert(`Başarıyla ${addedCount} adet firma sırasına göre yüklendi!`);
+            } catch(err) {
+                alert("Excel dosyası okunurken hata oluştu: " + err.message);
+            }
+            event.target.value = "";
+        };
+        reader.readAsArrayBuffer(file);
+    }
 
-            let indicesToDelete = Array.from(checkboxes).map(cb => parseInt(cb.value)).sort((a,b) => b - a);
-            let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
+    function toggleSelectAllCompanies(source) {
+        let checkboxes = document.querySelectorAll('.company-checkbox');
+        checkboxes.forEach(cb => cb.checked = source.checked);
+    }
 
-            indicesToDelete.forEach(idx => {
-                list.splice(idx, 1);
-            });
+    function deleteSelectedCompanies() {
+        if(!isAdmin) { alert("Yalnızca Admin silebilir!"); return; }
+        let checkboxes = document.querySelectorAll('.company-checkbox:checked');
+        if(checkboxes.length === 0) { alert("Silinecek firma seçilmedi!"); return; }
+        
+        if(!confirm("Seçilen firmaları silmek istediğinize emin misiniz?")) return;
 
-            localStorage.setItem('osb_firmalar', JSON.stringify(list));
-            
-            // Firebase veritabanından kalıcı olarak siliyoruz
-            db.ref('Isletmeler').set(list);
+        let indicesToDelete = Array.from(checkboxes).map(cb => parseInt(cb.value)).sort((a,b) => b - a);
+        let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
 
-            loadCompaniesTable();
-            populateCompanyDatalist();
-            alert("Seçilen firmalar silindi.");
-        }
-
-        function loadCompaniesTable(search = "") {
-            let tbody = document.getElementById('firma-list');
-            let pendingBox = document.getElementById('pending-companies-box');
-            let pendingListContainer = document.getElementById('pending-companies-list');
-            if(!tbody) return;
-
-            tbody.innerHTML = "";
-            let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
-            let pendings = JSON.parse(localStorage.getItem('osb_pending_firmalar')) || [];
-
-            if(isAdmin && pendings.length > 0) {
-                if(pendingBox) pendingBox.style.display = 'block';
-                if(pendingListContainer) {
-                    pendingListContainer.innerHTML = "";
-                    pendings.forEach((p, pIdx) => {
-                        let div = document.createElement('div');
-                        div.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#1e293b; padding:8px 12px; border-radius:6px; font-size:12px;";
-                        div.innerHTML = `<span><b>${p.FirmaAdi}</b> - <i>${p.user}</i></span><button class="btn btn-success" style="padding:2px 6px; font-size:11px;" onclick="approvePendingCompany(${pIdx})">Onayla</button>`;
-                        pendingListContainer.appendChild(div);
-                    });
-                }
-            } else { if(pendingBox) pendingBox.style.display = 'none'; }
-
-            let searchVal = search.trim().toUpperCase();
-            let filteredWithIndices = [];
-            list.forEach((f, originalIndex) => {
-                let name = (f.FirmaAdi || f.name || "").toUpperCase();
-                let adres = (f.CaddeAdres || f.adres || "").toUpperCase();
-                if(!searchVal || name.includes(searchVal) || adres.includes(searchVal)) {
-                    filteredWithIndices.push({ f, originalIndex });
-                }
-            });
-
-            filteredWithIndices.forEach(({ f, originalIndex }) => {
-                let name = f.FirmaAdi || f.name;
-                let adres = f.CaddeAdres || f.adres;
-                let tel = f.Iletisim || f.tel;
-                let gaz = f.DogalgazVanaDurumu || f.gazVana;
-                let gps = f.GPS || f.gps;
-
-                let navBtn = gps && gps.includes(',') ? `<br><a href="https://www.google.com/maps/dir/?api=1&destination=${gps.replace(/\s+/g,'')}" target="_blank" class="btn btn-success" style="padding:2px 8px; font-size:11px; margin-top:4px;">🧭 Yol Tarifi</a>` : '';
-
-                let tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><input type="checkbox" class="company-checkbox" value="${originalIndex}"></td>
-                    <td><b>${name}</b></td>
-                    <td>${adres}</td>
-                    <td>${tel || '-'}<br><small style="color:var(--accent);">${gps || 'GPS Yok'}</small>${navBtn}</td>
-                    <td><span class="badge blinking-red-badge">🔥 DOĞALGAZ VAR: ${gaz}</span></td>
-                    <td>
-                        ${isAdmin ? `<button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="editCompany(${originalIndex})">Düzenle</button> <button class="btn btn-danger" style="padding:2px 6px; font-size:11px;" onclick="deleteCompany(${originalIndex})">Sil</button>` : '-'}
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function editCompany(idx) {
-            let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
-            let item = list[idx];
-            document.getElementById('edit-firma-index').value = idx;
-            document.getElementById('f-name').value = item.FirmaAdi || item.name;
-            document.getElementById('f-adres').value = item.CaddeAdres || item.adres;
-            document.getElementById('f-tel').value = item.Iletisim || item.tel;
-            document.getElementById('f-gaz-vana').value = item.DogalgazVanaDurumu || item.gazVana;
-            document.getElementById('f-gps').value = item.GPS || item.gps;
-            toggleForm('firma-form');
-        }
-
-        function approvePendingCompany(pIdx) {
-            if(!isAdmin) return;
-            let pendings = JSON.parse(localStorage.getItem('osb_pending_firmalar')) || [];
-            let item = pendings[pIdx];
-            let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
-            list.unshift(item);
-            pendings.splice(pIdx, 1);
-            localStorage.setItem('osb_firmalar', JSON.stringify(list));
-            localStorage.setItem('osb_pending_firmalar', JSON.stringify(pendings));
-            
-            // Firebase veritabanını güncelliyoruz
-            db.ref('Isletmeler').set(list);
-
-            sendDataToSheet("Isletmeler", item);
-            loadCompaniesTable();
-            populateCompanyDatalist();
-            alert("Firma onaylandı!");
-        }
-
-        function searchCompanies() {
-            let val = document.getElementById('firma-arama-input').value;
-            loadCompaniesTable(val);
-        }
-
-        function deleteCompany(idx) {
-            if(!isAdmin) return;
-            let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
+        indicesToDelete.forEach(idx => {
             list.splice(idx, 1);
-            localStorage.setItem('osb_firmalar', JSON.stringify(list));
-            
-            // Firebase veritabanından kalıcı olarak siliyoruz
-            db.ref('Isletmeler').set(list);
+        });
 
-            loadCompaniesTable();
-            populateCompanyDatalist();
-        }
+        localStorage.setItem('osb_firmalar', JSON.stringify(list));
+        db.ref('Isletmeler').set(list);
 
-        function toggleForm(id) {
-            let f = document.getElementById(id);
-            if(f) f.style.display = f.style.display === 'none' ? 'grid' : 'none';
-        }
+        loadCompaniesTable();
+        if(typeof populateCompanyDatalist === 'function') populateCompanyDatalist();
+        alert("Seçilen firmalar silindi.");
+    }
 
-        function showModule(id, el) {
-            document.querySelectorAll('.module-section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            let sec = document.getElementById(id);
-            if(sec) sec.classList.add('active');
-            if(el) el.classList.add('active');
-            if(id === 'mod5' && map) { setTimeout(() => { map.invalidateSize(); }, 200); }
-        }
-    </script>
-</body>
-</html>
+    function loadCompaniesTable(search = "") {
+        let tbody = document.getElementById('firma-list');
+        let pendingBox = document.getElementById('pending-companies-box');
+        let pendingListContainer = document.getElementById('pending-companies-list');
+        if(!tbody) return;
+
+        tbody.innerHTML = "";
+        let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
+        let pendings = JSON.parse(localStorage.getItem('osb_pending_firmalar')) || [];
+
+        if(isAdmin && pendings.length > 0) {
+            if(pendingBox) pendingBox.style.display = 'block';
+            if(pendingListContainer) {
+                pendingListContainer.innerHTML = "";
+                pendings.forEach((p, pIdx) => {
+                    let div = document.createElement('div');
+                    div.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#1e293b; padding:8px 12px; border-radius:6px; font-size:12px;";
+                    div.innerHTML = `<span><b>${p.FirmaAdi}</b> - <i>${p.user}</i></span><button class="btn btn-success" style="padding:2px 6px; font-size:11px;" onclick="approvePendingCompany(${pIdx})">Onayla</button>`;
+                    pendingListContainer.appendChild(div);
+                });
+            }
+        } else { if(pendingBox) pendingBox.style.display = 'none'; }
+
+        let searchVal = search.trim().toUpperCase();
+        let filteredWithIndices = [];
+        list.forEach((f, originalIndex) => {
+            let name = (f.FirmaAdi || f.name || "").toUpperCase();
+            let adres = (f.CaddeAdres || f.adres || "").toUpperCase();
+            if(!searchVal || name.includes(searchVal) || adres.includes(searchVal)) {
+                filteredWithIndices.push({ f, originalIndex });
+            }
+        });
+
+        filteredWithIndices.forEach(({ f, originalIndex }) => {
+            let name = f.FirmaAdi || f.name;
+            let adres = f.CaddeAdres || f.adres;
+            let tel = f.Iletisim || f.tel;
+            let gaz = f.DogalgazVanaDurumu || f.gazVana;
+            let gps = f.GPS || f.gps;
+
+            let navBtn = gps && gps.includes(',') ? `<br><a href="https://www.google.com/maps/dir/?api=1&destination=${gps.replace(/\s+/g,'')}" target="_blank" class="btn btn-success" style="padding:2px 8px; font-size:11px; margin-top:4px;">🧭 Yol Tarifi</a>` : '';
+
+            let tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="checkbox" class="company-checkbox" value="${originalIndex}"></td>
+                <td><b>${name}</b></td>
+                <td>${adres}</td>
+                <td>${tel || '-'}<br><small style="color:var(--accent);">${gps || 'GPS Yok'}</small>${navBtn}</td>
+                <td><span class="badge blinking-red-badge">🔥 DOĞALGAZ VAR: ${gaz}</span></td>
+                <td>
+                    ${isAdmin ? `<button class="btn btn-secondary" style="padding:2px 6px; font-size:11px;" onclick="editCompany(${originalIndex})">Düzenle</button> <button class="btn btn-danger" style="padding:2px 6px; font-size:11px;" onclick="deleteCompany(${originalIndex})">Sil</button>` : '-'}
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function editCompany(idx) {
+        let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
+        let item = list[idx];
+        document.getElementById('edit-firma-index').value = idx;
+        document.getElementById('f-name').value = item.FirmaAdi || item.name;
+        document.getElementById('f-adres').value = item.CaddeAdres || item.adres;
+        document.getElementById('f-tel').value = item.Iletisim || item.tel;
+        document.getElementById('f-gaz-vana').value = item.DogalgazVanaDurumu || item.gazVana;
+        document.getElementById('f-gps').value = item.GPS || item.gps;
+        toggleForm('firma-form');
+    }
+
+    function approvePendingCompany(pIdx) {
+        if(!isAdmin) return;
+        let pendings = JSON.parse(localStorage.getItem('osb_pending_firmalar')) || [];
+        let item = pendings[pIdx];
+        let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
+        list.unshift(item);
+        pendings.splice(pIdx, 1);
+        localStorage.setItem('osb_firmalar', JSON.stringify(list));
+        localStorage.setItem('osb_pending_firmalar', JSON.stringify(pendings));
+        db.ref('Isletmeler').set(list);
+        sendDataToSheet("Isletmeler", item);
+        loadCompaniesTable();
+        if(typeof populateCompanyDatalist === 'function') populateCompanyDatalist();
+        alert("Firma onaylandı!");
+    }
+
+    function searchCompanies() {
+        let val = document.getElementById('firma-arama-input').value;
+        loadCompaniesTable(val);
+    }
+
+    function deleteCompany(idx) {
+        if(!isAdmin) return;
+        let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
+        list.splice(idx, 1);
+        localStorage.setItem('osb_firmalar', JSON.stringify(list));
+        db.ref('Isletmeler').set(list);
+        loadCompaniesTable();
+        if(typeof populateCompanyDatalist === 'function') populateCompanyDatalist();
+    }
+
+    function toggleForm(id) {
+        let f = document.getElementById(id);
+        if(f) f.style.display = f.style.display === 'none' ? 'grid' : 'none';
+    }
+
+    function showModule(id, el) {
+        document.querySelectorAll('.module-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        let sec = document.getElementById(id);
+        if(sec) sec.classList.add('active');
+        if(el) el.classList.add('active');
+        if(id === 'mod5' && map) { setTimeout(() => { map.invalidateSize(); }, 200); }
+    }
