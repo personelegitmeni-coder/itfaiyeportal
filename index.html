@@ -1,28 +1,27 @@
 <script>
-    // Sayfadaki form veya butonlara basıldığında ID'ye bakmadan doğrudan çalışan evrensel dinleyici
+    // Sayfadaki form veya butonlara basıldığında otomatik çalışan evrensel dinleyici
     document.addEventListener("DOMContentLoaded", function() {
-        // Sayfadaki TÜM formları yakala
         const forms = document.querySelectorAll('form');
         forms.forEach(form => {
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
-                giris isleminiBaslat();
+                girisIsleminiBaslat();
             });
         });
 
-        // Eğer form yoksa, "Giriş" yazan tüm butonları yakala
         const buttons = document.querySelectorAll('button, input[type="submit"]');
         buttons.forEach(btn => {
-            if (btn.innerText.includes('Giriş') || btn.value.includes('Giriş') || btn.id.includes('login')) {
+            let btnText = (btn.innerText || btn.value || "").toLowerCase();
+            if (btnText.includes('giriş') || btnText.includes('login') || (btn.id && btn.id.includes('login'))) {
                 btn.addEventListener('click', function(e) {
                     e.preventDefault();
-                    giris isleminiBaslat();
+                    girisIsleminiBaslat();
                 });
             }
         });
     });
 
-    function giris isleminiBaslat() {
+    function girisIsleminiBaslat() {
         window.isAdmin = true;
         window.currentUser = "Admin";
         localStorage.setItem('osb_is_admin', 'true');
@@ -33,20 +32,17 @@
     }
 
     function sistemiAc() {
-        // Sayfadaki giriş ile ilgili ne varsa gizle
+        // Giriş ile ilgili ekranları gizle
         document.querySelectorAll('div, section, form').forEach(el => {
             if (el.id && (el.id.toLowerCase().includes('login') || el.id.toLowerCase().includes('giris'))) {
                 el.style.display = 'none';
             }
         });
 
-        // Sayfada ana panel olabilecek tüm ana divleri görünür yap
+        // Ana panelleri görünür yap
         document.querySelectorAll('#app, #main-container, #dashboard, #main-panel, .app-container, .main-content, .container').forEach(el => {
             el.style.display = 'block';
         });
-
-        // Ekstra garanti: Bütün body çocuklarını kontrol et, gizli olan ana paneli aç
-        document.body.style.display = 'block';
     }
 
     function switchLoginTab(tabName) {
