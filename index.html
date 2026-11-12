@@ -637,7 +637,7 @@
                 </div>
             </section>
 
-           // --- MODÜL 13: İŞLETMELER ---
+          // --- MODÜL 13: İŞLETMELER (Kilitlenme Yapmayan Saf Sürüm) ---
 
     function saveCompanyRecord() {
         const name = document.getElementById('f-name').value.toUpperCase();
@@ -659,7 +659,12 @@
                 list.unshift(rowObj);
             }
             localStorage.setItem('osb_firmalar', JSON.stringify(list));
-            db.ref('Isletmeler').set(list); // Firebase senkronizasyonu
+            
+            // Tek bir noktadan güvenli Firebase kayıt
+            if(typeof db !== 'undefined') {
+                db.ref('Isletmeler').set(list);
+            }
+            
             alert("Firma kaydedildi / güncellendi.");
         } else {
             let pendings = JSON.parse(localStorage.getItem('osb_pending_firmalar')) || [];
@@ -683,7 +688,6 @@
                 let firstSheetName = workbook.SheetNames[0];
                 let worksheet = workbook.Sheets[firstSheetName];
                 
-                // Sütun sırasına göre hatasız okuma (1.Sütun: Firma, 2.Sütun: Adres, 3.Sütun: İletişim, 4.Sütun: Vana, 5.Sütun: GPS)
                 let rows = XLSX.utils.sheet_to_json(worksheet, {header: 1});
                 let firmalar = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
                 let addedCount = 0;
@@ -706,22 +710,21 @@
                 }
 
                 localStorage.setItem('osb_firmalar', JSON.stringify(firmalar));
-                db.ref('Isletmeler').set(firmalar); // Firebase ile anlık senkronizasyon
+                
+                // Excel bittikten sonra tek seferde Firebase'e gönder (Kilitlenmeyi önler)
+                if(typeof db !== 'undefined') {
+                    db.ref('Isletmeler').set(firmalar);
+                }
 
                 loadCompaniesTable();
                 if(typeof populateCompanyDatalist === 'function') populateCompanyDatalist();
-                alert(`Başarıyla ${addedCount} adet firma sırasına göre yüklendi ve Firebase'e kaydedildi!`);
+                alert(`Başarıyla ${addedCount} adet firma sırasına göre yüklendi!`);
             } catch(err) {
                 alert("Excel dosyası okunurken hata oluştu: " + err.message);
             }
             event.target.value = "";
         };
         reader.readAsArrayBuffer(file);
-    }
-
-    function toggleSelectAllCompanies(source) {
-        let checkboxes = document.querySelectorAll('.company-checkbox');
-        checkboxes.forEach(cb => cb.checked = source.checked);
     }
 
     function deleteSelectedCompanies() {
@@ -739,7 +742,9 @@
         });
 
         localStorage.setItem('osb_firmalar', JSON.stringify(list));
-        db.ref('Isletmeler').set(list);
+        if(typeof db !== 'undefined') {
+            db.ref('Isletmeler').set(list);
+        }
 
         loadCompaniesTable();
         if(typeof populateCompanyDatalist === 'function') populateCompanyDatalist();
@@ -815,33 +820,14 @@
         toggleForm('firma-form');
     }
 
-    function approvePendingCompany(pIdx) {
-        if(!isAdmin) return;
-        let pendings = JSON.parse(localStorage.getItem('osb_pending_firmalar')) || [];
-        let item = pendings[pIdx];
-        let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
-        list.unshift(item);
-        pendings.splice(pIdx, 1);
-        localStorage.setItem('osb_firmalar', JSON.stringify(list));
-        localStorage.setItem('osb_pending_firmalar', JSON.stringify(pendings));
-        db.ref('Isletmeler').set(list);
-        sendDataToSheet("Isletmeler", item);
-        loadCompaniesTable();
-        if(typeof populateCompanyDatalist === 'function') populateCompanyDatalist();
-        alert("Firma onaylandı!");
-    }
-
-    function searchCompanies() {
-        let val = document.getElementById('firma-arama-input').value;
-        loadCompaniesTable(val);
-    }
-
     function deleteCompany(idx) {
         if(!isAdmin) return;
         let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
         list.splice(idx, 1);
         localStorage.setItem('osb_firmalar', JSON.stringify(list));
-        db.ref('Isletmeler').set(list);
+        if(typeof db !== 'undefined') {
+            db.ref('Isletmeler').set(list);
+        }
         loadCompaniesTable();
         if(typeof populateCompanyDatalist === 'function') populateCompanyDatalist();
     }
@@ -849,13 +835,4 @@
     function toggleForm(id) {
         let f = document.getElementById(id);
         if(f) f.style.display = f.style.display === 'none' ? 'grid' : 'none';
-    }
-
-    function showModule(id, el) {
-        document.querySelectorAll('.module-section').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        let sec = document.getElementById(id);
-        if(sec) sec.classList.add('active');
-        if(el) el.classList.add('active');
-        if(id === 'mod5' && map) { setTimeout(() => { map.invalidateSize(); }, 200); }
     }
