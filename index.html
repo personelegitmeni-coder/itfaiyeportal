@@ -701,16 +701,19 @@
                             GPS: row[4] ? String(row[4]) : ""
                         };
                         firmalar.unshift(fObj);
+                        
+                        // Google Sheets'e doğru anahtarlarla (keys) tek tek gönderiyoruz
+                        sendDataToSheet("Isletmeler", fObj);
                         addedCount++;
                     }
                 }
 
                 localStorage.setItem('osb_firmalar', JSON.stringify(firmalar));
-                db.ref('Isletmeler').set(firmalar); // Firebase'e gönder
+                db.ref('Isletmeler').set(firmalar); // Firebase'e toplu gönder
 
                 loadCompaniesTable();
                 if(typeof populateCompanyDatalist === 'function') populateCompanyDatalist();
-                alert(`Başarıyla ${addedCount} adet firma sırasına göre yüklendi!`);
+                alert(`Başarıyla ${addedCount} adet firma sırasına göre yüklendi ve Google Sheets'e işlendi!`);
             } catch(err) {
                 alert("Excel dosyası okunurken hata oluştu: " + err.message);
             }
