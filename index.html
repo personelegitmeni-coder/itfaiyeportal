@@ -12,15 +12,30 @@ document.addEventListener("DOMContentLoaded", function() {
                 localStorage.setItem('osb_is_admin', 'true');
                 localStorage.setItem('osb_current_user', "Admin");
                 
-                // 1. Giriş ekranını gizle
+                // 1. Giriş ekranını kesin olarak gizle
                 let loginScreen = document.getElementById('login-screen') || document.getElementById('login-modal');
                 if(loginScreen) loginScreen.style.display = 'none';
 
-                // 2. Ana uygulama panelini görünür yap
+                // 2. Ana uygulama panelini görünür yap (ID veya Class eşleşmesi)
                 let mainApp = document.getElementById('app') || document.getElementById('main-container') || document.getElementById('dashboard');
-                if(mainApp) mainApp.style.display = 'block';
+                if(mainApp) {
+                    mainApp.style.display = 'block';
+                } else {
+                    // Eğer ID bulunamazsa tüm olası ana panel sınıflarını görünür yap
+                    document.querySelectorAll('.app-container, .main-content, #main-page').forEach(el => {
+                        el.style.display = 'block';
+                    });
+                }
 
-                if(typeof loadCompaniesTable === 'function') loadCompaniesTable();
+                // 3. Tablo yükleme fonksiyonu varsa hataya takılmadan çalıştır
+                try {
+                    if(typeof loadCompaniesTable === 'function') {
+                        loadCompaniesTable();
+                    }
+                } catch(e) {
+                    console.log("Tablo yükleme uyarısı: ", e);
+                }
+
                 alert("Admin olarak giriş yapıldı!");
             } else {
                 alert("Lütfen şifre giriniz!");
@@ -28,22 +43,6 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 });
-
-    function switchLoginTab(tabName) {
-        try {
-            document.querySelectorAll('.login-tab-content, .tab-content').forEach(el => {
-                el.style.display = 'none';
-            });
-            document.querySelectorAll('.login-tab-btn, .tab-btn').forEach(el => {
-                el.classList.remove('active');
-            });
-            let targetTab = document.getElementById(tabName);
-            if(targetTab) targetTab.style.display = 'block';
-        } catch(err) {
-            console.log("Sekme hatası: ", err);
-        }
-    }
-</script>
 
 <!-- Firebase SDK'ları -->
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
