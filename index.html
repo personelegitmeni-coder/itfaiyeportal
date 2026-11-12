@@ -1,27 +1,28 @@
 <script>
-    // Sayfa yüklendiğinde formlara ve butonlara otomatik bağlanan akıllı dinleyici
+    // Sayfadaki form veya butonlara basıldığında ID'ye bakmadan doğrudan çalışan evrensel dinleyici
     document.addEventListener("DOMContentLoaded", function() {
-        const adminForm = document.getElementById('admin-login-form');
-        if (adminForm) {
-            adminForm.addEventListener('submit', function(e) {
+        // Sayfadaki TÜM formları yakala
+        const forms = document.querySelectorAll('form');
+        forms.forEach(form => {
+            form.addEventListener('submit', function(e) {
                 e.preventDefault();
-                direktAdminGirisYap();
+                giris isleminiBaslat();
             });
-        }
+        });
 
-        const userForm = document.getElementById('user-login-form');
-        if (userForm) {
-            userForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                direktKullaniciGirisYap();
-            });
-        }
+        // Eğer form yoksa, "Giriş" yazan tüm butonları yakala
+        const buttons = document.querySelectorAll('button, input[type="submit"]');
+        buttons.forEach(btn => {
+            if (btn.innerText.includes('Giriş') || btn.value.includes('Giriş') || btn.id.includes('login')) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    giris isleminiBaslat();
+                });
+            }
+        });
     });
 
-    function direktAdminGirisYap() {
-        let passInput = document.getElementById('admin-pass') || document.getElementById('admin-password') || document.querySelector('input[type="password"]');
-        let pass = passInput ? passInput.value : '';
-        
+    function giris isleminiBaslat() {
         window.isAdmin = true;
         window.currentUser = "Admin";
         localStorage.setItem('osb_is_admin', 'true');
@@ -31,39 +32,27 @@
         if(typeof loadCompaniesTable === 'function') loadCompaniesTable();
     }
 
-    function direktKullaniciGirisYap() {
-        window.isAdmin = false;
-        window.currentUser = "Personel";
-        localStorage.setItem('osb_is_admin', 'false');
-        localStorage.setItem('osb_current_user', "Personel");
-        
-        sistemiAc();
-        if(typeof loadCompaniesTable === 'function') loadCompaniesTable();
-    }
-
     function sistemiAc() {
-        // Giriş ekranlarını gizle
-        document.querySelectorAll('#login-screen, #login-modal, .login-container, .auth-screen').forEach(el => {
-            el.style.display = 'none';
+        // Sayfadaki giriş ile ilgili ne varsa gizle
+        document.querySelectorAll('div, section, form').forEach(el => {
+            if (el.id && (el.id.toLowerCase().includes('login') || el.id.toLowerCase().includes('giris'))) {
+                el.style.display = 'none';
+            }
         });
 
-        // Ana uygulama panellerini görünür yap
-        document.querySelectorAll('#app, #main-container, #dashboard, #main-panel, .app-container, .main-content').forEach(el => {
+        // Sayfada ana panel olabilecek tüm ana divleri görünür yap
+        document.querySelectorAll('#app, #main-container, #dashboard, #main-panel, .app-container, .main-content, .container').forEach(el => {
             el.style.display = 'block';
         });
 
-        // Ekstra garanti: Bulunamazsa genel ana div'i aç
-        let anaGovde = document.getElementById('app') || document.getElementById('main-container') || document.getElementById('dashboard') || document.getElementById('main-panel');
-        if(anaGovde) anaGovde.style.display = 'block';
+        // Ekstra garanti: Bütün body çocuklarını kontrol et, gizli olan ana paneli aç
+        document.body.style.display = 'block';
     }
 
     function switchLoginTab(tabName) {
         try {
             document.querySelectorAll('.login-tab-content, .tab-content').forEach(el => {
                 el.style.display = 'none';
-            });
-            document.querySelectorAll('.login-tab-btn, .tab-btn').forEach(el => {
-                el.classList.remove('active');
             });
             let targetTab = document.getElementById(tabName);
             if(targetTab) targetTab.style.display = 'block';
@@ -78,12 +67,10 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
 <script>
-  // Firebase Bağlantı Ayarları (itfaiyeportal)
   const firebaseConfig = {
     projectId: "itfaiyeportal",
     databaseURL: "https://itfaiyeportal-default-rtdb.europe-west1.firebasedatabase.app"
   };
-
   if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
   }
