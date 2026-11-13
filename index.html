@@ -739,6 +739,20 @@
             }
         }
 
+        // GOOGLE SHEETS TABLO SENRONİZASYON (SİLME İŞLEMLERİ İÇİN)
+        async function syncTableToSheet(sheetName, listData) {
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action: "syncTable", sheetName: sheetName, rows: listData })
+                });
+            } catch(err) {
+                console.error("Sheets senkronizasyon hatası:", err);
+            }
+        }
+
         function forceUpper(el) { el.value = el.value.toUpperCase(); }
 
         function updateClockAndWeather() {
@@ -823,6 +837,79 @@
                 alert("Tarayıcınız konum desteklemiyor.");
             }
         }
+
+        // --- GÜNCELLENMİŞ SİLME FONKSİYONLARI (GOOGLE SHEETS SENKRONİZASYONLU) ---
+
+        function deletePersonnel(idx) {
+            if(!isAdmin) return;
+            let list = JSON.parse(localStorage.getItem('osb_personel')) || [];
+            list.splice(idx, 1);
+            localStorage.setItem('osb_personel', JSON.stringify(list));
+            syncTableToSheet("Personel", list); // Google Sheets Güncellemesi
+            loadPersonnelTable();
+            renderPersonnelButtons();
+            loadYetkiPersonelCheckboxes();
+        }
+
+        function deleteOlay(idx) {
+            if(!isAdmin) return;
+            let olaylar = JSON.parse(localStorage.getItem('osb_olaylar')) || [];
+            olaylar.splice(idx, 1);
+            localStorage.setItem('osb_olaylar', JSON.stringify(olaylar));
+            syncTableToSheet("OlayRaporlari", olaylar); // Google Sheets Güncellemesi
+            loadOlaylarTable();
+        }
+
+        function deleteYSC(idx) {
+            if(!isAdmin) return;
+            let list = JSON.parse(localStorage.getItem('osb_ysc_listesi')) || [];
+            list.splice(idx, 1);
+            localStorage.setItem('osb_ysc_listesi', JSON.stringify(list));
+            syncTableToSheet("YSCKontrol", list); // Google Sheets Güncellemesi
+            loadYSCTable();
+        }
+
+        function deleteHydrant(idx) {
+            if(!isAdmin) return;
+            let list = JSON.parse(localStorage.getItem('osb_hidrant_listesi')) || [];
+            list.splice(idx, 1);
+            localStorage.setItem('osb_hidrant_listesi', JSON.stringify(list));
+            syncTableToSheet("Hidrantlar", list); // Google Sheets Güncellemesi
+            loadHydrantTable();
+            updateMapMarkers();
+        }
+
+        function deleteCompany(idx) {
+            if(!isAdmin) return;
+            let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
+            list.splice(idx, 1);
+            localStorage.setItem('osb_firmalar', JSON.stringify(list));
+            syncTableToSheet("Isletmeler", list); // Google Sheets Güncellemesi
+            loadCompaniesTable();
+            populateCompanyDatalist();
+        }
+
+        function deleteSelectedCompanies() {
+            if(!isAdmin) { alert("Yalnızca Admin silebilir!"); return; }
+            let checkboxes = document.querySelectorAll('.company-checkbox:checked');
+            if(checkboxes.length === 0) { alert("Silinecek firma seçilmedi!"); return; }
+            
+            if(!confirm("Seçilen firmaları silmek istediğinize emin misiniz?")) return;
+
+            let indicesToDelete = Array.from(checkboxes).map(cb => parseInt(cb.value)).sort((a,b) => b - a);
+            let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
+
+            indicesToDelete.forEach(idx => {
+                list.splice(idx, 1);
+            });
+
+            localStorage.setItem('osb_firmalar', JSON.stringify(list));
+            syncTableToSheet("Isletmeler", list); // Google Sheets Güncellemesi
+            loadCompaniesTable();
+            populateCompanyDatalist();
+            alert("Seçilen firmalar silindi.");
+        }
+    </script>
 
         // --- MODÜL 1: PERSONEL ---
         function calculateKalanIzin() {
