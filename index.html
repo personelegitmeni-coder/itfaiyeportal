@@ -964,9 +964,9 @@
             renderPersonnelButtons();
         }
 
-        function autoFillCompanyAddress(firmaAdi) {
+        function autoFillCompanyAddress(FirmaAdi) {
             let firmalar = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
-            let matched = firmalar.find(f => (f.FirmaAdi || f.name || "").toUpperCase() === firmaAdi.toUpperCase());
+            let matched = firmalar.find(f => (f.FirmaAdi || f.name || "").toUpperCase() === FirmaAdi.toUpperCase());
             if(matched) {
                 document.getElementById('olay-konum').value = matched.CaddeAdres || matched.adres || "";
             }
