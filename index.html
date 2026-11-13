@@ -768,17 +768,17 @@
         }
 
         async function syncTableToSheet(sheetName, listData) {
-            try {
-                await fetch(SCRIPT_URL, {
-                    method: "POST",
-                    mode: "no-cors",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ action: "syncTable", sheetName: sheetName, rows: listData })
-                });
-            } catch(err) {
-                console.error("Sheets senkronizasyon hatası:", err);
-            }
-        }
+    try {
+        await fetch(SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "text/plain;charset=utf-8" }, // <-- Google Apps Script ile tam uyumlu hale getirildi
+            body: JSON.stringify({ action: "syncTable", sheetName: sheetName, rows: listData })
+        });
+    } catch(err) {
+        console.error("Sheets senkronizasyon hatası:", err);
+    }
+}
 
         function forceUpper(el) { el.value = el.value.toUpperCase(); }
 
