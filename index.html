@@ -391,7 +391,7 @@
                     </div>
 
                     <div id="ariza-form-box" style="display:none;" class="form-grid">
-                        <div class="form-group"><label>Araç Plakası Seç (Admin Tanımlı):</label><select id="ariza-plaka-select"></select></div>
+                        <div class="form-group"><label>Araç Plakası Seç:</label><select id="ariza-plaka-select"></select></div>
                         <div class="form-group"><label>Arıza Durumu:</label><select id="ariza-durum"><option>Arızalı / Yapılmadı</option><option>Onarımda</option><option>Yapıldı</option></select></div>
                         <div class="form-group"><label>Arıza Tarihi & Saati:</label><input type="datetime-local" id="ariza-tarih"></div>
                         <div class="form-group"><label>Onarım Tarihi & Saati:</label><input type="datetime-local" id="onarim-tarih"></div>
@@ -724,7 +724,7 @@
     <!-- SCRIPT ALTYAPISI -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzDTyS356zbjBAOBpoULWNZ6cG3_LtD-MYkCWyF0VkUmII32lfijVjdwyNhof5E12uG/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyl_SLb8au_iMFDaFWVFxnggMTYNWImukbueHY7LF4kBivjFe-RK5dbYsOMeSZJX8vi/exec";
 
         let currentUser = null;
         let currentTC = null;
@@ -743,8 +743,8 @@
             cleanExpiredChatMessages();
             fetchWindyWeatherAndAlerts();
             setInterval(fetchAllDataFromSheets, 15000);
-            setInterval(fetchWindyWeatherAndAlerts, 15 * 60 * 1000); // 15 dakikada bir windy hava durumu güncellemesi
-            setInterval(updateTempAuthCountdowns, 50); // Salise bazlı canlı sayaç
+            setInterval(fetchWindyWeatherAndAlerts, 15 * 60 * 1000);
+            setInterval(updateTempAuthCountdowns, 50);
         };
 
         async function fetchAllDataFromSheets() {
@@ -753,14 +753,18 @@
                 if(!res.ok) throw new Error("Google Sheets sunucusu yanıt vermedi");
                 let data = await res.json();
                 
-                if(data.Personel && data.Personel.length > 0) localStorage.setItem('osb_personel', JSON.stringify(data.Personel));
-                if(data.OlayRaporlari && data.OlayRaporlari.length > 0) localStorage.setItem('osb_olaylar', JSON.stringify(data.OlayRaporlari));
-                if(data.AracArizalari && data.AracArizalari.length > 0) localStorage.setItem('osb_arac_arizalari', JSON.stringify(data.AracArizalari));
-                if(data.YSCKontrol && data.YSCKontrol.length > 0) localStorage.setItem('osb_ysc_listesi', JSON.stringify(data.YSCKontrol));
-                if(data.Hidrantlar && data.Hidrantlar.length > 0) localStorage.setItem('osb_hidrant_listesi', JSON.stringify(data.Hidrantlar));
-                if(data.Isletmeler && data.Isletmeler.length > 0) localStorage.setItem('osb_firmalar', JSON.stringify(data.Isletmeler));
-                if(data.Duyurular && data.Duyurular.length > 0) localStorage.setItem('osb_duyurular', JSON.stringify(data.Duyurular));
-                if(data.Formlar && data.Formlar.length > 0) localStorage.setItem('osb_formlar', JSON.stringify(data.Formlar));
+                if(data.Personel) localStorage.setItem('osb_personel', JSON.stringify(data.Personel));
+                if(data.OlayRaporlari) localStorage.setItem('osb_olaylar', JSON.stringify(data.OlayRaporlari));
+                if(data.AracArizalari) localStorage.setItem('osb_arac_arizalari', JSON.stringify(data.AracArizalari));
+                if(data.AracListesi) localStorage.setItem('osb_arac_listesi', JSON.stringify(data.AracListesi));
+                if(data.YSCKontrol) localStorage.setItem('osb_ysc_listesi', JSON.stringify(data.YSCKontrol));
+                if(data.Hidrantlar) localStorage.setItem('osb_hidrant_listesi', JSON.stringify(data.Hidrantlar));
+                if(data.Isletmeler) localStorage.setItem('osb_firmalar', JSON.stringify(data.Isletmeler));
+                if(data.Duyurular) localStorage.setItem('osb_duyurular', JSON.stringify(data.Duyurular));
+                if(data.Formlar) localStorage.setItem('osb_formlar', JSON.stringify(data.Formlar));
+                if(data.BekleyenPersonel) localStorage.setItem('osb_pending_personel', JSON.stringify(data.BekleyenPersonel));
+                if(data.BekleyenOlaylar) localStorage.setItem('osb_pending_olaylar', JSON.stringify(data.BekleyenOlaylar));
+                if(data.BekleyenFirmalar) localStorage.setItem('osb_pending_firmalar', JSON.stringify(data.BekleyenFirmalar));
             } catch(err) {
                 console.warn("Google Sheets canlı bağlantısı kurulamadı, yerel veriler kullanılıyor:", err);
             }
@@ -768,17 +772,17 @@
         }
 
         async function syncTableToSheet(sheetName, listData) {
-    try {
-        await fetch(SCRIPT_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "text/plain;charset=utf-8" }, // <-- Google Apps Script ile tam uyumlu hale getirildi
-            body: JSON.stringify({ action: "syncTable", sheetName: sheetName, rows: listData })
-        });
-    } catch(err) {
-        console.error("Sheets senkronizasyon hatası:", err);
-    }
-}
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify({ action: "syncTable", sheetName: sheetName, rows: listData })
+                });
+            } catch(err) {
+                console.error("Sheets senkronizasyon hatası:", err);
+            }
+        }
 
         function forceUpper(el) { el.value = el.value.toUpperCase(); }
 
@@ -789,7 +793,6 @@
         setInterval(updateClockAndWeather, 1000);
         updateClockAndWeather();
 
-        // 10. KURAL: Gerçek Zamanlı Meteoroloji Verisi (Adana OSB: 36.9584, 35.4182) ve Windy Linki
         async function fetchWindyWeatherAndAlerts() {
             const weatherEl = document.getElementById('windy-weather');
             const alertBanner = document.getElementById('weather-alert-banner');
@@ -1035,6 +1038,7 @@
                     let pendings = JSON.parse(localStorage.getItem('osb_pending_personel')) || [];
                     pendings.push({ ...newObj, user: currentUser });
                     localStorage.setItem('osb_pending_personel', JSON.stringify(pendings));
+                    syncTableToSheet("BekleyenPersonel", pendings);
                     alert("Personel kaydı talebiniz Admin onayına gönderildi.");
                 }
             }
@@ -1114,6 +1118,7 @@
             localStorage.setItem('osb_personel', JSON.stringify(list));
             localStorage.setItem('osb_pending_personel', JSON.stringify(pendings));
             syncTableToSheet("Personel", list);
+            syncTableToSheet("BekleyenPersonel", pendings);
             loadPersonnelTable();
             renderPersonnelButtons();
             populatePersonnelDropdowns();
@@ -1262,6 +1267,7 @@
                     let pendings = JSON.parse(localStorage.getItem('osb_pending_olaylar')) || [];
                     pendings.push({ ...rowObj, user: currentUser });
                     localStorage.setItem('osb_pending_olaylar', JSON.stringify(pendings));
+                    syncTableToSheet("BekleyenOlaylar", pendings);
                     alert("Olay raporunuz Admin onayına gönderildi. Onaylandıktan sonra listede görünecektir.");
                 }
             }
@@ -1338,6 +1344,7 @@
             localStorage.setItem('osb_olaylar', JSON.stringify(olaylar));
             localStorage.setItem('osb_pending_olaylar', JSON.stringify(pendings));
             syncTableToSheet("OlayRaporlari", olaylar);
+            syncTableToSheet("BekleyenOlaylar", pendings);
             loadOlaylarTable();
             alert("Olay raporu onaylandı ve listeye eklendi!");
         }
@@ -1400,11 +1407,12 @@
             let araclar = JSON.parse(localStorage.getItem('osb_arac_listesi')) || [];
             araclar.push({plaka, tip});
             localStorage.setItem('osb_arac_listesi', JSON.stringify(araclar));
+            syncTableToSheet("AracListesi", araclar);
             document.getElementById('yeni-plaka').value = "";
             document.getElementById('yeni-tip').value = "";
             loadVehicleModules();
             loadAdminVehicleMasterList();
-            alert("Araç eklendi.");
+            alert("Araç eklendi ve senkronize edildi.");
         }
 
         function loadAdminVehicleMasterList() {
@@ -1419,7 +1427,7 @@
             araclar.forEach((a, idx) => {
                 let div = document.createElement('div');
                 div.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#1e293b; padding:6px 10px; border-radius:4px; font-size:12px;";
-                div.innerHTML = `<span><b>${a.plaka}</b> - ${a.tip}</span> <button class="btn btn-danger" style="padding:2px 6px; font-size:10px;" onclick="deleteVehicleMaster(${idx})">Sil</button>`;
+                div.innerHTML = `<span><b>${a.plaka || a.Plaka}</b> - ${a.tip || a.AracTipi}</span> <button class="btn btn-danger" style="padding:2px 6px; font-size:10px;" onclick="deleteVehicleMaster(${idx})">Sil</button>`;
                 container.appendChild(div);
             });
         }
@@ -1429,32 +1437,41 @@
             let araclar = JSON.parse(localStorage.getItem('osb_arac_listesi')) || [];
             araclar.splice(idx, 1);
             localStorage.setItem('osb_arac_listesi', JSON.stringify(araclar));
+            syncTableToSheet("AracListesi", araclar);
             loadVehicleModules();
             loadAdminVehicleMasterList();
         }
 
         function loadVehicleModules() {
             let sel = document.getElementById('ariza-plaka-select');
+            let araclar = JSON.parse(localStorage.getItem('osb_arac_listesi')) || [];
+            
+            if(araclar.length === 0) {
+                araclar = [
+                    { plaka: "01 AHU 548", tip: "ARAZÖZ" },
+                    { plaka: "01 ITB 01", tip: "İTFAİYE ARACI" },
+                    { plaka: "01 ITB 02", tip: "KURTARMA ARACI" }
+                ];
+                localStorage.setItem('osb_arac_listesi', JSON.stringify(araclar));
+            }
+
             if(sel) {
                 sel.innerHTML = "";
-                let araclar = JSON.parse(localStorage.getItem('osb_arac_listesi')) || [];
-                if(araclar.length === 0) {
-                    sel.innerHTML = `<option value="">ÖNCE ADMİN TARAFINDAN ARAÇ EKLENMELİDİR</option>`;
-                } else {
-                    araclar.forEach(a => {
-                        let opt = document.createElement('option');
-                        opt.value = a.plaka;
-                        opt.text = `${a.plaka} - ${a.tip}`;
-                        sel.appendChild(opt);
-                    });
-                }
+                araclar.forEach(a => {
+                    let p = a.plaka || a.Plaka;
+                    let t = a.tip || a.AracTipi || "ARAZÖZ";
+                    let opt = document.createElement('option');
+                    opt.value = p;
+                    opt.text = `${p} - ${t}`;
+                    sel.appendChild(opt);
+                });
             }
 
             let container = document.getElementById('arac-ariza-container');
             if(!container) return;
             container.innerHTML = "";
             let arizalar = JSON.parse(localStorage.getItem('osb_arac_arizalari')) || [];
-            document.getElementById('arizali-arac-sayi').innerText = arizalar.filter(a => a.Durum !== 'YAPILDI').length;
+            document.getElementById('arizali-arac-sayi').innerText = arizalar.filter(a => (a.Durum || a.durum) !== 'YAPILDI').length;
 
             arizalar.forEach((ariza, idx) => {
                 let div = document.createElement('div');
@@ -1473,7 +1490,7 @@
 
         function submitVehicleAriza() {
             const plaka = document.getElementById('ariza-plaka-select').value;
-            if(!plaka || plaka.includes("ÖNCE ADMİN")) { alert("Lütfen geçerli bir araç plakası seçiniz!"); return; }
+            if(!plaka) { alert("Lütfen araç plakası seçiniz!"); return; }
             const durum = document.getElementById('ariza-durum').value;
             const detay = document.getElementById('ariza-detay').value.toUpperCase();
             const fotoInput = document.getElementById('ariza-foto');
@@ -2180,6 +2197,7 @@
                 let pendings = JSON.parse(localStorage.getItem('osb_pending_firmalar')) || [];
                 pendings.push({ ...rowObj, user: currentUser });
                 localStorage.setItem('osb_pending_firmalar', JSON.stringify(pendings));
+                syncTableToSheet("BekleyenFirmalar", pendings);
                 alert("Firma kaydınız Admin onayına gönderildi.");
             }
             loadCompaniesTable();
@@ -2336,6 +2354,7 @@
             localStorage.setItem('osb_firmalar', JSON.stringify(list));
             localStorage.setItem('osb_pending_firmalar', JSON.stringify(pendings));
             syncTableToSheet("Isletmeler", list);
+            syncTableToSheet("BekleyenFirmalar", pendings);
             loadCompaniesTable();
             populateCompanyDatalist();
             alert("Firma onaylandı ve senkronize edildi!");
