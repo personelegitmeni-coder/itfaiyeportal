@@ -63,7 +63,6 @@
         }
         .blinking-btn { background: #22c55e !important; color: white !important; padding: 5px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; animation: blinkEffect 1.2s infinite ease-in-out; box-shadow: 0 0 10px rgba(34, 197, 94, 0.7); }
         .blinking-red-badge { background: #ef4444 !important; color: white !important; animation: blinkEffect 1s infinite ease-in-out; box-shadow: 0 0 8px rgba(239, 68, 68, 0.8); }
-        .badge-yeni-anim { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; animation: greenBlink 1s infinite ease-in-out; margin-right: 5px; }
 
         .announcement-banner { background: #14532d; color: #bbf7d0; padding: 10px 20px; text-align: center; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .badge-new { background: var(--success); color: white; font-weight: bold; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
@@ -164,7 +163,7 @@
                 <button type="submit" class="btn btn-success" style="width:100%; margin-top:5px;">Admin Girişi Yap</button>
             </form>
             <form id="user-login-form" class="login-form" onsubmit="event.preventDefault(); handleUserLogin();">
-                <p style="font-size:12px; color:var(--text-muted); margin-bottom:5px;">Lütfen 11 haneli TC kimlik no giriniz.</p>
+                <p style="font-size:12px; color:var(--text-muted); margin-bottom:5px;">Yalnızca Modül 1'e kayıtlı personeller giriş yapabilir.</p>
                 <div class="form-group">
                     <label>Personel TC Kimlik No:</label>
                     <input type="text" id="personel-tc" name="username" autocomplete="username" placeholder="11 Haneli TC" required>
@@ -206,7 +205,7 @@
 
     <div class="announcement-banner">
         <span class="badge-new">CANLI BAĞLANTI AKTİF</span>
-        <span>☁️ Tüm veriler Google Sheets E-Tablonuz ile anlık olarak senkronize edilmektedir.</span>
+        <span>☁️ Tüm veriler Google Sheets E-Tablonuz ile anlık olarak senkronize edilmektedir (Ekleme, Düzenleme ve Silme).</span>
     </div>
 
     <div class="main-wrapper">
@@ -704,7 +703,7 @@
             setInterval(fetchAllDataFromSheets, 10000);
         };
 
-        // GOOGLE SHEETS VERİ ÇEKME - GELİŞTİRİLMİŞ HATA YÖNETİMİ
+        // GOOGLE SHEETS VERİ ÇEKME
         async function fetchAllDataFromSheets() {
             try {
                 let res = await fetch(SCRIPT_URL + "?action=readAll");
@@ -725,21 +724,7 @@
             loadAllModules();
         }
 
-        // GOOGLE SHEETS VERİ GÖNDERME - GELİŞTİRİLMİŞ İSTEK YAPISI
-        async function sendDataToSheet(sheetName, rowData) {
-            try {
-                await fetch(SCRIPT_URL, {
-                    method: "POST",
-                    mode: "no-cors",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ action: "appendRow", sheetName: sheetName, data: rowData })
-                });
-            } catch(err) {
-                console.error("Sheets kayıt hatası:", err);
-            }
-        }
-
-        // GOOGLE SHEETS TABLO SENRONİZASYON (SİLME İŞLEMLERİ İÇİN)
+        // GOOGLE SHEETS TABLO SENKRONİZASYON (EKLEME, DÜZENLEME VE SİLME)
         async function syncTableToSheet(sheetName, listData) {
             try {
                 await fetch(SCRIPT_URL, {
@@ -789,18 +774,29 @@
             } else { alert("Hatalı Admin Bilgisi!"); }
         }
 
+        // --- GÜVENLİ PERSONEL GİRİŞİ (MODÜL 1 KONTROLÜ) ---
         function handleUserLogin() {
             const tc = document.getElementById('personel-tc').value.trim();
             if (tc.length === 11) {
+                let pList = JSON.parse(localStorage.getItem('osb_personel')) || [];
+                let foundPerson = pList.find(p => (p.TC || p.tc) === tc);
+                
+                if (!foundPerson) {
+                    alert("⚠️ Bu TC kimlik numarasına ait kayıtlı personel bulunamadı! Yalnızca Admin tarafından Modül 1'e eklenen personel giriş yapabilir.");
+                    return;
+                }
+
                 isAdmin = false;
                 currentTC = tc;
-                currentUser = `PERSONEL (${tc})`;
+                currentUser = `${foundPerson.AdSoyad || foundPerson.name} (PERSONEL)`;
                 document.getElementById('login-overlay').style.display = 'none';
                 document.getElementById('current-user-display').innerText = currentUser;
                 document.body.classList.remove('is-admin');
-                alert("Giriş Başarılı!");
+                alert("Giriş Başarılı, hoş geldiniz " + (foundPerson.AdSoyad || foundPerson.name) + "!");
                 loadAllModules();
-            } else { alert("Lütfen 11 haneli TC giriniz!"); }
+            } else { 
+                alert("Lütfen 11 haneli geçerli bir TC giriniz!"); 
+            }
         }
 
         function logout() { location.reload(); }
@@ -838,79 +834,6 @@
             }
         }
 
-        // --- GÜNCELLENMİŞ SİLME FONKSİYONLARI (GOOGLE SHEETS SENKRONİZASYONLU) ---
-
-        function deletePersonnel(idx) {
-            if(!isAdmin) return;
-            let list = JSON.parse(localStorage.getItem('osb_personel')) || [];
-            list.splice(idx, 1);
-            localStorage.setItem('osb_personel', JSON.stringify(list));
-            syncTableToSheet("Personel", list); // Google Sheets Güncellemesi
-            loadPersonnelTable();
-            renderPersonnelButtons();
-            loadYetkiPersonelCheckboxes();
-        }
-
-        function deleteOlay(idx) {
-            if(!isAdmin) return;
-            let olaylar = JSON.parse(localStorage.getItem('osb_olaylar')) || [];
-            olaylar.splice(idx, 1);
-            localStorage.setItem('osb_olaylar', JSON.stringify(olaylar));
-            syncTableToSheet("OlayRaporlari", olaylar); // Google Sheets Güncellemesi
-            loadOlaylarTable();
-        }
-
-        function deleteYSC(idx) {
-            if(!isAdmin) return;
-            let list = JSON.parse(localStorage.getItem('osb_ysc_listesi')) || [];
-            list.splice(idx, 1);
-            localStorage.setItem('osb_ysc_listesi', JSON.stringify(list));
-            syncTableToSheet("YSCKontrol", list); // Google Sheets Güncellemesi
-            loadYSCTable();
-        }
-
-        function deleteHydrant(idx) {
-            if(!isAdmin) return;
-            let list = JSON.parse(localStorage.getItem('osb_hidrant_listesi')) || [];
-            list.splice(idx, 1);
-            localStorage.setItem('osb_hidrant_listesi', JSON.stringify(list));
-            syncTableToSheet("Hidrantlar", list); // Google Sheets Güncellemesi
-            loadHydrantTable();
-            updateMapMarkers();
-        }
-
-        function deleteCompany(idx) {
-            if(!isAdmin) return;
-            let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
-            list.splice(idx, 1);
-            localStorage.setItem('osb_firmalar', JSON.stringify(list));
-            syncTableToSheet("Isletmeler", list); // Google Sheets Güncellemesi
-            loadCompaniesTable();
-            populateCompanyDatalist();
-        }
-
-        function deleteSelectedCompanies() {
-            if(!isAdmin) { alert("Yalnızca Admin silebilir!"); return; }
-            let checkboxes = document.querySelectorAll('.company-checkbox:checked');
-            if(checkboxes.length === 0) { alert("Silinecek firma seçilmedi!"); return; }
-            
-            if(!confirm("Seçilen firmaları silmek istediğinize emin misiniz?")) return;
-
-            let indicesToDelete = Array.from(checkboxes).map(cb => parseInt(cb.value)).sort((a,b) => b - a);
-            let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
-
-            indicesToDelete.forEach(idx => {
-                list.splice(idx, 1);
-            });
-
-            localStorage.setItem('osb_firmalar', JSON.stringify(list));
-            syncTableToSheet("Isletmeler", list); // Google Sheets Güncellemesi
-            loadCompaniesTable();
-            populateCompanyDatalist();
-            alert("Seçilen firmalar silindi.");
-        }
-    </script>
-</script>
         // --- MODÜL 1: PERSONEL ---
         function calculateKalanIzin() {
             let toplam = parseFloat(document.getElementById('p-toplam-izin').value) || 30;
@@ -942,12 +865,12 @@
             let newObj = { TC: tc, AdSoyad: name, Gorev: role, Vardiya: shift, KanGrubu: kan, IseGiris: giris, ToplamIzin: toplamIzin, KullanilanIzin: kullanilan, KalanIzin: kalan, Ayakkabi: ayakkabi, Tisort: tisort, Pantolon: pantolon, Ceket: ceket, Nomex: nomex };
             list.unshift(newObj);
             localStorage.setItem('osb_personel', JSON.stringify(list));
-            sendDataToSheet("Personel", newObj);
+            syncTableToSheet("Personel", list);
             loadPersonnelTable();
             renderPersonnelButtons();
             loadYetkiPersonelCheckboxes();
             toggleForm('p-form');
-            alert("Personel kaydedildi!");
+            alert("Personel kaydedildi ve Sheets ile senkronize edildi!");
         }
 
         function loadPersonnelTable() {
@@ -975,6 +898,7 @@
             let list = JSON.parse(localStorage.getItem('osb_personel')) || [];
             list.splice(idx, 1);
             localStorage.setItem('osb_personel', JSON.stringify(list));
+            syncTableToSheet("Personel", list);
             loadPersonnelTable();
             renderPersonnelButtons();
             loadYetkiPersonelCheckboxes();
@@ -999,7 +923,7 @@
             container.scrollTop = container.scrollHeight;
         }
 
-        // --- MODÜL 2: OLAY RAPORLARI & PERFORMANS PUANLAMA & YIL SONU RAPORU ---
+        // --- MODÜL 2: OLAY RAPORLARI & PERFORMANS ---
         function populateCompanyDatalist() {
             let datalist = document.getElementById('firma-onerileri');
             if(!datalist) return;
@@ -1083,13 +1007,14 @@
                 olaylar[editIdx] = rowObj;
                 document.getElementById('edit-olay-index').value = "-1";
                 localStorage.setItem('osb_olaylar', JSON.stringify(olaylar));
-                alert("Olay raporu güncellendi!");
+                syncTableToSheet("OlayRaporlari", olaylar);
+                alert("Olay raporu güncellendi ve Sheets ile senkronize edildi!");
             } else {
                 if(isAdmin) {
                     olaylar.unshift(rowObj);
                     localStorage.setItem('osb_olaylar', JSON.stringify(olaylar));
-                    sendDataToSheet("OlayRaporlari", rowObj);
-                    alert("Olay raporu kaydedildi!");
+                    syncTableToSheet("OlayRaporlari", olaylar);
+                    alert("Olay raporu kaydedildi ve Sheets ile senkronize edildi!");
                 } else {
                     let pendings = JSON.parse(localStorage.getItem('osb_pending_olaylar')) || [];
                     pendings.push({ ...rowObj, user: currentUser });
@@ -1169,9 +1094,9 @@
             pendings.splice(pIdx, 1);
             localStorage.setItem('osb_olaylar', JSON.stringify(olaylar));
             localStorage.setItem('osb_pending_olaylar', JSON.stringify(pendings));
-            sendDataToSheet("OlayRaporlari", item);
+            syncTableToSheet("OlayRaporlari", olaylar);
             loadOlaylarTable();
-            alert("Onaylandı!");
+            alert("Onaylandı ve senkronize edildi!");
         }
 
         function deleteOlay(idx) {
@@ -1179,10 +1104,11 @@
             let olaylar = JSON.parse(localStorage.getItem('osb_olaylar')) || [];
             olaylar.splice(idx, 1);
             localStorage.setItem('osb_olaylar', JSON.stringify(olaylar));
+            syncTableToSheet("OlayRaporlari", olaylar);
             loadOlaylarTable();
         }
 
-        // --- YIL SONU PERSONEL DEĞERLENDİRME & GRAFİK RAPORU ---
+        // --- YIL SONU RAPORU ---
         function openYearEndReportModal() {
             let modal = document.getElementById('year-end-modal');
             let content = document.getElementById('year-end-content');
@@ -1285,9 +1211,9 @@
             let arizalar = JSON.parse(localStorage.getItem('osb_arac_arizalari')) || [];
             arizalar.unshift(rowObj);
             localStorage.setItem('osb_arac_arizalari', JSON.stringify(arizalar));
-            sendDataToSheet("AracArizalari", rowObj);
+            syncTableToSheet("AracArizalari", arizalar);
             loadVehicleModules();
-            alert("Arıza kaydı gönderildi.");
+            alert("Arıza kaydı gönderildi ve Sheets ile senkronize edildi!");
         }
 
         function deleteAriza(idx) {
@@ -1295,6 +1221,7 @@
             let arizalar = JSON.parse(localStorage.getItem('osb_arac_arizalari')) || [];
             arizalar.splice(idx, 1);
             localStorage.setItem('osb_arac_arizalari', JSON.stringify(arizalar));
+            syncTableToSheet("AracArizalari", arizalar);
             loadVehicleModules();
         }
 
@@ -1320,9 +1247,9 @@
             let list = JSON.parse(localStorage.getItem('osb_ysc_listesi')) || [];
             list.unshift(rowObj);
             localStorage.setItem('osb_ysc_listesi', JSON.stringify(list));
-            sendDataToSheet("YSCKontrol", rowObj);
+            syncTableToSheet("YSCKontrol", list);
             loadYSCTable();
-            alert("YSC kaydedildi!");
+            alert("YSC kaydedildi ve Sheets ile senkronize edildi!");
         }
 
         function filterYSCList(filterType) { loadYSCTable(filterType); }
@@ -1356,10 +1283,11 @@
             let list = JSON.parse(localStorage.getItem('osb_ysc_listesi')) || [];
             list.splice(idx, 1);
             localStorage.setItem('osb_ysc_listesi', JSON.stringify(list));
+            syncTableToSheet("YSCKontrol", list);
             loadYSCTable();
         }
 
-        // --- MODÜL 5: HİDRANTLAR & RENKLİ PİNLER & HARİTA ---
+        // --- MODÜL 5: HİDRANTLAR & HARİTA ---
         function initMap() {
             if(map) return;
             map = L.map('map').setView([36.9584, 35.4182], 14);
@@ -1387,10 +1315,10 @@
             let list = JSON.parse(localStorage.getItem('osb_hidrant_listesi')) || [];
             list.unshift(rowObj);
             localStorage.setItem('osb_hidrant_listesi', JSON.stringify(list));
-            sendDataToSheet("Hidrantlar", rowObj);
+            syncTableToSheet("Hidrantlar", list);
             loadHydrantTable();
             updateMapMarkers();
-            alert("Hidrant kaydedildi!");
+            alert("Hidrant kaydedildi ve Sheets ile senkronize edildi!");
         }
 
         function searchHydrant() {
@@ -1436,10 +1364,10 @@
                 let gpsStr = h.GPSKoordinati || h.gps || "";
                 let durum = h.Durum || h.durum || "Sağlam / Aktif";
                 
-                let colorHex = "#22c55e"; // Yeşil (Sağlam)
-                if(durum.includes('Arızalı')) colorHex = "#ef4444"; // Kırmızı
-                else if(durum.includes('Bakımda')) colorHex = "#f97316"; // Turuncu
-                else if(durum.includes('Pasif')) colorHex = "#64748b"; // Gri
+                let colorHex = "#22c55e";
+                if(durum.includes('Arızalı')) colorHex = "#ef4444";
+                else if(durum.includes('Bakımda')) colorHex = "#f97316";
+                else if(durum.includes('Pasif')) colorHex = "#64748b";
 
                 if(gpsStr.includes(',')) {
                     let parts = gpsStr.split(',');
@@ -1463,6 +1391,7 @@
             let list = JSON.parse(localStorage.getItem('osb_hidrant_listesi')) || [];
             list.splice(idx, 1);
             localStorage.setItem('osb_hidrant_listesi', JSON.stringify(list));
+            syncTableToSheet("Hidrantlar", list);
             loadHydrantTable();
             updateMapMarkers();
         }
@@ -1569,12 +1498,12 @@
                 document.getElementById('edit-duyuru-index').value = "-1";
             } else {
                 list.unshift(rowObj);
-                sendDataToSheet("Duyurular", rowObj);
             }
             localStorage.setItem('osb_duyurular', JSON.stringify(list));
+            syncTableToSheet("Duyurular", list);
             loadAnnouncements();
             toggleForm('duyuru-form');
-            alert("Duyuru kaydedildi!");
+            alert("Duyuru kaydedildi ve Sheets ile senkronize edildi!");
         }
 
         function loadAnnouncements() {
@@ -1610,6 +1539,7 @@
             let list = JSON.parse(localStorage.getItem('osb_duyurular')) || [];
             list.splice(idx, 1);
             localStorage.setItem('osb_duyurular', JSON.stringify(list));
+            syncTableToSheet("Duyurular", list);
             loadAnnouncements();
         }
 
@@ -1666,9 +1596,9 @@
             let list = JSON.parse(localStorage.getItem('osb_formlar')) || [];
             list.unshift(rowObj);
             localStorage.setItem('osb_formlar', JSON.stringify(list));
-            sendDataToSheet("Formlar", rowObj);
+            syncTableToSheet("Formlar", list);
             loadFormsTable();
-            alert("Form yüklendi!");
+            alert("Form yüklendi ve Sheets ile senkronize edildi!");
         }
 
         function loadFormsTable() {
@@ -1688,6 +1618,7 @@
             let list = JSON.parse(localStorage.getItem('osb_formlar')) || [];
             list.splice(idx, 1);
             localStorage.setItem('osb_formlar', JSON.stringify(list));
+            syncTableToSheet("Formlar", list);
             loadFormsTable();
         }
 
@@ -1769,10 +1700,10 @@
                     document.getElementById('edit-firma-index').value = "-1";
                 } else {
                     list.unshift(rowObj);
-                    sendDataToSheet("Isletmeler", rowObj);
                 }
                 localStorage.setItem('osb_firmalar', JSON.stringify(list));
-                alert("Firma kaydedildi / güncellendi.");
+                syncTableToSheet("Isletmeler", list);
+                alert("Firma kaydedildi / güncellendi ve Sheets ile senkronize edildi!");
             } else {
                 let pendings = JSON.parse(localStorage.getItem('osb_pending_firmalar')) || [];
                 pendings.push({ ...rowObj, user: currentUser });
@@ -1810,15 +1741,15 @@
                                 GPS: String(row[4] || "")
                             };
                             firmalar.unshift(fObj);
-                            sendDataToSheet("Isletmeler", fObj);
                             addedCount++;
                         }
                     }
 
                     localStorage.setItem('osb_firmalar', JSON.stringify(firmalar));
+                    syncTableToSheet("Isletmeler", firmalar);
                     loadCompaniesTable();
                     populateCompanyDatalist();
-                    alert(`Başarıyla ${addedCount} adet firma Excel'den yüklendi ve senkronize edildi!`);
+                    alert(`Başarıyla ${addedCount} adet firma Excel'den yüklendi ve Sheets ile senkronize edildi!`);
                 } catch(err) {
                     alert("Excel dosyası okunurken hata oluştu: " + err.message);
                 }
@@ -1847,6 +1778,7 @@
             });
 
             localStorage.setItem('osb_firmalar', JSON.stringify(list));
+            syncTableToSheet("Isletmeler", list);
             loadCompaniesTable();
             populateCompanyDatalist();
             alert("Seçilen firmalar silindi.");
@@ -1930,10 +1862,10 @@
             pendings.splice(pIdx, 1);
             localStorage.setItem('osb_firmalar', JSON.stringify(list));
             localStorage.setItem('osb_pending_firmalar', JSON.stringify(pendings));
-            sendDataToSheet("Isletmeler", item);
+            syncTableToSheet("Isletmeler", list);
             loadCompaniesTable();
             populateCompanyDatalist();
-            alert("Firma onaylandı!");
+            alert("Firma onaylandı ve senkronize edildi!");
         }
 
         function searchCompanies() {
@@ -1946,6 +1878,7 @@
             let list = JSON.parse(localStorage.getItem('osb_firmalar')) || [];
             list.splice(idx, 1);
             localStorage.setItem('osb_firmalar', JSON.stringify(list));
+            syncTableToSheet("Isletmeler", list);
             loadCompaniesTable();
             populateCompanyDatalist();
         }
