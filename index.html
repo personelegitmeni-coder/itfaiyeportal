@@ -700,17 +700,19 @@
             generateNextHydrantCode();
             initMap();
             cleanExpiredChatMessages();
-            setInterval(fetchAllDataFromSheets, 10000);
+            setInterval(fetchAllDataFromSheets, 15000);
         };
 
-        // GOOGLE SHEETS VERİ ÇEKME
+        // GÜNCELLENMİŞ GOOGLE SHEETS VERİ ÇEKME (YEREL KAYITLARI KORUYAN GÜVENLİ YAPI)
         async function fetchAllDataFromSheets() {
             try {
                 let res = await fetch(SCRIPT_URL + "?action=readAll");
                 if(!res.ok) throw new Error("Google Sheets sunucusu yanıt vermedi: Status " + res.status);
                 let data = await res.json();
                 
-                if(data.Personel && data.Personel.length > 0) localStorage.setItem('osb_personel', JSON.stringify(data.Personel));
+                if(data.Personel && data.Personel.length > 0) {
+                    localStorage.setItem('osb_personel', JSON.stringify(data.Personel));
+                }
                 if(data.OlayRaporlari && data.OlayRaporlari.length > 0) localStorage.setItem('osb_olaylar', JSON.stringify(data.OlayRaporlari));
                 if(data.AracArizalari && data.AracArizalari.length > 0) localStorage.setItem('osb_arac_arizalari', JSON.stringify(data.AracArizalari));
                 if(data.YSCKontrol && data.YSCKontrol.length > 0) localStorage.setItem('osb_ysc_listesi', JSON.stringify(data.YSCKontrol));
@@ -719,7 +721,7 @@
                 if(data.Duyurular && data.Duyurular.length > 0) localStorage.setItem('osb_duyurular', JSON.stringify(data.Duyurular));
                 if(data.Formlar && data.Formlar.length > 0) localStorage.setItem('osb_formlar', JSON.stringify(data.Formlar));
             } catch(err) {
-                console.error("Google Sheets Veri Çekme Hatası:", err);
+                console.warn("Google Sheets canlı bağlantısı kurulamadı, yerel veriler kullanılıyor:", err);
             }
             loadAllModules();
         }
@@ -774,25 +776,29 @@
             } else { alert("Hatalı Admin Bilgisi!"); }
         }
 
-        // --- GÜVENLİ PERSONEL GİRİŞİ (MODÜL 1 KONTROLÜ) ---
+        // --- GÜVENLİ VE ESNEK PERSONEL GİRİŞİ (MODÜL 1 KONTROLÜ) ---
         function handleUserLogin() {
             const tc = document.getElementById('personel-tc').value.trim();
             if (tc.length === 11) {
                 let pList = JSON.parse(localStorage.getItem('osb_personel')) || [];
-                let foundPerson = pList.find(p => (p.TC || p.tc) === tc);
+                
+                let foundPerson = pList.find(p => {
+                    let pTc = String(p.TC || p.tc || p['TC KİMLİK NO'] || p['tc_no'] || '').trim();
+                    return pTc === tc;
+                });
                 
                 if (!foundPerson) {
-                    alert("⚠️ Bu TC kimlik numarasına ait kayıtlı personel bulunamadı! Yalnızca Admin tarafından Modül 1'e eklenen personel giriş yapabilir.");
+                    alert(`⚠️ Bu TC (${tc}) ile Modül 1'de kayıtlı personel bulunamadı!\n\nOlası Sebepler:\n1. Admin tarafından Modül 1'e henüz kaydedilmemiş olabilir.\n2. Google Sheets'ten veriler henüz yüklenmemiş/senkronize olmamış olabilir.`);
                     return;
                 }
 
                 isAdmin = false;
                 currentTC = tc;
-                currentUser = `${foundPerson.AdSoyad || foundPerson.name} (PERSONEL)`;
+                currentUser = `${foundPerson.AdSoyad || foundPerson.name || foundPerson['AD SOYAD'] || 'PERSONEL'} (PERSONEL)`;
                 document.getElementById('login-overlay').style.display = 'none';
                 document.getElementById('current-user-display').innerText = currentUser;
                 document.body.classList.remove('is-admin');
-                alert("Giriş Başarılı, hoş geldiniz " + (foundPerson.AdSoyad || foundPerson.name) + "!");
+                alert("Giriş Başarılı, hoş geldiniz " + (foundPerson.AdSoyad || foundPerson.name || foundPerson['AD SOYAD'] || '') + "!");
                 loadAllModules();
             } else { 
                 alert("Lütfen 11 haneli geçerli bir TC giriniz!"); 
@@ -880,7 +886,7 @@
             let list = JSON.parse(localStorage.getItem('osb_personel')) || [];
 
             list.forEach((p, idx) => {
-                if(!isAdmin && p.TC !== currentTC) return;
+                if(!isAdmin && String(p.TC || p.tc || '') !== String(currentTC)) return;
                 let tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><b>${p.TC || p.tc}</b><br>${p.AdSoyad || p.name}</td>
